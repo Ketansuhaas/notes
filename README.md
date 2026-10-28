@@ -43,9 +43,8 @@ then open http://localhost:8000.
 
 ## Deploying to GitHub Pages
 
-1. Create a GitHub repo named `notes` and push this folder to it.
-2. In the repo settings, enable **Pages** → **Deploy from a branch** →
+Repo: https://github.com/Ketansuhaas/notes
+
+1. In the repo settings, enable **Pages** → **Deploy from a branch** →
    branch `main`, folder `/ (root)`.
-3. The site will be published at `https://YOUR-USERNAME.github.io/notes/`.
-4. Replace the `YOUR-USERNAME` placeholders in post citation blocks with
-   your actual GitHub username.
+2. The site will be published at `https://ketansuhaas.github.io/notes/`.
