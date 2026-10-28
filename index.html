@@ -3,14 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Notes — Ketan Saichandran</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Notes — Ketan Suhaas Saichandran</title>
   <meta name="description" content="Notes on mathematics, language modelling, and generative modelling.">
   <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="site-title" href="index.html">Notes</a>
-    <div class="site-subtitle">Mathematics, language modelling, and generative modelling — Ketan Saichandran</div>
+    <div class="site-header-top">
+      <a class="site-title" href="index.html">Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics, language modelling, and generative modelling — Ketan Suhaas Saichandran</div>
   </header>
 
   <main>
@@ -32,8 +44,9 @@
 
   <footer class="site-footer">
     <!-- TODO: link to your GitHub profile / repo once published -->
-    &copy; <span id="year"></span> Ketan Saichandran
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
+  <script src="assets/theme.js"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -3,6 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
   <title>Eigenvalues, eigenvectors, and defectiveness — Notes</title>
   <meta name="description" content="Eigenvalues and eigenvectors, their connection to rank, algebraic vs. geometric multiplicity, and defectiveness.">
   <link rel="stylesheet" href="../assets/style.css">
@@ -18,7 +27,10 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="site-title" href="../index.html">Notes</a>
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
     <div class="site-subtitle">Mathematics</div>
   </header>
 
@@ -27,7 +39,7 @@
   <main>
     <article>
       <h1>Eigenvalues, eigenvectors, and defectiveness</h1>
-      <div class="post-meta">Ketan Saichandran &middot; <time datetime="2026-10-28">28 October 2026</time></div>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-28">28 October 2026</time></div>
 
       <h2>Eigenvalues and eigenvectors</h2>
       <p>
@@ -140,13 +152,13 @@
       <section class="cite-box">
         <h2>Cite this</h2>
         <p class="cite-text">
-          Ketan Saichandran, &ldquo;Eigenvalues, eigenvectors, and defectiveness,&rdquo;
+          Ketan Suhaas Saichandran, &ldquo;Eigenvalues, eigenvectors, and defectiveness,&rdquo;
           <em>Notes</em>, 28 October 2026.
           <a href="https://ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html">ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html</a>
         </p>
         <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
         <pre id="bibtex"><code>@misc{saichandran2026eigendefective,
-  author       = {Saichandran, Ketan},
+  author       = {Saichandran, Ketan Suhaas},
   title        = {Eigenvalues, eigenvectors, and defectiveness},
   howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html}},
   year         = {2026},
@@ -157,9 +169,10 @@
   </main>
 
   <footer class="site-footer">
-    &copy; <span id="year"></span> Ketan Saichandran
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/cite.js"></script>
+  <script src="../assets/theme.js"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

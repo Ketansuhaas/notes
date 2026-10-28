@@ -3,13 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
   <title>Mathematics — Notes</title>
   <meta name="description" content="Notes on mathematics.">
   <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
   <header class="site-header">
-    <a class="site-title" href="../index.html">Notes</a>
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
     <div class="site-subtitle">Mathematics</div>
   </header>
 
@@ -18,23 +30,20 @@
   <main>
     <ul class="post-list">
       <li>
-        <a href="eigenvalues-and-defectiveness.html">Eigenvalues, eigenvectors, and defectiveness</a>
-        <time datetime="2026-10-28">2026-10-28</time>
-      </li>
-      <li>
         <a href="linear-algebra-fundamentals.html">Rank, subspaces, and projections</a>
         <time datetime="2026-10-28">2026-10-28</time>
       </li>
       <li>
-        <a href="example-post.html">Template: eigenvalues of a 2&times;2 matrix</a>
+        <a href="eigenvalues-and-defectiveness.html">Eigenvalues, eigenvectors, and defectiveness</a>
         <time datetime="2026-10-28">2026-10-28</time>
       </li>
     </ul>
   </main>
 
   <footer class="site-footer">
-    &copy; <span id="year"></span> Ketan Saichandran
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
+  <script src="../assets/theme.js"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
