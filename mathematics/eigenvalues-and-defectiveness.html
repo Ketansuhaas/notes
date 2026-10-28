@@ -102,6 +102,27 @@
         $$
       </p>
 
+      <h2>Diagonalization</h2>
+      <p>Stack eigenvectors as columns of $V$, eigenvalues on the diagonal of $\Lambda$:</p>
+      <p>
+        $$
+        AV = A\begin{pmatrix} v_1 & \cdots & v_n \end{pmatrix} = \begin{pmatrix} \lambda_1 v_1 & \cdots & \lambda_n v_n \end{pmatrix} = V\Lambda.
+        $$
+      </p>
+      <p>
+        This always holds. But $A = V\Lambda V^{-1}$ needs $V$ invertible $\iff$ its columns (the eigenvectors)
+        are linearly independent $\iff$ $\operatorname{rank}(V) = n \iff C(V) = \mathbb{R}^n$.
+      </p>
+      <p class="intuition"><em>Intuition: independent eigenvectors give a new coordinate system in which $A$ is just a scaling &mdash; that's what diagonalizable means.</em></p>
+      <p class="example-label">Example</p>
+      <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$ with eigenvectors $(1,1), (1,-1)$ from above:</p>
+      <p>
+        $$
+        V = \begin{pmatrix}1&1\\1&-1\end{pmatrix}, \quad \det(V) = -2 \neq 0 \;\Rightarrow\; \text{invertible}, \ \operatorname{rank}(V) = 2 = n.
+        $$
+      </p>
+      <p>So $A = V\Lambda V^{-1}$ with $\Lambda = \operatorname{diag}(3,1)$.</p>
+
       <h2>Defectiveness</h2>
       <p>
         $A$ is <strong>defective</strong> if $\operatorname{GM}(\lambda) < \operatorname{AM}(\lambda)$ for some $\lambda$ &mdash;
