@@ -159,6 +159,58 @@
         Check $A^Te = 0$: $\ -\tfrac13+0+\tfrac13=0$ and $0-\tfrac13+\tfrac13=0$. &#10003;
       </p>
 
+      <h2>The big picture</h2>
+      <p>
+        $$
+        \mathbb{R}^m = C(A) \oplus N(A^T), \qquad \mathbb{R}^n = C(A^T) \oplus N(A).
+        $$
+      </p>
+
+      <p><strong>Output side.</strong> Every $b$ splits uniquely into a reachable part and a part $A$ is blind to:</p>
+      <p>
+        $$
+        b = b_{\text{col}} + b_\perp, \quad b_{\text{col}} \in C(A), \ b_\perp \in N(A^T).
+        $$
+      </p>
+      <p>$Ax$ can only ever land in $C(A)$, so $b_\perp$ can never be reached &mdash; the best we can do is $Ax = b_{\text{col}}$, exactly the projection above.</p>
+      <p class="intuition"><em>Intuition: $b_\perp$ is the part of $b$ that $A$ is structurally blind to.</em></p>
+      <p class="example-label">Example</p>
+      <p>Reusing $b = p + e$ from the projection above:</p>
+      <p>
+        $$
+        \begin{pmatrix}1\\1\\3\end{pmatrix} =
+        \underbrace{\begin{pmatrix}4/3\\4/3\\8/3\end{pmatrix}}_{b_{\text{col}} = p\, \in\, C(A)} +
+        \underbrace{\begin{pmatrix}-1/3\\-1/3\\1/3\end{pmatrix}}_{b_\perp = e\, \in\, N(A^T)}.
+        $$
+      </p>
+
+      <p><strong>Input side.</strong> Every $x$ splits uniquely too:</p>
+      <p>
+        $$
+        x = x_{\text{row}} + x_{\text{null}}, \quad x_{\text{row}} \in C(A^T), \ x_{\text{null}} \in N(A).
+        $$
+      </p>
+      <p>
+        $$
+        Ax = A(x_{\text{row}} + x_{\text{null}}) = Ax_{\text{row}} + \underbrace{Ax_{\text{null}}}_{=\,0} = Ax_{\text{row}}.
+        $$
+      </p>
+      <p>The null-space part of $x$ is invisible to $A$ &mdash; only $x_{\text{row}}$ ever matters.</p>
+      <p class="intuition"><em>Intuition: $A$ only ever "sees" the row-space part of its input.</em></p>
+      <p class="example-label">Example</p>
+      <p>Using the wide $A$ and $x=(1,1,0)$ from the solving example above ($Ax = (1,1)$):</p>
+      <p>
+        $$
+        x = \underbrace{\begin{pmatrix}1/3\\1/3\\2/3\end{pmatrix}}_{x_{\text{row}}} +
+        \underbrace{\begin{pmatrix}2/3\\2/3\\-2/3\end{pmatrix}}_{x_{\text{null}}}, \qquad
+        Ax_{\text{row}} = \begin{pmatrix}1\\1\end{pmatrix} = Ax.
+        $$
+      </p>
+      <p>($x_{\text{row}}$ is also the minimum-norm solution to $Ax = (1,1)$.)</p>
+      <p>
+        Together: $A$ is a bijection from the row space onto the column space, with $N(A)$ and $N(A^T)$ as the blind spots on either side.
+      </p>
+
       <section class="cite-box">
         <h2>Cite this</h2>
         <p class="cite-text">
