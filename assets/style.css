@@ -164,6 +164,11 @@ pre code {
   padding: 0;
 }
 
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
 blockquote {
   margin: 1.5rem 0;
   padding-left: 1rem;

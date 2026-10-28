@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eigenvalues, eigenvectors, and defectiveness — Notes</title>
+  <meta name="description" content="Eigenvalues and eigenvectors, their connection to rank, algebraic vs. geometric multiplicity, and defectiveness.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="site-title" href="../index.html">Notes</a>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Notes</a> / <a href="index.html">Mathematics</a></nav>
+
+  <main>
+    <article>
+      <h1>Eigenvalues, eigenvectors, and defectiveness</h1>
+      <div class="post-meta">Ketan Saichandran &middot; <time datetime="2026-10-28">28 October 2026</time></div>
+
+      <h2>Eigenvalues and eigenvectors</h2>
+      <p>
+        $$
+        Av = \lambda v, \quad v \neq 0.
+        $$
+      </p>
+      <p>$\lambda$: eigenvalue. $v$: eigenvector. Found from $\det(A - \lambda I) = 0$ (characteristic equation).</p>
+      <p class="intuition"><em>Intuition: directions $A$ only stretches or shrinks — never rotates off their own line.</em></p>
+      <p class="example-label">Example</p>
+      <p>
+        $$
+        A = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}: \quad
+        \det(A-\lambda I) = \lambda^2 - 4\lambda + 3 = 0 \;\Rightarrow\; \lambda = 1, 3.
+        $$
+      </p>
+      <p>
+        $$
+        \lambda=3: (A-3I)v=0 \Rightarrow v = \begin{pmatrix}1\\1\end{pmatrix}, \qquad
+        \lambda=1: (A-I)v=0 \Rightarrow v = \begin{pmatrix}1\\-1\end{pmatrix}.
+        $$
+      </p>
+
+      <h2>Eigenvalues and rank</h2>
+      <p>
+        $$
+        \dim N(A) = n - \operatorname{rank}(A) \quad \text{(rank–nullity)}.
+        $$
+      </p>
+      <p>
+        $N(A) = N(A - 0I)$ is the eigenspace of $\lambda = 0$, so $\dim N(A)$ is $0$'s <em>geometric</em> multiplicity.
+        Hence $\operatorname{rank}(A) = n - (\text{geometric multiplicity of } 0)$ &mdash; always true.
+        If $A$ is diagonalizable, this equals the count of nonzero eigenvalues.
+      </p>
+      <p class="intuition"><em>Intuition: $\lambda=0$ marks directions $A$ collapses; everything else contributes to rank.</em></p>
+      <p class="example-label">Example</p>
+      <p>
+        $$
+        A = \begin{pmatrix} 1 & 2 \\ 2 & 4 \end{pmatrix}\ (\operatorname{rank} 1): \quad
+        \det(A-\lambda I) = \lambda^2 - 5\lambda = 0 \;\Rightarrow\; \lambda = 0, 5.
+        $$
+      </p>
+      <p>
+        $$
+        N(A) = \operatorname{span}\begin{pmatrix}2\\-1\end{pmatrix}, \ \dim = 1 = n - \operatorname{rank}(A).
+        $$
+      </p>
+      <p>
+        $$
+        \text{1 nonzero eigenvalue} = \operatorname{rank}(A). \ \checkmark
+        $$
+      </p>
+
+      <h2>Algebraic vs. geometric multiplicity</h2>
+      <p>
+        Algebraic multiplicity $\operatorname{AM}(\lambda)$: multiplicity of $\lambda$ as a root of $\det(A-\lambda I)=0$.
+        Geometric multiplicity $\operatorname{GM}(\lambda) = \dim N(A - \lambda I)$: dimension of its eigenspace.
+        Always $1 \le \operatorname{GM}(\lambda) \le \operatorname{AM}(\lambda)$.
+      </p>
+      <p class="intuition"><em>Intuition: AM counts roots on paper; GM counts how many independent directions actually get that eigenvalue.</em></p>
+      <p class="example-label">Example</p>
+      <p>
+        $$
+        A = \begin{pmatrix} 2 & 1 \\ 0 & 2 \end{pmatrix}: \quad
+        \det(A-\lambda I) = (2-\lambda)^2 = 0 \;\Rightarrow\; \lambda = 2,\ \operatorname{AM}(2) = 2.
+        $$
+      </p>
+      <p>
+        $$
+        A - 2I = \begin{pmatrix} 0&1\\0&0\end{pmatrix} \Rightarrow N(A-2I) = \operatorname{span}\begin{pmatrix}1\\0\end{pmatrix},
+        \ \operatorname{GM}(2) = 1 < \operatorname{AM}(2) = 2.
+        $$
+      </p>
+
+      <h2>Defectiveness</h2>
+      <p>
+        $A$ is <strong>defective</strong> if $\operatorname{GM}(\lambda) < \operatorname{AM}(\lambda)$ for some $\lambda$ &mdash;
+        too few eigenvectors to form a basis, so $A$ is not diagonalizable.
+        Diagonalizable $\iff$ $\operatorname{GM}(\lambda) = \operatorname{AM}(\lambda)$ for every $\lambda$.
+      </p>
+      <p class="intuition"><em>Intuition: a repeated eigenvalue doesn't hand you a second independent eigenvector for free.</em></p>
+      <p class="example-label">Example</p>
+      <p>
+        $\begin{pmatrix} 2 & 1 \\ 0 & 2 \end{pmatrix}$ above is defective (GM $<$ AM).
+        Contrast with $\begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix}$: same $\operatorname{AM}(2)=2$,
+        but $A - 2I = 0 \Rightarrow \operatorname{GM}(2) = 2 = \operatorname{AM}(2)$ &mdash; not defective (already diagonal).
+      </p>
+
+      <section class="cite-box">
+        <h2>Cite this</h2>
+        <p class="cite-text">
+          Ketan Saichandran, &ldquo;Eigenvalues, eigenvectors, and defectiveness,&rdquo;
+          <em>Notes</em>, 28 October 2026.
+          <a href="https://ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html">ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html</a>
+        </p>
+        <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
+        <pre id="bibtex"><code>@misc{saichandran2026eigendefective,
+  author       = {Saichandran, Ketan},
+  title        = {Eigenvalues, eigenvectors, and defectiveness},
+  howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html}},
+  year         = {2026},
+  note         = {Accessed: YYYY-MM-DD}
+}</code></pre>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Saichandran
+  </footer>
+  <script src="../assets/cite.js"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
