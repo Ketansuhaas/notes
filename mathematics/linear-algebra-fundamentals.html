@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rank, subspaces, and projections — Notes</title>
+  <meta name="description" content="Rank, tall/wide/square solvability of Ax=b, vector spaces and subspaces, the four fundamental subspaces, and the projection matrix derived from the residual condition.">
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="site-title" href="../index.html">Notes</a>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Notes</a> / <a href="index.html">Mathematics</a></nav>
+
+  <main>
+    <article>
+      <h1>Rank, subspaces, and projections</h1>
+      <div class="post-meta">Ketan Saichandran &middot; <time datetime="2026-10-28">28 October 2026</time></div>
+
+      <h2>Rank</h2>
+      <p>
+        $\operatorname{rank}(A) = \dim C(A) = \dim C(A^T)$ = # independent columns = # independent rows = # pivots.
+      </p>
+      <p>
+        $$
+        A = \begin{pmatrix} 1 & 2 \\ 2 & 4 \\ 3 & 6 \end{pmatrix}, \quad \text{col}_2 = 2\,\text{col}_1 \;\Rightarrow\; \operatorname{rank}(A) = 1.
+        $$
+      </p>
+
+      <h2>Solving $Ax = b$</h2>
+      <p>Behaviour depends on shape and rank $r$ of $A \in \mathbb{R}^{m \times n}$.</p>
+
+      <p><strong>Tall</strong> ($m > n$), full column rank $r = n$: $N(A) = \{0\}$, so at most one solution.</p>
+      <p>
+        $$
+        A = \begin{pmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{pmatrix}, \quad
+        b = \begin{pmatrix} 1 \\ 1 \\ 2 \end{pmatrix} \Rightarrow x = \begin{pmatrix}1\\1\end{pmatrix} \ \text{(unique, } b \in C(A)\text{)}
+        $$
+      </p>
+      <p>
+        $$
+        b = \begin{pmatrix} 1 \\ 1 \\ 3 \end{pmatrix} \notin C(A) \;\Rightarrow\; \text{no exact solution — least squares instead.}
+        $$
+      </p>
+
+      <p><strong>Wide</strong> ($m < n$), full row rank $r = m$: $C(A) = \mathbb{R}^m$, so always consistent; $n - r$ free variables $\Rightarrow$ infinitely many solutions.</p>
+      <p>
+        $$
+        A = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 1 \end{pmatrix}, \quad b = \begin{pmatrix}1\\1\end{pmatrix}
+        \;\Rightarrow\; x = \underbrace{\begin{pmatrix}1\\1\\0\end{pmatrix}}_{x_p} + t\underbrace{\begin{pmatrix}-1\\-1\\1\end{pmatrix}}_{\in\, N(A)}, \ t \in \mathbb{R}.
+        $$
+      </p>
+
+      <p><strong>Square</strong> ($m = n$): full rank $\Rightarrow$ invertible, unique $x = A^{-1}b$ for every $b$. Rank-deficient $\Rightarrow$ no solution or infinitely many, depending on $b$.</p>
+      <p>
+        $$
+        A = \begin{pmatrix} 1 & 2 \\ 2 & 4 \end{pmatrix}\ (\operatorname{rank} 1): \quad
+        b = \begin{pmatrix}1\\2\end{pmatrix} \in C(A) \Rightarrow \text{infinitely many}, \qquad
+        b = \begin{pmatrix}1\\1\end{pmatrix} \notin C(A) \Rightarrow \text{none.}
+        $$
+      </p>
+
+      <h2>Vector space, subspace</h2>
+      <p>
+        Vector space $V$: closed under addition and scalar multiplication, $0 \in V$.
+        Subspace $S \subseteq V$: a subset that is itself a vector space.
+      </p>
+      <p>
+        $$
+        L = \{\, t(1,1) : t \in \mathbb{R} \,\} \subset \mathbb{R}^2 \ \text{is a subspace (line through origin)}.
+        $$
+      </p>
+      <p>
+        $$
+        M = \{\, (1,0) + t(0,1) : t \in \mathbb{R} \,\} \subset \mathbb{R}^2 \ \text{is not (} 0 \notin M \text{)}.
+        $$
+      </p>
+
+      <h2>Fundamental subspaces</h2>
+      <p>For $A \in \mathbb{R}^{m \times n}$, $\operatorname{rank}(A) = r$:</p>
+      <ul>
+        <li>Column space $C(A) \subseteq \mathbb{R}^m$, $\dim = r$</li>
+        <li>Null space $N(A) = \{x : Ax = 0\} \subseteq \mathbb{R}^n$, $\dim = n - r$</li>
+        <li>Row space $C(A^T) \subseteq \mathbb{R}^n$, $\dim = r$</li>
+        <li>Left null space $N(A^T) \subseteq \mathbb{R}^m$, $\dim = m - r$</li>
+      </ul>
+      <p>
+        $$
+        N(A) \perp C(A^T) \ \text{in } \mathbb{R}^n, \qquad N(A^T) \perp C(A) \ \text{in } \mathbb{R}^m.
+        $$
+      </p>
+      <p>Using $A = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 1 \end{pmatrix}$ ($m=2, n=3, r=2$):</p>
+      <p>
+        $$
+        C(A) = \mathbb{R}^2, \quad
+        N(A) = \operatorname{span}\begin{pmatrix}-1\\-1\\1\end{pmatrix}, \quad
+        C(A^T) = \operatorname{span}\left\{\begin{pmatrix}1\\0\\1\end{pmatrix}, \begin{pmatrix}0\\1\\1\end{pmatrix}\right\}, \quad
+        N(A^T) = \{0\}.
+        $$
+      </p>
+      <p>
+        Check: $(-1,-1,1) \cdot (1,0,1) = 0$ and $(-1,-1,1) \cdot (0,1,1) = 0$ &mdash; $N(A) \perp C(A^T)$. &#10003;
+      </p>
+
+      <h2>Projection, via the residual</h2>
+      <p><strong>Onto a line</strong> $\operatorname{span}(a)$: write $p = \hat x\, a$, residual $e = b - p$. Require $e \perp a$:</p>
+      <p>
+        $$
+        a^T(b - \hat x a) = 0 \;\Rightarrow\; \hat x = \frac{a^Tb}{a^Ta}
+        \;\Rightarrow\; p = \frac{a a^T}{a^Ta}\, b =: Pb.
+        $$
+      </p>
+      <p>
+        $$
+        a = \begin{pmatrix}1\\1\end{pmatrix},\ b = \begin{pmatrix}4\\0\end{pmatrix}
+        \Rightarrow \hat x = \frac{4}{2}=2,\ p=\begin{pmatrix}2\\2\end{pmatrix},\ e=\begin{pmatrix}2\\-2\end{pmatrix},\ a\cdot e = 0.\ \checkmark
+        $$
+      </p>
+
+      <p><strong>Onto $C(A)$</strong>: write $p = A\hat x$, residual $e = b - A\hat x$. Require $e \perp C(A)$, i.e. $A^Te = 0$:</p>
+      <p>
+        $$
+        A^T(b - A\hat x) = 0 \;\Rightarrow\; A^TA\,\hat x = A^Tb \;\Rightarrow\; \hat x = (A^TA)^{-1}A^Tb
+        \;\Rightarrow\; p = \underbrace{A(A^TA)^{-1}A^T}_{P}\,b.
+        $$
+      </p>
+      <p>Reusing the tall $A$ and its inconsistent $b=(1,1,3)$ from above:</p>
+      <p>
+        $$
+        A^TA = \begin{pmatrix}2&1\\1&2\end{pmatrix}, \quad A^Tb = \begin{pmatrix}4\\4\end{pmatrix}
+        \;\Rightarrow\; \hat x = \begin{pmatrix}4/3\\4/3\end{pmatrix}, \quad p = \begin{pmatrix}4/3\\4/3\\8/3\end{pmatrix}, \quad e = \begin{pmatrix}-1/3\\-1/3\\1/3\end{pmatrix}.
+        $$
+      </p>
+      <p>
+        Check $A^Te = 0$: $\ -\tfrac13+0+\tfrac13=0$ and $0-\tfrac13+\tfrac13=0$. &#10003;
+      </p>
+
+      <section class="cite-box">
+        <h2>Cite this</h2>
+        <p class="cite-text">
+          Ketan Saichandran, &ldquo;Rank, subspaces, and projections,&rdquo;
+          <em>Notes</em>, 28 October 2026.
+          <a href="https://ketansuhaas.github.io/notes/mathematics/linear-algebra-fundamentals.html">ketansuhaas.github.io/notes/mathematics/linear-algebra-fundamentals.html</a>
+        </p>
+        <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
+        <pre id="bibtex"><code>@misc{saichandran2026rank,
+  author       = {Saichandran, Ketan},
+  title        = {Rank, subspaces, and projections},
+  howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/linear-algebra-fundamentals.html}},
+  year         = {2026},
+  note         = {Accessed: YYYY-MM-DD}
+}</code></pre>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Saichandran
+  </footer>
+  <script src="../assets/cite.js"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
