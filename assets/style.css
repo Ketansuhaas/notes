@@ -171,6 +171,21 @@ blockquote {
   color: var(--muted);
 }
 
+.example-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 1.25rem 0 0.35rem;
+}
+
+.intuition {
+  color: var(--muted);
+  font-style: italic;
+  margin: 0.5rem 0 1.25rem;
+}
+
 .cite-box {
   margin-top: 3.5rem;
   padding-top: 1.5rem;

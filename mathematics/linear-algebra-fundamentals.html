@@ -33,6 +33,8 @@
       <p>
         $\operatorname{rank}(A) = \dim C(A) = \dim C(A^T)$ = # independent columns = # independent rows = # pivots.
       </p>
+      <p class="intuition"><em>Intuition: the number of genuinely independent directions $A$ can produce.</em></p>
+      <p class="example-label">Example</p>
       <p>
         $$
         A = \begin{pmatrix} 1 & 2 \\ 2 & 4 \\ 3 & 6 \end{pmatrix}, \quad \text{col}_2 = 2\,\text{col}_1 \;\Rightarrow\; \operatorname{rank}(A) = 1.
@@ -43,6 +45,7 @@
       <p>Behaviour depends on shape and rank $r$ of $A \in \mathbb{R}^{m \times n}$.</p>
 
       <p><strong>Tall</strong> ($m > n$), full column rank $r = n$: $N(A) = \{0\}$, so at most one solution.</p>
+      <p class="example-label">Example</p>
       <p>
         $$
         A = \begin{pmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{pmatrix}, \quad
@@ -56,6 +59,7 @@
       </p>
 
       <p><strong>Wide</strong> ($m < n$), full row rank $r = m$: $C(A) = \mathbb{R}^m$, so always consistent; $n - r$ free variables $\Rightarrow$ infinitely many solutions.</p>
+      <p class="example-label">Example</p>
       <p>
         $$
         A = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 1 \end{pmatrix}, \quad b = \begin{pmatrix}1\\1\end{pmatrix}
@@ -64,6 +68,7 @@
       </p>
 
       <p><strong>Square</strong> ($m = n$): full rank $\Rightarrow$ invertible, unique $x = A^{-1}b$ for every $b$. Rank-deficient $\Rightarrow$ no solution or infinitely many, depending on $b$.</p>
+      <p class="example-label">Example</p>
       <p>
         $$
         A = \begin{pmatrix} 1 & 2 \\ 2 & 4 \end{pmatrix}\ (\operatorname{rank} 1): \quad
@@ -77,6 +82,8 @@
         Vector space $V$: closed under addition and scalar multiplication, $0 \in V$.
         Subspace $S \subseteq V$: a subset that is itself a vector space.
       </p>
+      <p class="intuition"><em>Intuition: a subspace is a flat slice of the space that passes through the origin.</em></p>
+      <p class="example-label">Example</p>
       <p>
         $$
         L = \{\, t(1,1) : t \in \mathbb{R} \,\} \subset \mathbb{R}^2 \ \text{is a subspace (line through origin)}.
@@ -96,11 +103,13 @@
         <li>Row space $C(A^T) \subseteq \mathbb{R}^n$, $\dim = r$</li>
         <li>Left null space $N(A^T) \subseteq \mathbb{R}^m$, $\dim = m - r$</li>
       </ul>
+      <p class="intuition"><em>Intuition: $C(A)$ is everywhere $Ax$ can reach; $N(A)$ is everything that collapses to $0$.</em></p>
       <p>
         $$
         N(A) \perp C(A^T) \ \text{in } \mathbb{R}^n, \qquad N(A^T) \perp C(A) \ \text{in } \mathbb{R}^m.
         $$
       </p>
+      <p class="example-label">Example</p>
       <p>Using $A = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 1 \end{pmatrix}$ ($m=2, n=3, r=2$):</p>
       <p>
         $$
@@ -115,6 +124,7 @@
       </p>
 
       <h2>Projection, via the residual</h2>
+      <p class="intuition"><em>Intuition: the closest point in a subspace is the one whose leftover error is perpendicular to it.</em></p>
       <p><strong>Onto a line</strong> $\operatorname{span}(a)$: write $p = \hat x\, a$, residual $e = b - p$. Require $e \perp a$:</p>
       <p>
         $$
@@ -122,6 +132,7 @@
         \;\Rightarrow\; p = \frac{a a^T}{a^Ta}\, b =: Pb.
         $$
       </p>
+      <p class="example-label">Example</p>
       <p>
         $$
         a = \begin{pmatrix}1\\1\end{pmatrix},\ b = \begin{pmatrix}4\\0\end{pmatrix}
@@ -136,6 +147,7 @@
         \;\Rightarrow\; p = \underbrace{A(A^TA)^{-1}A^T}_{P}\,b.
         $$
       </p>
+      <p class="example-label">Example</p>
       <p>Reusing the tall $A$ and its inconsistent $b=(1,1,3)$ from above:</p>
       <p>
         $$
