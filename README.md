@@ -1,4 +1,4 @@
-# Notes
+# Machine Learning Notes: Mathematics & Theory
 
 A simple, static blog on mathematics, language modelling, and generative
 modelling. No build step — plain HTML/CSS, deployed via GitHub Pages.
