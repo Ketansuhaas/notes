@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Gradients, Jacobians, and Hessians - Machine Learning Notes</title>
+  <meta name="description" content="Gradients, Jacobians, and Hessians explained through their shapes: the derivative's shape is always (outputs) x (inputs), and the Hessian is just the Jacobian of the gradient.">
+  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Machine Learning Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Machine Learning Notes</a> / <a href="index.html">Mathematics</a> / Gradients, Jacobians, and Hessians</nav>
+
+  <main>
+    <article>
+      <h1>Gradients, Jacobians, and Hessians</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
+
+      <h2>The gradient</h2>
+      <p>For a scalar function $f:\mathbb{R}^n\to\mathbb{R}$, the gradient collects all $n$ partial derivatives into a vector, same shape as $x$:</p>
+      <p>
+        $$
+        \nabla f(x) = \begin{pmatrix}\partial f/\partial x_1\\ \vdots \\ \partial f/\partial x_n\end{pmatrix} \in \mathbb{R}^n,
+        \quad f(x+\epsilon v) \approx f(x) + \epsilon\,\nabla f(x)^Tv.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: the gradient is "every partial derivative, stacked as a vector"; it points in the direction $f$ increases fastest.</em></p>
+      <p class="example-label">Example</p>
+      <p>$f(x_1,x_2)=x_1^2+x_1x_2+x_2^2$ (from Quadratic forms): $\nabla f = (2x_1+x_2,\ x_1+2x_2)$. At $(1,1)$: $\nabla f=(3,3)$.</p>
+
+      <h2>The Jacobian</h2>
+      <p>For a vector-valued $g:\mathbb{R}^n\to\mathbb{R}^m$, the Jacobian stacks one gradient per output, as rows:</p>
+      <p>
+        $$
+        J \in \mathbb{R}^{m\times n}, \quad J_{ij} = \partial g_i/\partial x_j,
+        \quad g(x+\Delta x) \approx g(x) + J\Delta x.
+        $$
+      </p>
+      <p>Shape rule: rows are outputs, columns are inputs. A scalar function is the case $m=1$: its Jacobian is a $1\times n$ row vector, and $\nabla f := J^T$ by convention, a column, so it lives in the same space as $x$ (handy for $x \leftarrow x-\eta\nabla f$).</p>
+      <p class="intuition"><em>Intuition: $J$ is the single matrix that best approximates $g$ linearly near $x$, exactly like a linear map's matrix.</em></p>
+      <p class="example-label">Example</p>
+      <p>$g(x_1,x_2) = (x_1+x_2,\ x_1x_2,\ x_1^2)$, a map $\mathbb{R}^2\to\mathbb{R}^3$:</p>
+      <p>
+        $$
+        J = \begin{pmatrix}1&1\\x_2&x_1\\2x_1&0\end{pmatrix} \in \mathbb{R}^{3\times2}, \quad
+        J(1,1) = \begin{pmatrix}1&1\\1&1\\2&0\end{pmatrix}.
+        $$
+      </p>
+
+      <h2>The Hessian</h2>
+      <p>$\nabla f$ is itself a map $\mathbb{R}^n\to\mathbb{R}^n$ (gradient in, gradient out), so it has its own Jacobian:</p>
+      <p>
+        $$
+        H = \nabla^2f(x) := J_{\nabla f} \in \mathbb{R}^{n\times n}, \quad H_{ij} = \partial^2f/\partial x_i\partial x_j.
+        $$
+      </p>
+      <p>Symmetric for smooth $f$ (mixed partials commute), which is exactly the symmetric $A$ from Quadratic forms.</p>
+      <p class="intuition"><em>Intuition: the Hessian isn't a new object, it's just the Jacobian of the gradient map.</em></p>
+      <p class="example-label">Example</p>
+      <p>Same $f$ as above, $\nabla f = (2x_1+x_2,\ x_1+2x_2)$: taking its Jacobian,</p>
+      <p>
+        $$
+        H = \begin{pmatrix}2&1\\1&2\end{pmatrix} = A, \quad \text{our running matrix, exactly as in Quadratic forms.}
+        $$
+      </p>
+
+      <h2>The shape rule</h2>
+      <p>One rule covers all three: a derivative's shape is always (number of outputs) $\times$ (number of inputs).</p>
+      <ul>
+        <li>$f:\mathbb{R}^n\to\mathbb{R}$: gradient, $n\times1$ (or its transpose, $1\times n$)</li>
+        <li>$g:\mathbb{R}^n\to\mathbb{R}^m$: Jacobian, $m\times n$</li>
+        <li>$\nabla f:\mathbb{R}^n\to\mathbb{R}^n$: Hessian, $n\times n$</li>
+      </ul>
+      <p class="intuition"><em>Intuition: don't memorize three shapes, memorize one rule and read off outputs and inputs.</em></p>
+
+      <h2>Chain rule and shapes</h2>
+      <p>For $k = h\circ g$ with $g:\mathbb{R}^n\to\mathbb{R}^m$ and $h:\mathbb{R}^m\to\mathbb{R}^p$, Jacobians compose by matrix multiplication, in the same order:</p>
+      <p>
+        $$
+        J_k = J_h J_g, \quad (p\times m)(m\times n) = p\times n.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: shapes must chain like matrix multiplication; this is exactly backpropagation, one Jacobian per layer.</em></p>
+      <p class="example-label">Example</p>
+      <p>With $g$ above and $h(y_1,y_2,y_3)=y_1+y_2+y_3$ (so $J_h=(1,1,1)$, a $1\times3$ row):</p>
+      <p>
+        $$
+        J_k(1,1) = (1,1,1)\begin{pmatrix}1&1\\1&1\\2&0\end{pmatrix} = (4,\ 2).
+        $$
+      </p>
+      <p>Direct check: $k=x_1+x_2+x_1x_2+x_1^2$, $\nabla k = (1+x_2+2x_1,\ 1+x_1)$, at $(1,1)$: $(4,2)$. &#10003;</p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
