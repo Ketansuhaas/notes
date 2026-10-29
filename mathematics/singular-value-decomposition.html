@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Singular value decomposition - Machine Learning Notes</title>
+  <meta name="description" content="A = USigmaV^T for any matrix, built from the spectral theorem applied to A^TA and AA^T, and how it hands you the four fundamental subspaces, low-rank approximation, and the pseudoinverse.">
+  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Machine Learning Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Machine Learning Notes</a> / <a href="index.html">Mathematics</a> / Singular value decomposition</nav>
+
+  <main>
+    <article>
+      <h1>Singular value decomposition</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
+
+      <h2>Statement</h2>
+      <p>Every $A\in\mathbb{R}^{m\times n}$, square or not, defective or not, factors as:</p>
+      <p>
+        $$
+        A = U\Sigma V^T, \quad U \in \mathbb{R}^{m\times m}, V \in \mathbb{R}^{n\times n} \text{ orthogonal}, \ \Sigma \in \mathbb{R}^{m\times n} \text{ diagonal}, \ \sigma_1\geq\sigma_2\geq\cdots\geq0.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: SVD finds one orthonormal basis for the input space and another for the output space, in which $A$ is just a (rectangular) diagonal scaling.</em></p>
+
+      <h2>Construction</h2>
+      <p>
+        $A^TA$ ($n\times n$) and $AA^T$ ($m\times m$) are always symmetric and positive semidefinite,
+        even when $A$ itself is rectangular or far from symmetric, so the spectral theorem always applies to them:
+      </p>
+      <p>
+        $$
+        A^TA = V\Lambda V^T, \quad AA^T = U\Lambda' U^T, \quad \lambda_i = \sigma_i^2 \ \text{(shared nonzero eigenvalues)}.
+        $$
+      </p>
+      <p>The columns of $V$ and $U$ are linked by $Av_i = \sigma_iu_i$ for every $\sigma_i>0$.</p>
+      <p class="intuition"><em>Intuition: $A^TA$ and $AA^T$ are always symmetric, so they're never defective, giving SVD for literally any matrix.</em></p>
+      <p class="example-label">Example</p>
+      <p>Reusing the wide $A=\begin{pmatrix}1&0&1\\0&1&1\end{pmatrix}$ (from Fundamental subspaces):</p>
+      <p>
+        $$
+        AA^T = \begin{pmatrix}2&1\\1&2\end{pmatrix}, \ \text{eigenvalues } 3,1, \ \text{eigenvectors } u_1=\tfrac{1}{\sqrt2}(1,1), \ u_2=\tfrac{1}{\sqrt2}(1,-1).
+        $$
+      </p>
+      <p>So $\sigma_1=\sqrt3, \sigma_2=1$. Then $v_1 = A^Tu_1/\sigma_1 = \tfrac{1}{\sqrt6}(1,1,2)$, and checking the link:</p>
+      <p>
+        $$
+        Av_1 = \tfrac{1}{\sqrt6}\begin{pmatrix}3\\3\end{pmatrix} = \sqrt3\cdot\tfrac{1}{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix} = \sigma_1u_1. \ \checkmark
+        $$
+      </p>
+
+      <h2>Rank and the fundamental subspaces</h2>
+      <p>
+        $\operatorname{rank}(A)$ is the count of nonzero singular values. The columns of $U$ and $V$ split exactly
+        along the four fundamental subspaces from before:
+      </p>
+      <ul>
+        <li>$u_1,\dots,u_r$ span $C(A)$; the rest of $U$ spans $N(A^T)$</li>
+        <li>$v_1,\dots,v_r$ span $C(A^T)$; the rest of $V$ spans $N(A)$</li>
+      </ul>
+      <p class="intuition"><em>Intuition: SVD hands you a ready-made orthonormal basis for every one of the four fundamental subspaces.</em></p>
+      <p class="example-label">Example</p>
+      <p>Here $r=2=m$, so $u_1,u_2$ span all of $C(A)=\mathbb{R}^2$ and $N(A^T)=\{0\}$. The leftover $v_3=\tfrac{1}{\sqrt3}(-1,-1,1)$ spans $N(A)$, matching the earlier post exactly.</p>
+
+      <h2>Low-rank approximation</h2>
+      <p>Expanding $U\Sigma V^T$ column by column gives a rank-1 sum, largest singular value first:</p>
+      <p>
+        $$
+        A = \sum_i \sigma_iu_iv_i^T.
+        $$
+      </p>
+      <p>Keeping only the top $k$ terms gives the best possible rank-$k$ approximation to $A$ (Eckart-Young).</p>
+      <p class="intuition"><em>Intuition: dropping the smallest singular values keeps the directions $A$ cares about most and discards the least important ones.</em></p>
+
+      <h2>The pseudoinverse</h2>
+      <p>Inverting only the nonzero singular values gives the Moore-Penrose pseudoinverse:</p>
+      <p>
+        $$
+        A^+ = V\Sigma^+U^T, \quad \Sigma^+_{ii} = 1/\sigma_i \ (\sigma_i\neq0), \ 0 \ \text{otherwise}.
+        $$
+      </p>
+      <p>$x^+=A^+b$ is exactly the minimum-norm solution to $Ax=b$, the $x_{\text{row}}$ from The big picture.</p>
+      <p class="intuition"><em>Intuition: where $A$ can't be inverted, the pseudoinverse does the best it can, landing exactly in the row space.</em></p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
