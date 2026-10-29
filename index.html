@@ -40,12 +40,29 @@
         <div class="category-desc">Coming soon.</div>
       </li>
     </ul>
+
+    <section class="cite-box">
+      <h2>Cite this</h2>
+      <p class="cite-text">
+        Ketan Suhaas Saichandran, &ldquo;Notes,&rdquo; 2026.
+        <a href="https://ketansuhaas.github.io/notes/">ketansuhaas.github.io/notes/</a>
+      </p>
+      <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
+      <pre id="bibtex"><code>@misc{saichandran2026notes,
+  author       = {Saichandran, Ketan Suhaas},
+  title        = {Notes},
+  howpublished = {\url{https://ketansuhaas.github.io/notes/}},
+  year         = {2026},
+  note         = {Accessed: YYYY-MM-DD}
+}</code></pre>
+    </section>
   </main>
 
   <footer class="site-footer">
     <!-- TODO: link to your GitHub profile / repo once published -->
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
+  <script src="assets/cite.js?v=2"></script>
   <script src="assets/theme.js?v=2"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
