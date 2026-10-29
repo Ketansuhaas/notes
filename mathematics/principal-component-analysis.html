@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Principal component analysis - Machine Learning Notes</title>
+  <meta name="description" content="PCA derived two ways, maximizing variance and constrained optimization, both landing on the same eigenvectors of the covariance matrix, then tied to the SVD.">
+  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Machine Learning Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Machine Learning Notes</a> / <a href="index.html">Mathematics</a> / Principal component analysis</nav>
+
+  <main>
+    <article>
+      <h1>Principal component analysis</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
+
+      <h2>Setup: variance along a direction</h2>
+      <p>Given centered data points $x_1,\dots,x_n\in\mathbb{R}^d$ (mean already subtracted), stacked as rows of $X$, the sample covariance matrix is $C=\tfrac1n\sum_ix_ix_i^T=\tfrac1nX^TX$, symmetric and positive semidefinite.</p>
+      <p>Projecting each point onto a unit direction $v$ gives a scalar $x_i^Tv$; the variance of these projections is:</p>
+      <p>
+        $$
+        \operatorname{Var}(v) = \tfrac1n\sum_i (x_i^Tv)^2 = v^TCv.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $C$ packages how the data spreads out in every direction at once; $v^TCv$ reads off the spread along one particular direction $v$.</em></p>
+      <p class="example-label">Example</p>
+      <p>Reusing $C=\begin{pmatrix}2&1\\1&2\end{pmatrix}$ (our running matrix, eigenvalues $3,1$, eigenvectors $\tfrac1{\sqrt2}(1,1), \tfrac1{\sqrt2}(1,-1)$): along $v=(1,0)$, $v^TCv=2$. Along $v=\tfrac1{\sqrt2}(1,1)$: $Cv=3v$, so $v^TCv=3$, more spread.</p>
+
+      <h2>Derivation 1: maximize variance directly</h2>
+      <p>The first principal component is the unit direction capturing the most variance:</p>
+      <p>
+        $$
+        v_1 = \operatorname*{arg\,max}_{\|v\|=1} v^TCv.
+        $$
+      </p>
+      <p>By the spectral theorem, $C=Q\Lambda Q^T$ with $\lambda_1\geq\cdots\geq\lambda_d\geq0$. Write $v=\sum_ic_iq_i$ in the eigenbasis, with $\sum_ic_i^2=1$ since $v$ is a unit vector:</p>
+      <p>
+        $$
+        v^TCv = \sum_i\lambda_ic_i^2 \ \leq\ \lambda_1\sum_ic_i^2 = \lambda_1,
+        $$
+      </p>
+      <p>with equality exactly when $v=q_1$, the top eigenvector.</p>
+      <p class="intuition"><em>Intuition: a unit vector's variance is a weighted average of the eigenvalues; to make that average as large as possible, put all the weight on the biggest one.</em></p>
+      <p class="example-label">Example</p>
+      <p>With $C$ above, every unit $v$ has $v^TCv=3c_1^2+c_2^2\leq3$, maximized at $c_1=1,c_2=0$, i.e. $v=\tfrac1{\sqrt2}(1,1)$: the same direction found by hand.</p>
+
+      <h2>Derivation 2: constrained optimization</h2>
+      <p>Same objective, via the Lagrangian tangency condition (from The Lagrangian and KKT conditions): maximize $f(v)=v^TCv$ subject to $g(v)=v^Tv-1=0$.</p>
+      <p>
+        $$
+        \nabla f(v) = 2Cv, \quad \nabla g(v) = 2v, \quad \nabla f = \lambda\nabla g \ \ \Rightarrow\ \ Cv = \lambda v.
+        $$
+      </p>
+      <p>Stationary points are exactly the unit eigenvectors of $C$, and at a stationary point $v^TCv=\lambda v^Tv=\lambda$: the objective value is the eigenvalue itself, so maximizing picks out the largest one.</p>
+      <p class="intuition"><em>Intuition: "maximize variance on the unit sphere" and "find eigenvectors of $C$" are the same question; constrained optimization and the eigenvalue problem share their stationary points.</em></p>
+      <p class="example-label">Example</p>
+      <p>$Cv=\lambda v$ gives $\lambda=3,v=\tfrac1{\sqrt2}(1,1)$ or $\lambda=1,v=\tfrac1{\sqrt2}(1,-1)$: the two stationary points, with $\lambda=3$ the maximum, matching Derivation 1 exactly.</p>
+
+      <h2>Further components</h2>
+      <p>The second component maximizes the same variance subject to the extra constraint $v\perp v_1$; the same argument, restricted to that orthogonal complement, gives the next eigenvector $v_2$ with eigenvalue $\lambda_2$. Repeating gives all $d$ components: the eigenvectors of $C$, ranked by eigenvalue.</p>
+      <p class="intuition"><em>Intuition: each new component grabs the most remaining variance, in a direction already perpendicular to everything claimed so far.</em></p>
+
+      <h2>Connection to the SVD</h2>
+      <p>If $X=U\Sigma V^T$ (from Singular value decomposition), then:</p>
+      <p>
+        $$
+        C = \tfrac1nX^TX = \tfrac1nV\Sigma^2V^T.
+        $$
+      </p>
+      <p>So the principal components are exactly the columns of $V$ (the right singular vectors of $X$), and the variance captured by component $i$ is $\sigma_i^2/n$.</p>
+      <p class="intuition"><em>Intuition: PCA is the spectral theorem applied to $C$, which is secretly the SVD of $X$; nothing new, just a direct application of what's already there.</em></p>
+
+      <h2>Dimensionality reduction</h2>
+      <p>Projecting onto the top $k$ components, $Z=XV_k\in\mathbb{R}^{n\times k}$, is exactly the rank-$k$ truncation from Low-rank approximation: it keeps the directions of largest variance and discards the rest, the best possible rank-$k$ summary of the data.</p>
+      <p class="intuition"><em>Intuition: PCA compresses data by keeping only the few directions that matter most, the same "keep the big singular values, drop the small ones" idea as SVD.</em></p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
