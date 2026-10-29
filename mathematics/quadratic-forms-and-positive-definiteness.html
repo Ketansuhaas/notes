@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Quadratic forms and positive definiteness - Machine Learning Notes</title>
+  <meta name="description" content="x^TAx, diagonalized into a sum of squares, positive definiteness, and how it determines minima, maxima, and saddle points via the Hessian.">
+  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Machine Learning Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Machine Learning Notes</a> / <a href="index.html">Mathematics</a> / Quadratic forms and positive definiteness</nav>
+
+  <main>
+    <article>
+      <h1>Quadratic forms and positive definiteness</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
+
+      <h2>Quadratic forms</h2>
+      <p>
+        $$
+        q(x) = x^TAx, \quad A \text{ symmetric (WLOG: the antisymmetric part of } A \text{ always contributes } 0).
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $q$ traces a bowl, dome, or saddle; $A$'s eigenvalues are the curvature along each principal axis.</em></p>
+      <p class="example-label">Example</p>
+      <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$:</p>
+      <p>
+        $$
+        q(x) = 2x_1^2 + 2x_1x_2 + 2x_2^2, \quad q(1,1) = 2+2+2 = 6.
+        $$
+      </p>
+
+      <h2>Diagonalizing a quadratic form</h2>
+      <p>Using the spectral theorem $A=Q\Lambda Q^T$, substitute $y = Q^Tx$ (coordinates in the eigenbasis):</p>
+      <p>
+        $$
+        q(x) = x^TQ\Lambda Q^Tx = y^T\Lambda y = \sum_i \lambda_iy_i^2.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: in the eigenbasis, a quadratic form is just a weighted sum of squares, no cross terms.</em></p>
+      <p class="example-label">Example</p>
+      <p>For $x=(1,1)$: $y = Q^Tx = (\sqrt2, 0)$, so $q(x) = 3(\sqrt2)^2 + 1(0)^2 = 6$. &#10003;</p>
+
+      <h2>Positive definiteness</h2>
+      <p>
+        $A$ is <strong>positive definite</strong> if $q(x)>0$ for every $x\neq0$. From the sum-of-squares form,
+        that holds iff every $\lambda_i>0$ (semidefinite allows $\lambda_i\geq0$; indefinite means mixed signs, a saddle).
+      </p>
+      <p>Quick test without eigenvalues, for $A=\begin{pmatrix}a&b\\b&d\end{pmatrix}$: positive definite iff $a>0$ and $ad-b^2>0$.</p>
+      <p class="intuition"><em>Intuition: positive definite means every direction curves upward, a genuine bowl with one bottom.</em></p>
+      <p class="example-label">Example</p>
+      <p>Our $A$: $a=2>0$, $ad-b^2=4-1=3>0$, positive definite, matching eigenvalues $3,1>0$.</p>
+      <p>Contrast $B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$: $a=0$ fails immediately; eigenvalues are $\pm1$, indefinite (a saddle).</p>
+
+      <h2>The Hessian and convexity</h2>
+      <p>Near a critical point $x_0$ (where $\nabla f(x_0)=0$), a smooth $f$ looks like its own quadratic form:</p>
+      <p>
+        $$
+        f(x_0+\Delta x) \approx f(x_0) + \tfrac12 \Delta x^TH\Delta x, \quad H = \nabla^2f(x_0) \text{ (the Hessian)}.
+        $$
+      </p>
+      <p>
+        $H$ positive definite: strict local minimum. $H$ negative definite: local maximum. $H$ indefinite: saddle point.
+        $f$ is convex everywhere iff $H(x)$ is positive semidefinite everywhere.
+      </p>
+      <p class="intuition"><em>Intuition: close to a critical point, the Hessian's definiteness is the only thing that decides what kind of point it is.</em></p>
+      <p class="example-label">Example</p>
+      <p>$f(x_1,x_2) = x_1^2+x_1x_2+x_2^2$ has Hessian $H=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A$, our running example, positive definite. So $x=0$ is a strict (global) minimum of $f$.</p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
