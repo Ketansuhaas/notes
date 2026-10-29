@@ -12,7 +12,7 @@
       } catch (e) {}
     })();
   </script>
-  <title>The spectral theorem — Machine Learning Notes</title>
+  <title>The spectral theorem - Machine Learning Notes</title>
   <meta name="description" content="Symmetric matrices have real eigenvalues and orthogonal eigenvectors: A = QΛQ^T, and A as a sum of simple rank-1 pieces.">
   <link rel="stylesheet" href="../assets/style.css?v=4">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -48,7 +48,7 @@
         A = Q\Lambda Q^T, \quad Q^TQ = I \ (\text{so } Q^{-1} = Q^T).
         $$
       </p>
-      <p class="intuition"><em>Intuition: symmetric matrices are a rotation into perpendicular axes, a pure scaling along them, and a rotation back &mdash; nothing else can happen.</em></p>
+      <p class="intuition"><em>Intuition: symmetric matrices are a rotation into perpendicular axes, a pure scaling along them, and a rotation back; nothing else can happen.</em></p>
 
       <h2>Eigenvalues are real</h2>
       <p>For $Av = \lambda v$ (allowing complex $\lambda, v$ for now), conjugate-transpose both sides and use $A^H = A^T = A$:</p>
@@ -85,11 +85,11 @@
 
       <h2>What if an eigenvalue repeats?</h2>
       <p>
-        The argument above only orthogonalizes eigenvectors from <em>different</em> eigenvalues &mdash;
+        The argument above only orthogonalizes eigenvectors from <em>different</em> eigenvalues:
         two eigenvectors sharing one eigenvalue aren't automatically orthogonal. But a repeated eigenvalue's
         eigenspace is just a subspace, so pick any orthonormal basis for it directly. Combined with the
-        other eigenvalues' (automatically orthogonal) eigenvectors, that's a full orthonormal eigenbasis
-        &mdash; repeats or not.
+        other eigenvalues' (automatically orthogonal) eigenvectors, that's a full orthonormal eigenbasis,
+        repeats or not.
       </p>
       <p>
         So symmetric $\Rightarrow$ always diagonalizable, $A = Q\Lambda Q^T$, never defective.
@@ -97,14 +97,14 @@
       </p>
       <p class="intuition"><em>Intuition: a repeated eigenvalue means more freedom in choosing eigenvectors, never less.</em></p>
       <p class="example-label">Example</p>
-      <p>$A = \begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$ (symmetric): eigenvalues $3,0,0$ &mdash; $0$ repeats with $\operatorname{AM}=2$.</p>
+      <p>$A = \begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$ (symmetric): eigenvalues $3,0,0$; $0$ repeats with $\operatorname{AM}=2$.</p>
       <p>
         $$
         N(A) = \{x : x_1+x_2+x_3=0\}, \ \dim = 2 = \operatorname{AM}(0) \;\Rightarrow\; \text{not defective.}
         $$
       </p>
       <p>Still, $\operatorname{rank}(A) = 1$: diagonalizable and low-rank are unrelated.</p>
-      <p>Pick any orthonormal basis of that plane, e.g. $q_2 = \tfrac{1}{\sqrt2}(1,-1,0)$, $q_3 = \tfrac{1}{\sqrt6}(1,1,-2)$, and $q_1 = \tfrac{1}{\sqrt3}(1,1,1)$ for $\lambda=3$ &mdash; all three pairwise orthogonal.</p>
+      <p>Pick any orthonormal basis of that plane, e.g. $q_2 = \tfrac{1}{\sqrt2}(1,-1,0)$, $q_3 = \tfrac{1}{\sqrt6}(1,1,-2)$, and $q_1 = \tfrac{1}{\sqrt3}(1,1,1)$ for $\lambda=3$: all three pairwise orthogonal.</p>
 
       <h2>$A$ as a sum of simple pieces</h2>
       <p>Multiplying out $Q\Lambda Q^T$ column by column gives a rank-1 sum:</p>
@@ -125,30 +125,12 @@
         3\,q_1q_1^T + 1\,q_2q_2^T = \begin{pmatrix}1.5&1.5\\1.5&1.5\end{pmatrix} + \begin{pmatrix}0.5&-0.5\\-0.5&0.5\end{pmatrix} = \begin{pmatrix}2&1\\1&2\end{pmatrix} = A. \ \checkmark
         $$
       </p>
-
-      <section class="cite-box">
-        <h2>Cite this</h2>
-        <p class="cite-text">
-          Ketan Suhaas Saichandran, &ldquo;The spectral theorem,&rdquo;
-          <em>Machine Learning Notes</em>, 29 October 2026.
-          <a href="https://ketansuhaas.github.io/notes/mathematics/spectral-theorem.html">ketansuhaas.github.io/notes/mathematics/spectral-theorem.html</a>
-        </p>
-        <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
-        <pre id="bibtex"><code>@misc{saichandran2026spectral,
-  author       = {Saichandran, Ketan Suhaas},
-  title        = {The spectral theorem},
-  howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/spectral-theorem.html}},
-  year         = {2026},
-  note         = {Accessed: YYYY-MM-DD}
-}</code></pre>
-      </section>
     </article>
   </main>
 
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
-  <script src="../assets/cite.js?v=2"></script>
   <script src="../assets/theme.js?v=2"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>

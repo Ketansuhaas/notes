@@ -12,8 +12,8 @@
       } catch (e) {}
     })();
   </script>
-  <title>Lines, planes, and spheres in R^n — Machine Learning Notes</title>
-  <meta name="description" content="Lines, hyperplanes, general k-dimensional flats, and spheres in R^n — the geometry behind linear algebra, before rank and subspaces.">
+  <title>Lines, planes, and spheres in R^n - Machine Learning Notes</title>
+  <meta name="description" content="Lines, hyperplanes, general k-dimensional flats, and spheres in R^n - the geometry behind linear algebra, before rank and subspaces.">
   <link rel="stylesheet" href="../assets/style.css?v=4">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -64,8 +64,8 @@
         n \cdot (x - p) = 0 \quad \iff \quad n \cdot x = n \cdot p =: c.
         $$
       </p>
-      <p>One linear equation removes one degree of freedom, so a hyperplane in $\mathbb{R}^n$ is $(n{-}1)$-dimensional &mdash; a line when $n=2$, an ordinary plane when $n=3$.</p>
-      <p class="intuition"><em>Intuition: a hyperplane is "everything at a fixed distance along one direction" &mdash; flat, and one dimension smaller than the space it sits in.</em></p>
+      <p>One linear equation removes one degree of freedom, so a hyperplane in $\mathbb{R}^n$ is $(n{-}1)$-dimensional: a line when $n=2$, an ordinary plane when $n=3$.</p>
+      <p class="intuition"><em>Intuition: a hyperplane is "everything at a fixed distance along one direction," flat, and one dimension smaller than the space it sits in.</em></p>
       <p class="example-label">Example</p>
       <p>
         $$
@@ -75,7 +75,7 @@
       </p>
 
       <h2>General $k$-dimensional flats</h2>
-      <p>More directions, parametrically, or more equations, implicitly &mdash; same object, two descriptions:</p>
+      <p>More directions, parametrically, or more equations, implicitly: same object, two descriptions.</p>
       <p>
         $$
         x = p + t_1d_1 + \cdots + t_kd_k \quad \iff \quad \text{intersection of } (n-k) \text{ independent hyperplanes}.
@@ -92,18 +92,18 @@
       </p>
       <p>
         This is exactly the picture behind $Ax=b$: each row of $A$ is a hyperplane's normal, and solving the
-        system means finding where they all meet &mdash; rank counts how many of those hyperplanes are actually
+        system means finding where they all meet; rank counts how many of those hyperplanes are actually
         independent.
       </p>
 
       <h2>Spheres</h2>
-      <p>Points at a fixed distance from a center &mdash; the first <em>curved</em> (non-flat) object here:</p>
+      <p>Points at a fixed distance from a center: the first <em>curved</em> (non-flat) object here.</p>
       <p>
         $$
         \|x - c\| = r \quad \iff \quad (x-c)\cdot(x-c) = r^2.
         $$
       </p>
-      <p class="intuition"><em>Intuition: lines and hyperplanes are linear equations (flat); a sphere is a quadratic one (curved) &mdash; a genuinely different shape.</em></p>
+      <p class="intuition"><em>Intuition: lines and hyperplanes are linear equations (flat); a sphere is a quadratic one (curved), a genuinely different shape.</em></p>
       <p class="example-label">Example</p>
       <p>
         $$
@@ -111,30 +111,12 @@
         \quad (1,0): \ 1^2+0^2=1. \ \checkmark
         $$
       </p>
-
-      <section class="cite-box">
-        <h2>Cite this</h2>
-        <p class="cite-text">
-          Ketan Suhaas Saichandran, &ldquo;Lines, planes, and spheres in R^n,&rdquo;
-          <em>Machine Learning Notes</em>, 27 October 2026.
-          <a href="https://ketansuhaas.github.io/notes/mathematics/geometry-in-rn.html">ketansuhaas.github.io/notes/mathematics/geometry-in-rn.html</a>
-        </p>
-        <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
-        <pre id="bibtex"><code>@misc{saichandran2026geometry,
-  author       = {Saichandran, Ketan Suhaas},
-  title        = {Lines, planes, and spheres in R^n},
-  howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/geometry-in-rn.html}},
-  year         = {2026},
-  note         = {Accessed: YYYY-MM-DD}
-}</code></pre>
-      </section>
     </article>
   </main>
 
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
-  <script src="../assets/cite.js?v=2"></script>
   <script src="../assets/theme.js?v=2"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>

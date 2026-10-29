@@ -12,7 +12,7 @@
       } catch (e) {}
     })();
   </script>
-  <title>Eigenvalues, eigenvectors, and defectiveness — Machine Learning Notes</title>
+  <title>Eigenvalues, eigenvectors, and defectiveness - Machine Learning Notes</title>
   <meta name="description" content="Eigenvalues and eigenvectors, their connection to rank, algebraic vs. geometric multiplicity, and defectiveness.">
   <link rel="stylesheet" href="../assets/style.css?v=4">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -48,7 +48,7 @@
         $$
       </p>
       <p>$\lambda$: eigenvalue. $v$: eigenvector. Found from $\det(A - \lambda I) = 0$ (characteristic equation).</p>
-      <p class="intuition"><em>Intuition: eigenvectors are the directions $A$ doesn't transform at all — it only scales them.</em></p>
+      <p class="intuition"><em>Intuition: eigenvectors are the directions $A$ doesn't transform at all, it only scales them.</em></p>
       <p class="example-label">Example</p>
       <p>
         $$
@@ -71,7 +71,7 @@
       </p>
       <p>
         $N(A) = N(A - 0I)$ is the eigenspace of $\lambda = 0$, so $\dim N(A)$ is $0$'s <em>geometric</em> multiplicity.
-        Hence $\operatorname{rank}(A) = n - (\text{geometric multiplicity of } 0)$ &mdash; always true.
+        Hence $\operatorname{rank}(A) = n - (\text{geometric multiplicity of } 0)$, always true.
         If $A$ is diagonalizable, this equals the count of nonzero eigenvalues.
       </p>
       <p class="intuition"><em>Intuition: $\lambda=0$ marks directions $A$ collapses; everything else contributes to rank.</em></p>
@@ -125,7 +125,7 @@
         This always holds. But $A = V\Lambda V^{-1}$ needs $V$ invertible $\iff$ its columns (the eigenvectors)
         are linearly independent $\iff$ $\operatorname{rank}(V) = n \iff C(V) = \mathbb{R}^n$.
       </p>
-      <p class="intuition"><em>Intuition: independent eigenvectors give a new coordinate system in which $A$ is just a scaling &mdash; that's what diagonalizable means.</em></p>
+      <p class="intuition"><em>Intuition: independent eigenvectors give a new coordinate system in which $A$ is just a scaling; that's what diagonalizable means.</em></p>
       <p class="example-label">Example</p>
       <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$ with eigenvectors $(1,1), (1,-1)$ from above:</p>
       <p>
@@ -137,7 +137,7 @@
 
       <h2>Defectiveness</h2>
       <p>
-        $A$ is <strong>defective</strong> if $\operatorname{GM}(\lambda) < \operatorname{AM}(\lambda)$ for some $\lambda$ &mdash;
+        $A$ is <strong>defective</strong> if $\operatorname{GM}(\lambda) < \operatorname{AM}(\lambda)$ for some $\lambda$:
         too few eigenvectors to form a basis, so $A$ is not diagonalizable.
         Diagonalizable $\iff$ $\operatorname{GM}(\lambda) = \operatorname{AM}(\lambda)$ for every $\lambda$.
       </p>
@@ -146,32 +146,14 @@
       <p>
         $\begin{pmatrix} 2 & 1 \\ 0 & 2 \end{pmatrix}$ above is defective (GM $<$ AM).
         Contrast with $\begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix}$: same $\operatorname{AM}(2)=2$,
-        but $A - 2I = 0 \Rightarrow \operatorname{GM}(2) = 2 = \operatorname{AM}(2)$ &mdash; not defective (already diagonal).
+        but $A - 2I = 0 \Rightarrow \operatorname{GM}(2) = 2 = \operatorname{AM}(2)$: not defective (already diagonal).
       </p>
-
-      <section class="cite-box">
-        <h2>Cite this</h2>
-        <p class="cite-text">
-          Ketan Suhaas Saichandran, &ldquo;Eigenvalues, eigenvectors, and defectiveness,&rdquo;
-          <em>Machine Learning Notes</em>, 28 October 2026.
-          <a href="https://ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html">ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html</a>
-        </p>
-        <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
-        <pre id="bibtex"><code>@misc{saichandran2026eigendefective,
-  author       = {Saichandran, Ketan Suhaas},
-  title        = {Eigenvalues, eigenvectors, and defectiveness},
-  howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/eigenvalues-and-defectiveness.html}},
-  year         = {2026},
-  note         = {Accessed: YYYY-MM-DD}
-}</code></pre>
-      </section>
     </article>
   </main>
 
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
-  <script src="../assets/cite.js?v=2"></script>
   <script src="../assets/theme.js?v=2"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>

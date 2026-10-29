@@ -12,7 +12,7 @@
       } catch (e) {}
     })();
   </script>
-  <title>Rank, subspaces, and projections — Machine Learning Notes</title>
+  <title>Rank, subspaces, and projections - Machine Learning Notes</title>
   <meta name="description" content="Rank, tall/wide/square solvability of Ax=b, vector spaces and subspaces, the four fundamental subspaces, and the projection matrix derived from the residual condition.">
   <link rel="stylesheet" href="../assets/style.css?v=4">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -66,7 +66,7 @@
       </p>
       <p>
         $$
-        b = \begin{pmatrix} 1 \\ 1 \\ 3 \end{pmatrix} \notin C(A) \;\Rightarrow\; \text{no exact solution — least squares instead.}
+        b = \begin{pmatrix} 1 \\ 1 \\ 3 \end{pmatrix} \notin C(A) \;\Rightarrow\; \text{no exact solution; least squares instead.}
         $$
       </p>
 
@@ -132,7 +132,7 @@
         $$
       </p>
       <p>
-        Check: $(-1,-1,1) \cdot (1,0,1) = 0$ and $(-1,-1,1) \cdot (0,1,1) = 0$ &mdash; $N(A) \perp C(A^T)$. &#10003;
+        Check: $(-1,-1,1) \cdot (1,0,1) = 0$ and $(-1,-1,1) \cdot (0,1,1) = 0$, so $N(A) \perp C(A^T)$. &#10003;
       </p>
 
       <h2>Projection, via the residual</h2>
@@ -175,7 +175,7 @@
       <p>
         $A$ is a map taking a vector from one space ($\mathbb{R}^n$) to another ($\mathbb{R}^m$).
         It's constrained both ways: it can't reach every point of the output space, and it
-        can't keep every input alive &mdash; some vectors just die to $0$.
+        can't keep every input alive: some vectors just die to $0$.
       </p>
       <p>
         $$
@@ -189,7 +189,7 @@
         b = b_{\text{col}} + b_\perp, \quad b_{\text{col}} \in C(A), \ b_\perp \in N(A^T).
         $$
       </p>
-      <p>$Ax$ can only ever land in $C(A)$, so $b_\perp$ can never be reached &mdash; the best we can do is $Ax = b_{\text{col}}$, exactly the projection above.</p>
+      <p>$Ax$ can only ever land in $C(A)$, so $b_\perp$ can never be reached; the best we can do is $Ax = b_{\text{col}}$, exactly the projection above.</p>
       <p class="intuition"><em>Intuition: $b_\perp$ is the part of $b$ that $A$ is structurally blind to.</em></p>
       <p class="example-label">Example</p>
       <p>Reusing $b = p + e$ from the projection above:</p>
@@ -212,7 +212,7 @@
         Ax = A(x_{\text{row}} + x_{\text{null}}) = Ax_{\text{row}} + \underbrace{Ax_{\text{null}}}_{=\,0} = Ax_{\text{row}}.
         $$
       </p>
-      <p>The null-space part of $x$ is invisible to $A$ &mdash; only $x_{\text{row}}$ ever matters.</p>
+      <p>The null-space part of $x$ is invisible to $A$: only $x_{\text{row}}$ ever matters.</p>
       <p class="intuition"><em>Intuition: $A$ only ever "sees" the row-space part of its input.</em></p>
       <p class="example-label">Example</p>
       <p>Using the wide $A$ and $x=(1,1,0)$ from the solving example above ($Ax = (1,1)$):</p>
@@ -227,30 +227,12 @@
       <p>
         Together: $A$ is a bijection from the row space onto the column space, with $N(A)$ and $N(A^T)$ as the blind spots on either side.
       </p>
-
-      <section class="cite-box">
-        <h2>Cite this</h2>
-        <p class="cite-text">
-          Ketan Suhaas Saichandran, &ldquo;Rank, subspaces, and projections,&rdquo;
-          <em>Machine Learning Notes</em>, 28 October 2026.
-          <a href="https://ketansuhaas.github.io/notes/mathematics/linear-algebra-fundamentals.html">ketansuhaas.github.io/notes/mathematics/linear-algebra-fundamentals.html</a>
-        </p>
-        <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
-        <pre id="bibtex"><code>@misc{saichandran2026rank,
-  author       = {Saichandran, Ketan Suhaas},
-  title        = {Rank, subspaces, and projections},
-  howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/linear-algebra-fundamentals.html}},
-  year         = {2026},
-  note         = {Accessed: YYYY-MM-DD}
-}</code></pre>
-      </section>
     </article>
   </main>
 
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
-  <script src="../assets/cite.js?v=2"></script>
   <script src="../assets/theme.js?v=2"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
