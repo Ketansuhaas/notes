@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>The spectral theorem — Notes</title>
+  <meta name="description" content="Symmetric matrices have real eigenvalues and orthogonal eigenvectors: A = QΛQ^T, and A as a sum of simple rank-1 pieces.">
+  <link rel="stylesheet" href="../assets/style.css?v=2">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Notes</a> / <a href="index.html">Mathematics</a></nav>
+
+  <main>
+    <article>
+      <h1>The spectral theorem</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
+
+      <h2>Statement</h2>
+      <p>If $A = A^T$ (symmetric), then its eigenvalues are real and its eigenvectors can be chosen orthonormal:</p>
+      <p>
+        $$
+        A = Q\Lambda Q^T, \quad Q^TQ = I \ (\text{so } Q^{-1} = Q^T).
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: symmetric matrices are a rotation into perpendicular axes, a pure scaling along them, and a rotation back &mdash; nothing else can happen.</em></p>
+
+      <h2>Eigenvalues are real</h2>
+      <p>For $Av = \lambda v$ (allowing complex $\lambda, v$ for now), conjugate-transpose both sides and use $A^H = A^T = A$:</p>
+      <p>
+        $$
+        v^H A v = \lambda\, v^Hv, \qquad v^H A v = (Av)^Hv = (\lambda v)^Hv = \bar\lambda\, v^Hv.
+        $$
+      </p>
+      <p>Since $v^Hv > 0$, this forces $\lambda = \bar\lambda$, i.e. $\lambda \in \mathbb{R}$.</p>
+      <p class="intuition"><em>Intuition: symmetry leaves no room for the complex (rotational) eigenvalues a generic matrix can have.</em></p>
+
+      <h2>Eigenvectors are orthogonal</h2>
+      <p>For distinct eigenvalues $\lambda_1 \neq \lambda_2$ with eigenvectors $v_1, v_2$:</p>
+      <p>
+        $$
+        \lambda_1 v_1^Tv_2 = (Av_1)^Tv_2 = v_1^TA^Tv_2 = v_1^TAv_2 = v_1^T(\lambda_2 v_2) = \lambda_2 v_1^Tv_2.
+        $$
+      </p>
+      <p>$(\lambda_1 - \lambda_2)v_1^Tv_2 = 0$ and $\lambda_1 \neq \lambda_2$, so $v_1^Tv_2 = 0$.</p>
+      <p class="intuition"><em>Intuition: symmetry ($A^T=A$) is exactly what lets the eigenvalue "slide across" the dot product like this.</em></p>
+      <p class="example-label">Example</p>
+      <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$, eigenvalues $3,1$, eigenvectors $(1,1),(1,-1)$ (from Diagonalization):</p>
+      <p>
+        $$
+        q_1 = \tfrac{1}{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix}, \quad q_2 = \tfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix},
+        \quad q_1 \cdot q_2 = \tfrac12(1-1) = 0.
+        $$
+      </p>
+      <p>
+        $$
+        Q = \tfrac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}, \ \Lambda = \begin{pmatrix}3&0\\0&1\end{pmatrix}, \quad Q\Lambda Q^T = \begin{pmatrix}2&1\\1&2\end{pmatrix} = A. \ \checkmark
+        $$
+      </p>
+
+      <h2>$A$ as a sum of simple pieces</h2>
+      <p>Multiplying out $Q\Lambda Q^T$ column by column gives a rank-1 sum:</p>
+      <p>
+        $$
+        A = \sum_i \lambda_i\, q_iq_i^T.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $A$ is a weighted sum of simple directions $q_iq_i^T$, one per eigenvector, weighted by how much $A$ stretches that direction.</em></p>
+      <p class="example-label">Example</p>
+      <p>
+        $$
+        q_1q_1^T = \tfrac12\begin{pmatrix}1&1\\1&1\end{pmatrix}, \quad q_2q_2^T = \tfrac12\begin{pmatrix}1&-1\\-1&1\end{pmatrix}.
+        $$
+      </p>
+      <p>
+        $$
+        3\,q_1q_1^T + 1\,q_2q_2^T = \begin{pmatrix}1.5&1.5\\1.5&1.5\end{pmatrix} + \begin{pmatrix}0.5&-0.5\\-0.5&0.5\end{pmatrix} = \begin{pmatrix}2&1\\1&2\end{pmatrix} = A. \ \checkmark
+        $$
+      </p>
+
+      <section class="cite-box">
+        <h2>Cite this</h2>
+        <p class="cite-text">
+          Ketan Suhaas Saichandran, &ldquo;The spectral theorem,&rdquo;
+          <em>Notes</em>, 29 October 2026.
+          <a href="https://ketansuhaas.github.io/notes/mathematics/spectral-theorem.html">ketansuhaas.github.io/notes/mathematics/spectral-theorem.html</a>
+        </p>
+        <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
+        <pre id="bibtex"><code>@misc{saichandran2026spectral,
+  author       = {Saichandran, Ketan Suhaas},
+  title        = {The spectral theorem},
+  howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/spectral-theorem.html}},
+  year         = {2026},
+  note         = {Accessed: YYYY-MM-DD}
+}</code></pre>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/cite.js?v=2"></script>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
