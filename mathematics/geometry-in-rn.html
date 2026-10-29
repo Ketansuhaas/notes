@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Lines, planes, and spheres in R^n — Notes</title>
+  <meta name="description" content="Lines, hyperplanes, general k-dimensional flats, and spheres in R^n — the geometry behind linear algebra, before rank and subspaces.">
+  <link rel="stylesheet" href="../assets/style.css?v=2">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Notes</a> / <a href="index.html">Mathematics</a></nav>
+
+  <main>
+    <article>
+      <h1>Lines, planes, and spheres in $\mathbb{R}^n$</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-27">27 October 2026</time></div>
+
+      <h2>Points and lines</h2>
+      <p>A point in $\mathbb{R}^n$ is just a vector $x = (x_1,\dots,x_n)$. A line through $p$ in direction $d \neq 0$:</p>
+      <p>
+        $$
+        x = p + td, \quad t \in \mathbb{R}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: one free parameter $t$ sweeps out a straight, 1-dimensional path.</em></p>
+      <p class="example-label">Example</p>
+      <p>
+        $$
+        p = \begin{pmatrix}1\\0\end{pmatrix}, \ d = \begin{pmatrix}1\\1\end{pmatrix} \;\Rightarrow\; x(t) = \begin{pmatrix}1+t\\t\end{pmatrix}.
+        \quad x(0) = \begin{pmatrix}1\\0\end{pmatrix}, \ x(1) = \begin{pmatrix}2\\1\end{pmatrix}.
+        $$
+      </p>
+
+      <h2>Hyperplanes</h2>
+      <p>A hyperplane through $p$ with normal $n \neq 0$ is all points whose "shadow" along $n$ is fixed:</p>
+      <p>
+        $$
+        n \cdot (x - p) = 0 \quad \iff \quad n \cdot x = n \cdot p =: c.
+        $$
+      </p>
+      <p>One linear equation removes one degree of freedom, so a hyperplane in $\mathbb{R}^n$ is $(n{-}1)$-dimensional &mdash; a line when $n=2$, an ordinary plane when $n=3$.</p>
+      <p class="intuition"><em>Intuition: a hyperplane is "everything at a fixed distance along one direction" &mdash; flat, and one dimension smaller than the space it sits in.</em></p>
+      <p class="example-label">Example</p>
+      <p>
+        $$
+        p = \begin{pmatrix}0\\0\\1\end{pmatrix}, \ n = \begin{pmatrix}1\\1\\1\end{pmatrix} \;\Rightarrow\; x+y+z = 1.
+        \quad (0,0,1) \text{ and } (1,0,0) \text{ both satisfy it.}
+        $$
+      </p>
+
+      <h2>General $k$-dimensional flats</h2>
+      <p>More directions, parametrically, or more equations, implicitly &mdash; same object, two descriptions:</p>
+      <p>
+        $$
+        x = p + t_1d_1 + \cdots + t_kd_k \quad \iff \quad \text{intersection of } (n-k) \text{ independent hyperplanes}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: every extra independent hyperplane you intersect with removes one more degree of freedom.</em></p>
+      <p class="example-label">Example</p>
+      <p>Two hyperplanes in $\mathbb{R}^3$: $x+y+z=1$ and $x-y=0$. Substituting $y=x=t$:</p>
+      <p>
+        $$
+        x(t) = \begin{pmatrix}0\\0\\1\end{pmatrix} + t\begin{pmatrix}1\\1\\-2\end{pmatrix}, \quad t \in \mathbb{R}
+        \quad \text{(a line: } 3 - 2 = 1 \text{ dimension).}
+        $$
+      </p>
+      <p>
+        This is exactly the picture behind $Ax=b$: each row of $A$ is a hyperplane's normal, and solving the
+        system means finding where they all meet &mdash; rank counts how many of those hyperplanes are actually
+        independent.
+      </p>
+
+      <h2>Spheres</h2>
+      <p>Points at a fixed distance from a center &mdash; the first <em>curved</em> (non-flat) object here:</p>
+      <p>
+        $$
+        \|x - c\| = r \quad \iff \quad (x-c)\cdot(x-c) = r^2.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: lines and hyperplanes are linear equations (flat); a sphere is a quadratic one (curved) &mdash; a genuinely different shape.</em></p>
+      <p class="example-label">Example</p>
+      <p>
+        $$
+        c = \begin{pmatrix}0\\0\end{pmatrix}, \ r = 1 \;\Rightarrow\; x^2+y^2=1 \quad \text{(unit circle)}.
+        \quad (1,0): \ 1^2+0^2=1. \ \checkmark
+        $$
+      </p>
+
+      <section class="cite-box">
+        <h2>Cite this</h2>
+        <p class="cite-text">
+          Ketan Suhaas Saichandran, &ldquo;Lines, planes, and spheres in R^n,&rdquo;
+          <em>Notes</em>, 27 October 2026.
+          <a href="https://ketansuhaas.github.io/notes/mathematics/geometry-in-rn.html">ketansuhaas.github.io/notes/mathematics/geometry-in-rn.html</a>
+        </p>
+        <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
+        <pre id="bibtex"><code>@misc{saichandran2026geometry,
+  author       = {Saichandran, Ketan Suhaas},
+  title        = {Lines, planes, and spheres in R^n},
+  howpublished = {\url{https://ketansuhaas.github.io/notes/mathematics/geometry-in-rn.html}},
+  year         = {2026},
+  note         = {Accessed: YYYY-MM-DD}
+}</code></pre>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/cite.js?v=2"></script>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
