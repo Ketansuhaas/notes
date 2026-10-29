@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Dynamics in the eigenbasis - Machine Learning Notes</title>
+  <meta name="description" content="What A^k x and dx/dt=Ax look like once x is written in the eigenbasis, and why the dominant eigenvalue always wins.">
+  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Machine Learning Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Machine Learning Notes</a> / <a href="index.html">Mathematics</a> / Dynamics in the eigenbasis</nav>
+
+  <main>
+    <article>
+      <h1>Dynamics in the eigenbasis</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
+
+      <h2>Expanding in the eigenbasis</h2>
+      <p>If $A$ is diagonalizable with eigenvectors $v_1,\dots,v_n$, write any $x_0$ as a combination of them:</p>
+      <p>
+        $$
+        x_0 = c_1v_1 + \cdots + c_nv_n.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: the eigenvectors are a new coordinate system; the $c_i$ are $x_0$'s coordinates in it.</em></p>
+      <p class="example-label">Example</p>
+      <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$, eigenvectors $v_1=(1,1), v_2=(1,-1)$ (from Diagonalization):</p>
+      <p>
+        $$
+        x_0 = \begin{pmatrix}4\\0\end{pmatrix} = 2v_1 + 2v_2.
+        $$
+      </p>
+
+      <h2>Repeated multiplication</h2>
+      <p>Since $Av_i = \lambda_iv_i$, also $A^kv_i = \lambda_i^kv_i$, so by linearity:</p>
+      <p>
+        $$
+        A^kx_0 = c_1\lambda_1^kv_1 + \cdots + c_n\lambda_n^kv_n.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: each eigen-direction grows or shrinks completely on its own, at its own geometric rate $\lambda_i$.</em></p>
+      <p class="example-label">Example</p>
+      <p>With $\lambda_1=3, \lambda_2=1$: $A^kx_0 = 2\cdot3^k v_1 + 2\cdot1^k v_2$. Check against direct multiplication:</p>
+      <p>
+        $$
+        Ax_0 = \begin{pmatrix}8\\4\end{pmatrix}, \quad A^2x_0 = \begin{pmatrix}20\\16\end{pmatrix}, \quad A^3x_0 = \begin{pmatrix}56\\52\end{pmatrix}.
+        $$
+      </p>
+      <p>Formula at $k=1$: $2\cdot3\cdot(1,1) + 2\cdot1\cdot(1,-1) = (8,4)$. &#10003;</p>
+
+      <h2>The dominant eigenvalue wins</h2>
+      <p>As $k\to\infty$, the largest $|\lambda_i|$ (with $c_i\neq0$) swamps every other term:</p>
+      <p>
+        $$
+        A^kx_0 \approx c_1\lambda_1^kv_1 \quad (\lambda_1 \text{ the dominant eigenvalue}).
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: repeatedly applying $A$ to almost any vector points it toward the dominant eigenvector, this is power iteration.</em></p>
+      <p class="example-label">Example</p>
+      <p>Direction of $A^kx_0$ above: $(8,4)$, $(20,16)$, $(56,52)$, i.e. ratios $0.5, 0.8, 0.929,\dots \to 1$, converging to $v_1=(1,1)$.</p>
+
+      <h2>Continuous time</h2>
+      <p>The same expansion solves $\dot x = Ax$:</p>
+      <p>
+        $$
+        x(t) = c_1e^{\lambda_1t}v_1 + \cdots + c_ne^{\lambda_nt}v_n.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $\lambda_i>0$ grows, $\lambda_i<0$ decays, $\lambda_i$ complex rotates; same picture, continuous time instead of steps.</em></p>
+
+      <h2>Why this matters</h2>
+      <p>
+        Power iteration (and PageRank) repeatedly multiplies by $A$ to find the dominant eigenvector.
+        A Markov chain is $x_{k+1}=Px_k$ with dominant eigenvalue $1$, so it converges to the stationary
+        distribution. A deep network applies something like $A^k$ across its layers: eigenvalues (or
+        singular values) far from $1$ are exactly why activations and gradients blow up or vanish with depth.
+      </p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
