@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>The Lagrangian and KKT conditions - Machine Learning Notes</title>
+  <meta name="description" content="Why a gradient is normal to a level set, how that forces the Lagrange tangency condition for equality constraints, and the KKT conditions for inequality constraints.">
+  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Machine Learning Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+    <div class="site-subtitle">Mathematics</div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Machine Learning Notes</a> / <a href="index.html">Mathematics</a> / The Lagrangian and KKT conditions</nav>
+
+  <main>
+    <article>
+      <h1>The Lagrangian and KKT conditions</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
+
+      <h2>Gradients are normal to level sets</h2>
+      <p>A level set of $f$ is $\{x : f(x)=c\}$, a contour. Walking along it in a tangent direction $v$ doesn't change $f$ at all, so the directional derivative must vanish:</p>
+      <p>
+        $$
+        \nabla f(x)\cdot v = 0 \quad \text{for every tangent direction } v \text{ of the level set through } x.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $\nabla f$ points where $f$ increases fastest; a level set is exactly the directions where $f$ doesn't change, so the two must be perpendicular.</em></p>
+      <p class="example-label">Example</p>
+      <p>$f(x,y)=x^2+y^2$, level set $x^2+y^2=4$ (a circle). At $(2,0)$: $\nabla f=(4,0)$, and the circle's tangent there is $(0,1)$. $(4,0)\cdot(0,1)=0.$ &#10003;</p>
+
+      <h2>Constrained optimization: a tangency condition</h2>
+      <p>Minimize $f(x)$ subject to $g(x)=0$. At an optimum $x^*$ on the constraint surface, moving along any tangent direction $v$ of that surface (so $\nabla g(x^*)\cdot v=0$) can't improve $f$ to first order either, so $\nabla f(x^*)\cdot v=0$ for the same $v$'s. Both gradients are normal to the same tangent space, in $\mathbb{R}^2$ that forces them to be parallel:</p>
+      <p>
+        $$
+        \nabla f(x^*) = \lambda\, \nabla g(x^*) \quad \text{for some scalar } \lambda.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: at the optimum, $f$'s contour must be tangent to the constraint surface; if they crossed instead, sliding along the constraint would still change $f$, so you couldn't be at an optimum yet.</em></p>
+      <p class="example-label">Example</p>
+      <p>Minimize $f(x,y)=x^2+y^2$ subject to $g(x,y)=x+y-1=0$. $\nabla f=(2x,2y)$, $\nabla g=(1,1)$. Setting $\nabla f=\lambda\nabla g$ gives $x=y$, and $x+y=1$ then gives $x=y=\tfrac12$, $\lambda=1$.</p>
+
+      <h2>The Lagrangian</h2>
+      <p>$L(x,\lambda) := f(x) + \lambda g(x)$ packages the tangency condition as a single unconstrained stationarity condition:</p>
+      <p>
+        $$
+        \nabla_x L = \nabla f(x) + \lambda\nabla g(x) = 0, \qquad \nabla_\lambda L = g(x) = 0.
+        $$
+      </p>
+      <p>With $m$ equality constraints $g_1,\dots,g_m$: $L(x,\lambda) = f(x) + \sum_i \lambda_ig_i(x)$, stationary in both $x$ and every $\lambda_i$.</p>
+      <p class="intuition"><em>Intuition: the Lagrangian turns a constrained problem into an unconstrained one, each multiplier $\lambda_i$ is just the bookkeeping that enforces $g_i(x)=0$.</em></p>
+      <p class="example-label">Example</p>
+      <p>Same problem: $L=x^2+y^2+\lambda(x+y-1)$. $\partial L/\partial x = 2x+\lambda=0$, $\partial L/\partial y=2y+\lambda=0$, $\partial L/\partial\lambda=x+y-1=0$. Solving: $x=y=\tfrac12$, $\lambda=-1$, the same point as above (the sign of $\lambda$ is just a convention).</p>
+
+      <h2>Inequality constraints and KKT</h2>
+      <p>Minimize $f(x)$ subject to $h(x)\leq0$. Two cases at the optimum $x^*$:</p>
+      <ul>
+        <li><strong>Inactive</strong> ($h(x^*)<0$): the constraint doesn't touch the optimum, so plainly $\nabla f(x^*)=0$.</li>
+        <li><strong>Active</strong> ($h(x^*)=0$): same tangency argument as before, but now you can only move into the feasible side $h\leq0$, not any direction, so the multiplier's sign is pinned down: $\nabla f(x^*) = -\mu\,\nabla h(x^*)$ with $\mu\geq0$.</li>
+      </ul>
+      <p class="intuition"><em>Intuition: an inequality constraint only pushes back once you're pressed against it; $\mu\geq0$ says that push can only block you from leaving the feasible region, never pull you into it.</em></p>
+      <p>Both cases are captured together by the <strong>KKT conditions</strong>, for $f$ minimized subject to $h_j(x)\leq0$ and $g_i(x)=0$:</p>
+      <p>
+        $$
+        \nabla f(x^*) + \sum_j \mu_j\nabla h_j(x^*) + \sum_i \lambda_i\nabla g_i(x^*) = 0 \quad \text{(stationarity)}
+        $$
+      </p>
+      <p>
+        $$
+        h_j(x^*)\leq0,\ \ g_i(x^*)=0 \quad \text{(primal feasibility)}, \qquad \mu_j\geq0 \quad \text{(dual feasibility)}
+        $$
+      </p>
+      <p>
+        $$
+        \mu_j\, h_j(x^*) = 0 \quad \text{(complementary slackness: inactive} \Rightarrow \mu_j=0\text{, active} \Rightarrow h_j=0\text{)}.
+        $$
+      </p>
+      <p class="example-label">Example</p>
+      <p>Minimize $f(x,y)=x^2+y^2$ subject to $h(x,y)=1-x-y\leq0$ (i.e. $x+y\geq1$). The unconstrained minimum of $f$ is the origin, which has $h(0,0)=1>0$: infeasible, so the constraint is active at the optimum.</p>
+      <p>Same computation as the equality case gives $x^*=y^*=\tfrac12$. Checking the multiplier's sign: $\nabla f(x^*)=(1,1)$, $\nabla h(x^*)=(-1,-1)$, and $\nabla f=-\mu\nabla h$ gives $\mu=1\geq0$. &#10003; Complementary slackness holds since $h(x^*)=0$ (active).</p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
