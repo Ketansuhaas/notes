@@ -85,31 +85,25 @@
 
       <h2>What if an eigenvalue repeats?</h2>
       <p>
-        The argument above only separates eigenvectors belonging to <em>different</em> eigenvalues.
-        The full theorem (orthonormal eigenvectors always exist, repeats or not) follows by induction
-        on $n$. Take one real eigenvalue $\lambda_1$ with unit eigenvector $q_1$ (one always exists:
-        the characteristic polynomial always has a root, and it's real by the argument above). On the
-        $(n{-}1)$-dimensional complement $q_1^\perp$, $A$ still maps $q_1^\perp$ to itself:
+        The argument above only orthogonalizes eigenvectors from <em>different</em> eigenvalues &mdash;
+        two eigenvectors sharing one eigenvalue aren't automatically orthogonal. But a repeated eigenvalue's
+        eigenspace is just a subspace, so pick any orthonormal basis for it directly. Combined with the
+        other eigenvalues' (automatically orthogonal) eigenvectors, that's a full orthonormal eigenbasis
+        &mdash; repeats or not.
       </p>
       <p>
-        $$
-        x \perp q_1 \;\Rightarrow\; q_1^T(Ax) = (Aq_1)^Tx = \lambda_1(q_1^Tx) = 0 \;\Rightarrow\; Ax \perp q_1.
-        $$
+        So symmetric $\Rightarrow$ always diagonalizable, $A = Q\Lambda Q^T$, never defective.
+        That's not the same as full rank: eigenvalues can still be $0$.
       </p>
-      <p>
-        So $A$ restricted to $q_1^\perp$ is still a symmetric matrix, one dimension smaller &mdash; by induction
-        it has its own $(n{-}1)$ orthonormal eigenvectors. Together with $q_1$, that's $n$ orthonormal
-        eigenvectors of $A$, whether or not any eigenvalue repeats: within a repeated eigenspace, any
-        orthonormal basis of it works equally well.
-      </p>
-      <p class="intuition"><em>Intuition: peel off one eigen-direction at a time; what's left over is always a smaller version of the same symmetric problem.</em></p>
+      <p class="intuition"><em>Intuition: a repeated eigenvalue means more freedom in choosing eigenvectors, never less.</em></p>
       <p class="example-label">Example</p>
-      <p>$A = \begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$ (rank 1, symmetric): eigenvalues $3, 0, 0$ &mdash; $0$ repeats with $\operatorname{AM}=2$.</p>
+      <p>$A = \begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$ (symmetric): eigenvalues $3,0,0$ &mdash; $0$ repeats with $\operatorname{AM}=2$.</p>
       <p>
         $$
         N(A) = \{x : x_1+x_2+x_3=0\}, \ \dim = 2 = \operatorname{AM}(0) \;\Rightarrow\; \text{not defective.}
         $$
       </p>
+      <p>Still, $\operatorname{rank}(A) = 1$: diagonalizable and low-rank are unrelated.</p>
       <p>Pick any orthonormal basis of that plane, e.g. $q_2 = \tfrac{1}{\sqrt2}(1,-1,0)$, $q_3 = \tfrac{1}{\sqrt6}(1,1,-2)$, and $q_1 = \tfrac{1}{\sqrt3}(1,1,1)$ for $\lambda=3$ &mdash; all three pairwise orthogonal.</p>
 
       <h2>$A$ as a sum of simple pieces</h2>
@@ -136,7 +130,7 @@
         <h2>Cite this</h2>
         <p class="cite-text">
           Ketan Suhaas Saichandran, &ldquo;The spectral theorem,&rdquo;
-          <em>Notes</em>, 29 October 2026.
+          <em>Machine Learning Notes</em>, 29 October 2026.
           <a href="https://ketansuhaas.github.io/notes/mathematics/spectral-theorem.html">ketansuhaas.github.io/notes/mathematics/spectral-theorem.html</a>
         </p>
         <button class="copy-btn" data-target="bibtex">Copy BibTeX</button>
