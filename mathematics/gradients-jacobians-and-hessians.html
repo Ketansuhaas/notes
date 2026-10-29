@@ -14,7 +14,7 @@
   </script>
   <title>Gradients, Jacobians, and Hessians - Machine Learning Notes</title>
   <meta name="description" content="Gradients, Jacobians, and Hessians explained through their shapes: the derivative's shape is always (outputs) x (inputs), and the Hessian is just the Jacobian of the gradient.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -96,6 +96,19 @@
         <li>$g:\mathbb{R}^n\to\mathbb{R}^m$: Jacobian, $m\times n$</li>
         <li>$\nabla f:\mathbb{R}^n\to\mathbb{R}^n$: Hessian, $n\times n$</li>
       </ul>
+      <p>Side by side, with the outputs down the rows and the inputs across the columns:</p>
+      <p>
+        $$
+        \underbrace{\nabla f}_{n\times1}=\begin{pmatrix}\partial_1f\\\vdots\\\partial_nf\end{pmatrix},
+        \qquad
+        \underbrace{J}_{m\times n}=\begin{pmatrix}-\,\nabla g_1^T-\\\vdots\\-\,\nabla g_m^T-\end{pmatrix}=\begin{pmatrix}\partial_1g_1&\cdots&\partial_ng_1\\\vdots&&\vdots\\\partial_1g_m&\cdots&\partial_ng_m\end{pmatrix},
+        $$
+      </p>
+      <p>
+        $$
+        \underbrace{H}_{n\times n}=\begin{pmatrix}\partial_1\partial_1f&\cdots&\partial_1\partial_nf\\\vdots&\ddots&\vdots\\\partial_n\partial_1f&\cdots&\partial_n\partial_nf\end{pmatrix}.
+        $$
+      </p>
       <p class="intuition"><em>Intuition: don't memorize three shapes, memorize one rule and read off outputs and inputs.</em></p>
 
       <h2>Chain rule and shapes</h2>
@@ -105,6 +118,12 @@
         J_k = J_h J_g, \quad (p\times m)(m\times n) = p\times n.
         $$
       </p>
+      <p>
+        $$
+        \underbrace{J_k}_{p\times n}=\underbrace{\begin{pmatrix}\ast&\cdots&\ast\\\vdots&&\vdots\\\ast&\cdots&\ast\end{pmatrix}}_{J_h,\ p\times m}\underbrace{\begin{pmatrix}\ast&\cdots&\ast\\\vdots&&\vdots\\\ast&\cdots&\ast\end{pmatrix}}_{J_g,\ m\times n}.
+        $$
+      </p>
+      <p>The inner dimension $m$ (the size of the intermediate space) is summed away, just as in any matrix product. For a scalar loss ($p=1$) the left factor is a $1\times m$ row, which is why backpropagation can carry a single row vector backward through the layers.</p>
       <p class="intuition"><em>Intuition: shapes must chain like matrix multiplication; this is exactly backpropagation, one Jacobian per layer.</em></p>
       <p class="example-label">Example</p>
       <p>With $g$ above and $h(y_1,y_2,y_3)=y_1+y_2+y_3$ (so $J_h=(1,1,1)$, a $1\times3$ row):</p>

@@ -14,7 +14,7 @@
   </script>
   <title>Singular value decomposition - Machine Learning Notes</title>
   <meta name="description" content="A = USigmaV^T for any matrix, built from the spectral theorem applied to A^TA and AA^T, and how it hands you the four fundamental subspaces, low-rank approximation, and the pseudoinverse.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -46,6 +46,26 @@
       <p>
         $$
         A = U\Sigma V^T, \quad U \in \mathbb{R}^{m\times m}, V \in \mathbb{R}^{n\times n} \text{ orthogonal}, \ \Sigma \in \mathbb{R}^{m\times n} \text{ diagonal}, \ \sigma_1\geq\sigma_2\geq\cdots\geq0.
+        $$
+      </p>
+      <p class="example-label">Shapes</p>
+      <p>For a tall $A$ ($m>n$), the $m\times n$ matrix $\Sigma$ is a square diagonal block with zero rows underneath; for a wide $A$ ($m<n$) it has zero columns to the right:</p>
+      <p>
+        $$
+        \underbrace{A}_{m\times n}=\underbrace{U}_{m\times m}\ \underbrace{\begin{pmatrix}\sigma_1&&\\&\ddots&\\&&\sigma_n\\\hline0&\cdots&0\\\vdots&&\vdots\\0&\cdots&0\end{pmatrix}}_{\Sigma,\ m\times n}\ \underbrace{V^T}_{n\times n}
+        \qquad\text{(tall)},
+        $$
+      </p>
+      <p>
+        $$
+        \underbrace{A}_{m\times n}=\underbrace{U}_{m\times m}\ \underbrace{\begin{pmatrix}\sigma_1&&&0&\cdots&0\\&\ddots&&\vdots&&\vdots\\&&\sigma_m&0&\cdots&0\end{pmatrix}}_{\Sigma,\ m\times n}\ \underbrace{V^T}_{n\times n}
+        \qquad\text{(wide)}.
+        $$
+      </p>
+      <p>The zero rows or columns of $\Sigma$ multiply the extra columns of $U$ or $V$ by $0$, so only the first $r=\operatorname{rank}(A)$ columns of each ever matter. Dropping them gives the compact ("thin") form:</p>
+      <p>
+        $$
+        \underbrace{A}_{m\times n}=\underbrace{U_r}_{m\times r}\ \underbrace{\Sigma_r}_{r\times r}\ \underbrace{V_r^T}_{r\times n}.
         $$
       </p>
       <p class="intuition"><em>Intuition: SVD finds one orthonormal basis for the input space and another for the output space, in which $A$ is just a (rectangular) diagonal scaling.</em></p>
@@ -108,6 +128,14 @@
       </p>
       <p>$x^+=A^+b$ is exactly the minimum-norm solution to $Ax=b$, the $x_{\text{row}}$ from The big picture.</p>
       <p class="intuition"><em>Intuition: where $A$ can't be inverted, the pseudoinverse does the best it can, landing exactly in the row space.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>$A$ maps $\mathbb{R}^n\to\mathbb{R}^m$, so $A^+$ goes back, $\mathbb{R}^m\to\mathbb{R}^n$, and $\Sigma^+$ is the transpose-shaped $\Sigma$ with each nonzero $\sigma_i$ inverted:</p>
+      <p>
+        $$
+        \underbrace{A^+}_{n\times m}=\underbrace{V}_{n\times n}\ \underbrace{\Sigma^+}_{n\times m}\ \underbrace{U^T}_{m\times m}, \qquad
+        \underbrace{x^+}_{n\times1}=\underbrace{A^+}_{n\times m}\underbrace{b}_{m\times1}.
+        $$
+      </p>
     </article>
   </main>
 

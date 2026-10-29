@@ -14,7 +14,7 @@
   </script>
   <title>Eigenvalues, eigenvectors, and defectiveness - Machine Learning Notes</title>
   <meta name="description" content="Eigenvalues and eigenvectors, their connection to rank, algebraic vs. geometric multiplicity, and defectiveness.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -124,6 +124,15 @@
       <p>
         This always holds. But $A = V\Lambda V^{-1}$ needs $V$ invertible $\iff$ its columns (the eigenvectors)
         are linearly independent $\iff$ $\operatorname{rank}(V) = n \iff C(V) = \mathbb{R}^n$.
+      </p>
+      <p class="example-label">Shapes</p>
+      <p>Every factor is $n\times n$. Multiplying by a diagonal matrix on the right scales the <em>columns</em> of $V$, which is exactly $\lambda_iv_i$:</p>
+      <p>
+        $$
+        \underbrace{A}_{n\times n}\underbrace{\begin{pmatrix}\vert&&\vert\\v_1&\cdots&v_n\\\vert&&\vert\end{pmatrix}}_{V,\ n\times n}
+        =\underbrace{\begin{pmatrix}\vert&&\vert\\v_1&\cdots&v_n\\\vert&&\vert\end{pmatrix}}_{V,\ n\times n}
+        \underbrace{\begin{pmatrix}\lambda_1&&\\&\ddots&\\&&\lambda_n\end{pmatrix}}_{\Lambda,\ n\times n}.
+        $$
       </p>
       <p class="intuition"><em>Intuition: independent eigenvectors give a new coordinate system in which $A$ is just a scaling; that's what diagonalizable means.</em></p>
       <p class="example-label">Example</p>

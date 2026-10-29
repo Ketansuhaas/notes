@@ -14,7 +14,7 @@
   </script>
   <title>The Lagrangian and KKT conditions - Machine Learning Notes</title>
   <meta name="description" content="Why a gradient is normal to a level set, how that forces the Lagrange tangency condition for equality constraints, and the KKT conditions for inequality constraints.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -72,6 +72,15 @@
       </p>
       <p>With $m$ equality constraints $g_1,\dots,g_m$: $L(x,\lambda) = f(x) + \sum_i \lambda_ig_i(x)$, stationary in both $x$ and every $\lambda_i$.</p>
       <p class="intuition"><em>Intuition: the Lagrangian turns a constrained problem into an unconstrained one, each multiplier $\lambda_i$ is just the bookkeeping that enforces $g_i(x)=0$.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>With $x\in\mathbb{R}^n$ and $m$ constraints $g:\mathbb{R}^n\to\mathbb{R}^m$ (Jacobian $J_g$ is $m\times n$), the $m$ multipliers form a vector $\lambda\in\mathbb{R}^m$, and stationarity is one vector equation in $\mathbb{R}^n$:</p>
+      <p>
+        $$
+        \underbrace{\nabla f(x)}_{n\times1}+\underbrace{J_g(x)^T}_{n\times m}\underbrace{\lambda}_{m\times1}=0,
+        \qquad J_g^T\lambda=\begin{pmatrix}\vert&&\vert\\\nabla g_1&\cdots&\nabla g_m\\\vert&&\vert\end{pmatrix}\begin{pmatrix}\lambda_1\\\vdots\\\lambda_m\end{pmatrix}=\sum_i\lambda_i\nabla g_i.
+        $$
+      </p>
+      <p>The columns of $J_g^T$ are the constraint gradients; $\lambda$ says how much of each to combine so that their sum cancels $\nabla f$. That is $\nabla f\in\operatorname{span}(\nabla g_1,\dots,\nabla g_m)$, the multi-constraint version of "parallel".</p>
       <p class="example-label">Example</p>
       <p>Same problem: $L=x^2+y^2+\lambda(x+y-1)$. $\partial L/\partial x = 2x+\lambda=0$, $\partial L/\partial y=2y+\lambda=0$, $\partial L/\partial\lambda=x+y-1=0$. Solving: $x=y=\tfrac12$, $\lambda=-1$, the same point as above (the sign of $\lambda$ is just a convention).</p>
 

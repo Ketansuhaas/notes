@@ -14,7 +14,7 @@
   </script>
   <title>Dynamics in the eigenbasis - Machine Learning Notes</title>
   <meta name="description" content="What A^k x and dx/dt=Ax look like once x is written in the eigenbasis, and why the dominant eigenvalue always wins.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -48,6 +48,14 @@
         x_0 = c_1v_1 + \cdots + c_nv_n.
         $$
       </p>
+      <p class="example-label">Shapes</p>
+      <p>Stacking the eigenvectors as columns of $V$ turns the sum into one matrix-vector product; solving for the coordinates uses $V^{-1}$:</p>
+      <p>
+        $$
+        \underbrace{x_0}_{n\times1}=\underbrace{\begin{pmatrix}\vert&&\vert\\v_1&\cdots&v_n\\\vert&&\vert\end{pmatrix}}_{V,\ n\times n}\underbrace{\begin{pmatrix}c_1\\\vdots\\c_n\end{pmatrix}}_{c,\ n\times1}
+        \quad\Longleftrightarrow\quad c=V^{-1}x_0.
+        $$
+      </p>
       <p class="intuition"><em>Intuition: the eigenvectors are a new coordinate system; the $c_i$ are $x_0$'s coordinates in it.</em></p>
       <p class="example-label">Example</p>
       <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$, eigenvectors $v_1=(1,1), v_2=(1,-1)$ (from Diagonalization):</p>
@@ -65,6 +73,14 @@
         $$
       </p>
       <p class="intuition"><em>Intuition: each eigen-direction grows or shrinks completely on its own, at its own geometric rate $\lambda_i$.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>In matrix form, $A^k=V\Lambda^kV^{-1}$: change to eigen-coordinates, scale each coordinate independently, change back. The middle matrix only needs its diagonal entries raised to the $k$-th power:</p>
+      <p>
+        $$
+        \underbrace{A^kx_0}_{n\times1}=\underbrace{V}_{n\times n}\underbrace{\begin{pmatrix}\lambda_1^k&&\\&\ddots&\\&&\lambda_n^k\end{pmatrix}}_{\Lambda^k,\ n\times n}\underbrace{V^{-1}x_0}_{n\times1}
+        =V\begin{pmatrix}\lambda_1^kc_1\\\vdots\\\lambda_n^kc_n\end{pmatrix}.
+        $$
+      </p>
       <p class="example-label">Example</p>
       <p>With $\lambda_1=3, \lambda_2=1$: $A^kx_0 = 2\cdot3^k v_1 + 2\cdot1^k v_2$. Check against direct multiplication:</p>
       <p>

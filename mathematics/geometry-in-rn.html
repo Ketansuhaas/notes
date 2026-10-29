@@ -14,7 +14,7 @@
   </script>
   <title>Lines, planes, and spheres in R^n - Machine Learning Notes</title>
   <meta name="description" content="Lines, hyperplanes, general k-dimensional flats, and spheres in R^n - the geometry behind linear algebra, before rank and subspaces.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -82,6 +82,16 @@
         $$
       </p>
       <p class="intuition"><em>Intuition: every extra independent hyperplane you intersect with removes one more degree of freedom.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>The two descriptions are two matrix equations. Implicit: stack the $n-k$ normals as rows. Parametric: stack the $k$ directions as columns:</p>
+      <p>
+        $$
+        \underbrace{\begin{pmatrix}-\,n_1^T-\\\vdots\\-\,n_{n-k}^T-\end{pmatrix}}_{(n-k)\times n}\underbrace{x}_{n\times1}=\underbrace{c}_{(n-k)\times1},
+        \qquad
+        \underbrace{x}_{n\times1}=\underbrace{p}_{n\times1}+\underbrace{\begin{pmatrix}\vert&&\vert\\d_1&\cdots&d_k\\\vert&&\vert\end{pmatrix}}_{n\times k}\underbrace{\begin{pmatrix}t_1\\\vdots\\t_k\end{pmatrix}}_{k\times1}.
+        $$
+      </p>
+      <p>The implicit form has $n-k$ rows (one per constraint), the parametric form has $k$ columns (one per free direction); the two counts always add up to $n$.</p>
       <p class="example-label">Example</p>
       <p>Two hyperplanes in $\mathbb{R}^3$: $x+y+z=1$ and $x-y=0$. Substituting $y=x=t$:</p>
       <p>

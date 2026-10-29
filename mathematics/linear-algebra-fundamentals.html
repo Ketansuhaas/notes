@@ -14,7 +14,7 @@
   </script>
   <title>Rank, subspaces, and projections - Machine Learning Notes</title>
   <meta name="description" content="Rank, tall/wide/square solvability of Ax=b, vector spaces and subspaces, the four fundamental subspaces, and the projection matrix derived from the residual condition.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -52,9 +52,37 @@
         A = \begin{pmatrix} 1 & 2 \\ 2 & 4 \\ 3 & 6 \end{pmatrix}, \quad \text{col}_2 = 2\,\text{col}_1 \;\Rightarrow\; \operatorname{rank}(A) = 1.
         $$
       </p>
+      <p class="example-label">Shapes</p>
+      <p>A rank-1 matrix is a column times a row (an outer product), which is why all its columns are multiples of one vector:</p>
+      <p>
+        $$
+        \underbrace{\begin{pmatrix} 1 & 2 \\ 2 & 4 \\ 3 & 6 \end{pmatrix}}_{3\times2}
+        =\underbrace{\begin{pmatrix} 1 \\ 2 \\ 3 \end{pmatrix}}_{3\times1}\underbrace{\begin{pmatrix} 1 & 2 \end{pmatrix}}_{1\times2}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: rank $r$ means $A$ can be squeezed through an $r$-dimensional bottleneck: $(m\times r)(r\times n)$.</em></p>
 
       <h2>Solving $Ax = b$</h2>
-      <p>Behaviour depends on shape and rank $r$ of $A \in \mathbb{R}^{m \times n}$.</p>
+      <p>Behaviour depends on shape and rank $r$ of $A \in \mathbb{R}^{m \times n}$. Here are the three shapes side by side ($m$ equations, $n$ unknowns):</p>
+      <p>
+        $$
+        \underbrace{\begin{pmatrix}\ast&\ast\\\ast&\ast\\\ast&\ast\\\ast&\ast\end{pmatrix}}_{\text{tall, } m>n}
+        \begin{pmatrix}x_1\\x_2\end{pmatrix}=\begin{pmatrix}b_1\\b_2\\b_3\\b_4\end{pmatrix},
+        $$
+      </p>
+      <p>
+        $$
+        \underbrace{\begin{pmatrix}\ast&\ast&\ast&\ast\\\ast&\ast&\ast&\ast\end{pmatrix}}_{\text{wide, } m<n}
+        \begin{pmatrix}x_1\\x_2\\x_3\\x_4\end{pmatrix}=\begin{pmatrix}b_1\\b_2\end{pmatrix},
+        $$
+      </p>
+      <p>
+        $$
+        \underbrace{\begin{pmatrix}\ast&\ast&\ast\\\ast&\ast&\ast\\\ast&\ast&\ast\end{pmatrix}}_{\text{square, } m=n}
+        \begin{pmatrix}x_1\\x_2\\x_3\end{pmatrix}=\begin{pmatrix}b_1\\b_2\\b_3\end{pmatrix}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: tall means more equations than unknowns (over-constrained); wide means fewer equations than unknowns (under-constrained); square is balanced.</em></p>
 
       <p><strong>Tall</strong> ($m > n$), full column rank $r = n$: $N(A) = \{0\}$, so at most one solution.</p>
       <p class="example-label">Example</p>
@@ -108,7 +136,14 @@
       </p>
 
       <h2>Fundamental subspaces</h2>
-      <p>For $A \in \mathbb{R}^{m \times n}$, $\operatorname{rank}(A) = r$:</p>
+      <p>First, which space does each piece of $A\in\mathbb{R}^{m\times n}$ live in? Columns have $m$ entries, rows have $n$:</p>
+      <p>
+        $$
+        A=\underbrace{\begin{pmatrix}\vert&&\vert\\a_1&\cdots&a_n\\\vert&&\vert\end{pmatrix}}_{n\text{ columns}, \ a_j\in\mathbb{R}^m}
+        =\underbrace{\begin{pmatrix}-\,r_1^T-\\\vdots\\-\,r_m^T-\end{pmatrix}}_{m\text{ rows}, \ r_i\in\mathbb{R}^n}.
+        $$
+      </p>
+      <p>$Ax=\sum_jx_ja_j$ is a combination of columns (so lands in $\mathbb{R}^m$), while $(Ax)_i=r_i^Tx$ is a row dotted with $x$ (so $x$ lives in $\mathbb{R}^n$). Now the four subspaces, for $\operatorname{rank}(A) = r$:</p>
       <ul>
         <li>Column space $C(A) \subseteq \mathbb{R}^m$, $\dim = r$</li>
         <li>Null space $N(A) = \{x : Ax = 0\} \subseteq \mathbb{R}^n$, $\dim = n - r$</li>
@@ -144,6 +179,12 @@
         \;\Rightarrow\; p = \frac{a a^T}{a^Ta}\, b =: Pb.
         $$
       </p>
+      <p>
+        $$
+        P=\frac{1}{\underbrace{a^Ta}_{1\times1}}\ \underbrace{a}_{m\times1}\underbrace{a^T}_{1\times m}\in\mathbb{R}^{m\times m}, \qquad
+        P\,b=\underbrace{(m\times m)(m\times1)}_{=\,m\times1}.
+        $$
+      </p>
       <p class="example-label">Example</p>
       <p>
         $$
@@ -157,6 +198,13 @@
         $$
         A^T(b - A\hat x) = 0 \;\Rightarrow\; A^TA\,\hat x = A^Tb \;\Rightarrow\; \hat x = (A^TA)^{-1}A^Tb
         \;\Rightarrow\; p = \underbrace{A(A^TA)^{-1}A^T}_{P}\,b.
+        $$
+      </p>
+      <p>Tracking shapes ($A$ tall, $m\times n$): the middle factor is small, the outer factors are tall and wide, and $P$ ends up $m\times m$ while only having rank $n$:</p>
+      <p>
+        $$
+        P=\underbrace{A}_{m\times n}\ \underbrace{(A^TA)^{-1}}_{n\times n}\ \underbrace{A^T}_{n\times m}\in\mathbb{R}^{m\times m},
+        \qquad \hat x=\underbrace{(A^TA)^{-1}A^T}_{n\times m}\,\underbrace{b}_{m\times1}\in\mathbb{R}^{n}.
         $$
       </p>
       <p class="example-label">Example</p>

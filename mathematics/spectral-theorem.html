@@ -14,7 +14,7 @@
   </script>
   <title>The spectral theorem - Machine Learning Notes</title>
   <meta name="description" content="Symmetric matrices have real eigenvalues and orthogonal eigenvectors: A = QΛQ^T, and A as a sum of simple rank-1 pieces.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -48,6 +48,16 @@
         A = Q\Lambda Q^T, \quad Q^TQ = I \ (\text{so } Q^{-1} = Q^T).
         $$
       </p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{A}_{n\times n}=
+        \underbrace{\begin{pmatrix}\vert&&\vert\\q_1&\cdots&q_n\\\vert&&\vert\end{pmatrix}}_{Q,\ n\times n}
+        \underbrace{\begin{pmatrix}\lambda_1&&\\&\ddots&\\&&\lambda_n\end{pmatrix}}_{\Lambda,\ n\times n}
+        \underbrace{\begin{pmatrix}-\,q_1^T-\\\vdots\\-\,q_n^T-\end{pmatrix}}_{Q^T,\ n\times n}.
+        $$
+      </p>
+      <p>The columns of $Q$ are the eigenvectors; the rows of $Q^T$ are the same vectors, laid flat. Orthonormality is the statement that every row of $Q^T$ dotted with every column of $Q$ gives $1$ on the diagonal and $0$ elsewhere, i.e. $Q^TQ=I$.</p>
       <p class="intuition"><em>Intuition: symmetric matrices are a rotation into perpendicular axes, a pure scaling along them, and a rotation back; nothing else can happen.</em></p>
 
       <h2>Eigenvalues are real</h2>
@@ -114,6 +124,15 @@
         $$
       </p>
       <p class="intuition"><em>Intuition: $A$ is a weighted sum of simple directions $q_iq_i^T$, one per eigenvector, weighted by how much $A$ stretches that direction.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>Each piece is a column times a row, an outer product, so it is a full $n\times n$ matrix of rank 1:</p>
+      <p>
+        $$
+        \underbrace{q_i}_{n\times1}\underbrace{q_i^T}_{1\times n}=\underbrace{\begin{pmatrix}q_{i1}q_{i1}&\cdots&q_{i1}q_{in}\\\vdots&\ddots&\vdots\\q_{in}q_{i1}&\cdots&q_{in}q_{in}\end{pmatrix}}_{n\times n,\ \text{rank }1}, \qquad
+        A=\lambda_1\underbrace{q_1q_1^T}_{n\times n}+\cdots+\lambda_n\underbrace{q_nq_n^T}_{n\times n}.
+        $$
+      </p>
+      <p>Each $q_iq_i^T$ is also the projection onto the line through $q_i$ (the line formula from Rank, subspaces, and projections, with $q_i^Tq_i=1$): $A$ projects onto each axis, scales by $\lambda_i$, and adds the results.</p>
       <p class="example-label">Example</p>
       <p>
         $$

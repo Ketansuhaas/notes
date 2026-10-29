@@ -285,3 +285,54 @@ footer.site-footer {
   color: var(--muted);
   font-size: 0.85rem;
 }
+
+.figure {
+  margin: 1.5rem 0;
+}
+
+.figure svg {
+  display: block;
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  margin: 0 auto;
+  color: var(--fg);
+}
+
+.figure figcaption {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.figure .pt {
+  fill: currentColor;
+}
+
+.figure .origin {
+  fill: var(--bg);
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.figure .axis {
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.figure .faint {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.figure .lbl {
+  fill: currentColor;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.figure .lbl.muted {
+  fill: var(--muted);
+}

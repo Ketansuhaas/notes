@@ -14,7 +14,7 @@
   </script>
   <title>Quadratic forms and positive definiteness - Machine Learning Notes</title>
   <meta name="description" content="x^TAx, diagonalized into a sum of squares, positive definiteness, and how it determines minima, maxima, and saddle points via the Hessian.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -47,6 +47,14 @@
         q(x) = x^TAx, \quad A \text{ symmetric (WLOG: the antisymmetric part of } A \text{ always contributes } 0).
         $$
       </p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        q(x)=\underbrace{x^T}_{1\times n}\ \underbrace{A}_{n\times n}\ \underbrace{x}_{n\times1}=\underbrace{q(x)}_{1\times1}
+        =\sum_{i,j}A_{ij}\,x_ix_j.
+        $$
+      </p>
+      <p>Squeezed between a row and a column, the $n\times n$ matrix collapses to a single number: $Ax$ is a vector ($n\times1$), and $x^T$ dots it with $x$ to give a scalar.</p>
       <p class="intuition"><em>Intuition: $q$ traces a bowl, dome, or saddle; $A$'s eigenvalues are the curvature along each principal axis.</em></p>
       <p class="example-label">Example</p>
       <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$:</p>
@@ -61,6 +69,13 @@
       <p>
         $$
         q(x) = x^TQ\Lambda Q^Tx = y^T\Lambda y = \sum_i \lambda_iy_i^2.
+        $$
+      </p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{y}_{n\times1}=\underbrace{Q^T}_{n\times n}\underbrace{x}_{n\times1}, \qquad
+        q=\underbrace{y^T}_{1\times n}\underbrace{\begin{pmatrix}\lambda_1&&\\&\ddots&\\&&\lambda_n\end{pmatrix}}_{\Lambda,\ n\times n}\underbrace{y}_{n\times1}.
         $$
       </p>
       <p class="intuition"><em>Intuition: in the eigenbasis, a quadratic form is just a weighted sum of squares, no cross terms.</em></p>

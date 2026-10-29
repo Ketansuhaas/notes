@@ -14,7 +14,7 @@
   </script>
   <title>Principal component analysis - Machine Learning Notes</title>
   <meta name="description" content="PCA derived two ways, maximizing variance and constrained optimization, both landing on the same eigenvectors of the covariance matrix, then tied to the SVD.">
-  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="../assets/style.css?v=6">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -50,6 +50,15 @@
         $$
       </p>
       <p class="intuition"><em>Intuition: $C$ packages how the data spreads out in every direction at once; $v^TCv$ reads off the spread along one particular direction $v$.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{X}_{n\times d}=\begin{pmatrix}-\,x_1^T-\\-\,x_2^T-\\ \vdots\\-\,x_n^T-\end{pmatrix}, \qquad
+        \underbrace{C}_{d\times d}=\tfrac1n\underbrace{X^T}_{d\times n}\,\underbrace{X}_{n\times d}, \qquad
+        \underbrace{v^T}_{1\times d}\,\underbrace{C}_{d\times d}\,\underbrace{v}_{d\times 1}=\underbrace{\operatorname{Var}(v)}_{1\times1}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: rows are samples, columns are features. $X^TX$ sums over the sample axis (the shared inner $n$ disappears), leaving a features-by-features table.</em></p>
       <p class="example-label">Example</p>
       <p>Reusing $C=\begin{pmatrix}2&1\\1&2\end{pmatrix}$ (our running matrix, eigenvalues $3,1$, eigenvectors $\tfrac1{\sqrt2}(1,1), \tfrac1{\sqrt2}(1,-1)$): along $v=(1,0)$, $v^TCv=2$. Along $v=\tfrac1{\sqrt2}(1,1)$: $Cv=3v$, so $v^TCv=3$, more spread.</p>
 
@@ -97,8 +106,133 @@
       <p>So the principal components are exactly the columns of $V$ (the right singular vectors of $X$), and the variance captured by component $i$ is $\sigma_i^2/n$.</p>
       <p class="intuition"><em>Intuition: PCA is the spectral theorem applied to $C$, which is secretly the SVD of $X$; nothing new, just a direct application of what's already there.</em></p>
 
-      <h2>Dimensionality reduction</h2>
-      <p>Projecting onto the top $k$ components, $Z=XV_k\in\mathbb{R}^{n\times k}$, is exactly the rank-$k$ truncation from Low-rank approximation: it keeps the directions of largest variance and discards the rest, the best possible rank-$k$ summary of the data.</p>
+      <h2>Dimensionality reduction: projecting down</h2>
+      <p>Keep only the top $k<d$ components. Stack them as the columns of $V_k\in\mathbb{R}^{d\times k}$ (the first $k$ columns of $V$), and replace each $d$-dimensional point $x_i$ by its $k$ coordinates along them:</p>
+      <p>
+        $$
+        z_i = V_k^Tx_i\in\mathbb{R}^k, \qquad Z = XV_k.
+        $$
+      </p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{Z}_{n\times k}=\underbrace{X}_{n\times d}\ \underbrace{V_k}_{d\times k}
+        =\begin{pmatrix}-\,x_1^T-\\ \vdots\\-\,x_n^T-\end{pmatrix}
+        \begin{pmatrix}\vert&&\vert\\v_1&\cdots&v_k\\\vert&&\vert\end{pmatrix}
+        =\begin{pmatrix}x_1^Tv_1&\cdots&x_1^Tv_k\\ \vdots&&\vdots\\x_n^Tv_1&\cdots&x_n^Tv_k\end{pmatrix}.
+        $$
+      </p>
+      <p>Entry $(i,j)$ is how far point $i$ sits along component $j$. The $n$ rows (samples) are untouched; only the feature axis shrinks from $d$ columns to $k$. In SVD terms, $Z=XV_k=U_k\Sigma_k$, i.e. $(n\times k)(k\times k)$.</p>
+      <p class="intuition"><em>Intuition: the same $n$ points, but each is now described by $k$ numbers instead of $d$: its coordinates in the best $k$-dimensional coordinate system for the data.</em></p>
+
+      <h2>Reconstruction</h2>
+      <p>To go back up to $\mathbb{R}^d$, map the coordinates through the same directions:</p>
+      <p>
+        $$
+        \underbrace{\hat X}_{n\times d}=\underbrace{Z}_{n\times k}\ \underbrace{V_k^T}_{k\times d}=XV_kV_k^T, \qquad
+        \hat x_i = \sum_{j=1}^k (x_i^Tv_j)\,v_j.
+        $$
+      </p>
+      <p>$V_kV_k^T\in\mathbb{R}^{d\times d}$ is exactly the projection matrix onto $\operatorname{span}(v_1,\dots,v_k)$ from Rank, subspaces, and projections: with $A=V_k$ orthonormal, $A^TA=I$ and $A(A^TA)^{-1}A^T$ collapses to $V_kV_k^T$. So $\hat X$ is an $n\times d$ matrix of rank at most $k$; it can be stored as $nk+kd$ numbers instead of $nd$. Expanding gives the Low-rank approximation sum:</p>
+      <p>
+        $$
+        \hat X=\sum_{i=1}^k\sigma_iu_iv_i^T.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: compress ($d\to k$ coordinates), then decompress ($k\to d$); what comes back is each point's shadow on the $k$-dimensional subspace, with the discarded directions flattened to zero.</em></p>
+
+      <h2>How much is kept</h2>
+      <p>Each point splits into a kept part and a discarded part that are perpendicular, $x_i=\hat x_i+(x_i-\hat x_i)$, so Pythagoras applies: $\|x_i\|^2=\|\hat x_i\|^2+\|x_i-\hat x_i\|^2$. Averaging over the data, with $\operatorname{tr}(C)=\sum_i\lambda_i$ the total variance:</p>
+      <p>
+        $$
+        \underbrace{\sum_{i=1}^d\lambda_i}_{\text{total variance}}
+        =\underbrace{\sum_{i=1}^k\lambda_i}_{\text{kept}}
+        +\underbrace{\sum_{i=k+1}^d\lambda_i}_{\text{lost} \,=\, \text{mean squared reconstruction error}}.
+        $$
+      </p>
+      <p>So the two goals of PCA, <em>maximize the variance you keep</em> and <em>minimize the reconstruction error</em>, are the same goal, and the top $k$ eigenvectors achieve both. The standard summary is the explained variance ratio:</p>
+      <p>
+        $$
+        \text{explained variance}(k)=\frac{\lambda_1+\cdots+\lambda_k}{\lambda_1+\cdots+\lambda_d}=\frac{\sigma_1^2+\cdots+\sigma_k^2}{\sigma_1^2+\cdots+\sigma_d^2}.
+        $$
+      </p>
+      <p>The new features are also uncorrelated, since the covariance of $Z$ is diagonal:</p>
+      <p>
+        $$
+        \underbrace{\tfrac1nZ^TZ}_{k\times k}=V_k^TCV_k=\Lambda_k=\begin{pmatrix}\lambda_1&&\\&\ddots&\\&&\lambda_k\end{pmatrix}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: every unit of variance is either kept or lost, and the dropped eigenvalues are precisely the price you pay; uncorrelated columns mean no component's information overlaps another's.</em></p>
+
+      <h2>Example: $2\to1$ dimensions</h2>
+      <p>Take four centered points whose covariance is our running $C=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, with $n=4,\ d=2,\ k=1$ and $v_1=\tfrac1{\sqrt2}(1,1)$:</p>
+      <p>
+        $$
+        \underbrace{X}_{4\times2}=\begin{pmatrix}\sqrt3&\sqrt3\\-\sqrt3&-\sqrt3\\1&-1\\-1&1\end{pmatrix},\qquad
+        \underbrace{Z}_{4\times1}=\underbrace{X}_{4\times2}\underbrace{v_1}_{2\times1}=\begin{pmatrix}\sqrt6\\-\sqrt6\\0\\0\end{pmatrix}.
+        $$
+      </p>
+      <p>Reconstruction $\hat X=Zv_1^T$ is $(4\times1)(1\times2)=4\times2$:</p>
+      <p>
+        $$
+        \hat X=\begin{pmatrix}\sqrt6\\-\sqrt6\\0\\0\end{pmatrix}\tfrac1{\sqrt2}\begin{pmatrix}1&1\end{pmatrix}
+        =\begin{pmatrix}\sqrt3&\sqrt3\\-\sqrt3&-\sqrt3\\0&0\\0&0\end{pmatrix}.
+        $$
+      </p>
+      <p>The first two points lie on PC1 and are recovered perfectly; the last two lie entirely along the discarded direction $v_2$, so they collapse to the origin.</p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 640 250" role="img" aria-label="Four points in the plane projected onto the first principal component, giving four coordinates on a number line">
+          <defs>
+            <marker id="pca-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <text class="lbl" x="12" y="14">Data in &#8477;&#178; with PC1</text>
+          <text class="lbl" x="400" y="14">Coordinates z in &#8477;&#185;</text>
+          <line class="axis" x1="12" y1="233" x2="228" y2="17"/>
+          <text class="lbl" x="234" y="20">v&#8321; (PC1)</text>
+          <line class="faint" x1="165" y1="170" x2="120" y2="125"/>
+          <line class="faint" x1="75" y1="80" x2="120" y2="125"/>
+          <circle class="pt" cx="198" cy="47" r="4.5"/>
+          <circle class="pt" cx="42" cy="203" r="4.5"/>
+          <circle class="pt" cx="165" cy="170" r="4.5"/>
+          <circle class="pt" cx="75" cy="80" r="4.5"/>
+          <circle class="origin" cx="120" cy="125" r="3"/>
+          <text class="lbl" x="204" y="60">x&#8321;</text>
+          <text class="lbl" x="22" y="218">x&#8322;</text>
+          <text class="lbl" x="172" y="186">x&#8323;</text>
+          <text class="lbl" x="54" y="76">x&#8324;</text>
+          <text class="lbl muted" x="128" y="150">lost</text>
+          <line class="axis" x1="262" y1="125" x2="368" y2="125" marker-end="url(#pca-arrow)"/>
+          <text class="lbl" x="283" y="115">project</text>
+          <line class="axis" x1="400" y1="125" x2="620" y2="125"/>
+          <line class="axis" x1="449" y1="119" x2="449" y2="131"/>
+          <line class="axis" x1="510" y1="119" x2="510" y2="131"/>
+          <line class="axis" x1="571" y1="119" x2="571" y2="131"/>
+          <circle class="pt" cx="449" cy="125" r="4.5"/>
+          <circle class="pt" cx="571" cy="125" r="4.5"/>
+          <circle class="pt" cx="510" cy="125" r="4.5"/>
+          <text class="lbl" x="441" y="108">x&#8322;</text>
+          <text class="lbl" x="563" y="108">x&#8321;</text>
+          <text class="lbl" x="490" y="108">x&#8323;, x&#8324;</text>
+          <text class="lbl" x="427" y="152">&#8722;&#8730;6</text>
+          <text class="lbl" x="504" y="152">0</text>
+          <text class="lbl" x="555" y="152">&#8730;6</text>
+        </svg>
+        <figcaption>Projecting onto PC1 keeps the spread along the diagonal ($\lambda_1=3$, 75% of the total variance) and loses the perpendicular part ($\lambda_2=1$).</figcaption>
+      </figure>
+
+      <p>Check the bookkeeping: variance of $Z$ is $\tfrac14(6+6+0+0)=3=\lambda_1$; mean squared reconstruction error is $\tfrac14(0+0+2+2)=1=\lambda_2$; explained variance is $\tfrac{3}{3+1}=75\%$. &#10003;</p>
+
+      <h2>Choosing $k$ and practical notes</h2>
+      <ul>
+        <li><strong>Choosing $k$.</strong> Plot $\lambda_i$ against $i$ (a scree plot) and look for the elbow where eigenvalues flatten out, or take the smallest $k$ whose explained variance passes a threshold (say 90% or 95%), or pick $k$ by how well a downstream task performs.</li>
+        <li><strong>Center first.</strong> Subtract the mean from every column before anything else, and add it back when reconstructing: $\hat x_i=\bar x+V_kV_k^T(x_i-\bar x)$.</li>
+        <li><strong>Scale if units differ.</strong> Variance depends on units, so a feature measured in large units dominates the top components; standardize columns (unit variance) if the features are not comparable.</li>
+        <li><strong>Compute via the SVD of $X$</strong>, not by forming $C=\tfrac1nX^TX$: squaring $X$ squares its condition number and loses precision. At most $\min(n-1,d)$ components carry any variance.</li>
+        <li><strong>Limits.</strong> PCA is linear, and high variance is not the same as importance: a large-variance direction may be noise, and a small-variance one may be the signal you care about.</li>
+      </ul>
       <p class="intuition"><em>Intuition: PCA compresses data by keeping only the few directions that matter most, the same "keep the big singular values, drop the small ones" idea as SVD.</em></p>
     </article>
   </main>
