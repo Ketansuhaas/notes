@@ -64,6 +64,7 @@
 
       <h2>Solving $Ax = b$</h2>
       <p>Behaviour depends on shape and rank $r$ of $A \in \mathbb{R}^{m \times n}$. Here are the three shapes side by side ($m$ equations, $n$ unknowns):</p>
+      <p class="example-label">Shapes</p>
       <p>
         $$
         \underbrace{\begin{pmatrix}\ast&\ast\\\ast&\ast\\\ast&\ast\\\ast&\ast\end{pmatrix}}_{\text{tall, } m>n}
@@ -137,6 +138,7 @@
 
       <h2>Fundamental subspaces</h2>
       <p>First, which space does each piece of $A\in\mathbb{R}^{m\times n}$ live in? Columns have $m$ entries, rows have $n$:</p>
+      <p class="example-label">Shapes</p>
       <p>
         $$
         A=\underbrace{\begin{pmatrix}\vert&&\vert\\a_1&\cdots&a_n\\\vert&&\vert\end{pmatrix}}_{n\text{ columns}, \ a_j\in\mathbb{R}^m}
@@ -156,6 +158,26 @@
         N(A) \perp C(A^T) \ \text{in } \mathbb{R}^n, \qquad N(A^T) \perp C(A) \ \text{in } \mathbb{R}^m.
         $$
       </p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 640 220" role="img" aria-label="Two panels showing the row space orthogonal to the null space in R^n, and the column space orthogonal to the left null space in R^m">
+          <text class="lbl" x="20" y="24">&#8477;&#8319; (inputs)</text>
+          <line class="axis" x1="30" y1="110" x2="270" y2="110"/>
+          <text class="lbl" x="235" y="100">C(A&#7488;), dim r</text>
+          <line style="stroke:var(--muted); stroke-width:1.5" x1="150" y1="30" x2="150" y2="190"/>
+          <text class="lbl muted" x="156" y="44">N(A), dim n&#8722;r</text>
+          <circle class="origin" cx="150" cy="110" r="3"/>
+
+          <text class="lbl" x="390" y="24">&#8477;&#7098; (outputs)</text>
+          <line class="axis" x1="400" y1="110" x2="610" y2="110"/>
+          <text class="lbl" x="580" y="100">C(A), dim r</text>
+          <line style="stroke:var(--muted); stroke-width:1.5" x1="500" y1="30" x2="500" y2="190"/>
+          <text class="lbl muted" x="506" y="44">N(A&#7488;), dim m&#8722;r</text>
+          <circle class="origin" cx="500" cy="110" r="3"/>
+        </svg>
+        <figcaption>Row space and null space split $\mathbb{R}^n$ into orthogonal complements of dimension $r$ and $n-r$; column space and left null space do the same to $\mathbb{R}^m$.</figcaption>
+      </figure>
+
       <p class="example-label">Example</p>
       <p>Using $A = \begin{pmatrix} 1 & 0 & 1 \\ 0 & 1 & 1 \end{pmatrix}$ ($m=2, n=3, r=2$):</p>
       <p>
@@ -179,12 +201,32 @@
         \;\Rightarrow\; p = \frac{a a^T}{a^Ta}\, b =: Pb.
         $$
       </p>
+      <p class="example-label">Shapes</p>
       <p>
         $$
         P=\frac{1}{\underbrace{a^Ta}_{1\times1}}\ \underbrace{a}_{m\times1}\underbrace{a^T}_{1\times m}\in\mathbb{R}^{m\times m}, \qquad
         P\,b=\underbrace{(m\times m)(m\times1)}_{=\,m\times1}.
         $$
       </p>
+      <p class="intuition"><em>Intuition: $aa^T$ is an outer product, rank 1, so $P$ is a full $m\times m$ matrix that still only ever produces multiples of $a$.</em></p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 400 240" role="img" aria-label="A point b above a line through the origin spanned by a, with its perpendicular projection p onto the line and the residual e joining them">
+          <circle class="origin" cx="40" cy="180" r="3"/>
+          <text class="lbl" x="28" y="200">0</text>
+          <line class="axis" x1="40" y1="180" x2="360" y2="180"/>
+          <text class="lbl" x="340" y="200">a</text>
+          <line class="faint" x1="40" y1="180" x2="260" y2="70"/>
+          <line class="faint" x1="260" y1="180" x2="260" y2="70"/>
+          <circle class="pt" cx="260" cy="70" r="4.5"/>
+          <circle class="pt" cx="260" cy="180" r="4.5"/>
+          <text class="lbl" x="268" y="66">b</text>
+          <text class="lbl" x="268" y="190">p</text>
+          <text class="lbl muted" x="268" y="128">e</text>
+        </svg>
+        <figcaption>Projecting $b$ onto $\operatorname{span}(a)$: the residual $e=b-p$ is forced to be perpendicular to $a$, which is exactly the equation that pins down $\hat x$.</figcaption>
+      </figure>
+
       <p class="example-label">Example</p>
       <p>
         $$
@@ -201,6 +243,7 @@
         $$
       </p>
       <p>Tracking shapes ($A$ tall, $m\times n$): the middle factor is small, the outer factors are tall and wide, and $P$ ends up $m\times m$ while only having rank $n$:</p>
+      <p class="example-label">Shapes</p>
       <p>
         $$
         P=\underbrace{A}_{m\times n}\ \underbrace{(A^TA)^{-1}}_{n\times n}\ \underbrace{A^T}_{n\times m}\in\mathbb{R}^{m\times m},
@@ -230,6 +273,40 @@
         \mathbb{R}^m = C(A) \oplus N(A^T), \qquad \mathbb{R}^n = C(A^T) \oplus N(A).
         $$
       </p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 640 230" role="img" aria-label="Input x splits into its row-space and null-space parts; only the row-space part survives the map A, landing in the column space, while the null-space part maps to 0">
+          <defs>
+            <marker id="la-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <text class="lbl" x="16" y="18">x in &#8477;&#8319;</text>
+          <circle class="origin" cx="40" cy="190" r="3"/>
+          <text class="lbl" x="28" y="205">0</text>
+          <line class="axis" x1="40" y1="190" x2="230" y2="190"/>
+          <text class="lbl" x="178" y="178">C(A&#7488;)</text>
+          <line class="faint" x1="170" y1="190" x2="170" y2="100"/>
+          <circle class="pt" cx="170" cy="190" r="4.5"/>
+          <circle class="pt" cx="170" cy="100" r="4.5"/>
+          <text class="lbl" x="138" y="207">x_row</text>
+          <text class="lbl" x="178" y="96">x</text>
+          <text class="lbl muted" x="176" y="145">x_null</text>
+
+          <line class="axis" x1="258" y1="140" x2="362" y2="140" marker-end="url(#la-arrow)"/>
+          <text class="lbl" x="298" y="128">A</text>
+
+          <text class="lbl" x="392" y="18">Ax in &#8477;&#7098;</text>
+          <circle class="origin" cx="400" cy="190" r="3"/>
+          <text class="lbl" x="388" y="205">0</text>
+          <line class="axis" x1="400" y1="190" x2="590" y2="190"/>
+          <text class="lbl" x="548" y="178">C(A)</text>
+          <circle class="pt" cx="520" cy="190" r="4.5"/>
+          <text class="lbl" x="496" y="207">Ax = Ax_row</text>
+          <text class="lbl muted" x="388" y="165">x_null &#8614; 0</text>
+        </svg>
+        <figcaption>Only the row-space part of $x$ survives the map: $x_{\text{null}}$ is invisible to $A$ and contributes nothing to $Ax$.</figcaption>
+      </figure>
 
       <p><strong>Output side.</strong> Every $b$ splits uniquely into a reachable part and a part $A$ is blind to:</p>
       <p>

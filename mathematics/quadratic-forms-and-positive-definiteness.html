@@ -91,7 +91,39 @@
       <p class="intuition"><em>Intuition: positive definite means every direction curves upward, a genuine bowl with one bottom.</em></p>
       <p class="example-label">Example</p>
       <p>Our $A$: $a=2>0$, $ad-b^2=4-1=3>0$, positive definite, matching eigenvalues $3,1>0$.</p>
-      <p>Contrast $B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$: $a=0$ fails immediately; eigenvalues are $\pm1$, indefinite (a saddle).</p>
+      <p>Contrast $B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$: $a=0$ fails immediately; eigenvalues are $\pm1$, indefinite (a saddle). Note $B$ shares $A$&rsquo;s eigenvectors, since $A=2I+B$.</p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 300 260" role="img" aria-label="Elliptical level sets of a positive definite quadratic form, aligned with the eigenvectors and narrower along the direction of the larger eigenvalue">
+          <circle class="origin" cx="150" cy="140" r="3"/>
+          <line class="axis" x1="86" y1="204" x2="214" y2="76"/>
+          <line class="axis" x1="86" y1="76" x2="214" y2="204"/>
+          <text class="lbl" x="218" y="72">q&#8321; (&#955;&#8321;=3)</text>
+          <text class="lbl" x="218" y="212">q&#8322; (&#955;&#8322;=1)</text>
+          <ellipse style="fill:none;stroke:currentColor;stroke-width:1.5" cx="150" cy="140" rx="35" ry="61" transform="rotate(-45 150 140)"/>
+          <ellipse style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" cx="150" cy="140" rx="52" ry="91" transform="rotate(-45 150 140)"/>
+          <text class="lbl muted" x="150" y="20">q(x) = c (outer: larger c)</text>
+        </svg>
+        <figcaption>Level sets of $q(x)=x^TAx$ for our running $A$ are ellipses aligned with $q_1,q_2$; the semi-axis along $q_i$ has length $\propto 1/\sqrt{\lambda_i}$, so the curve is tightest along the largest eigenvalue.</figcaption>
+      </figure>
+
+      <figure class="figure">
+        <svg viewBox="0 0 300 260" role="img" aria-label="Hyperbolic level sets of an indefinite quadratic form, curving away from the eigenvector axes instead of closing into an ellipse">
+          <g transform="translate(150,140) rotate(-45)">
+            <line class="axis" x1="-90" y1="0" x2="90" y2="0"/>
+            <line class="axis" x1="0" y1="-90" x2="0" y2="90"/>
+            <circle class="origin" cx="0" cy="0" r="3"/>
+            <path style="fill:none;stroke:currentColor;stroke-width:1.5" d="M 55,-45 C 25,-18 25,18 55,45"/>
+            <path style="fill:none;stroke:currentColor;stroke-width:1.5" d="M -55,-45 C -25,-18 -25,18 -55,45"/>
+            <path style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" d="M -45,-55 C -18,-25 18,-25 45,-55"/>
+            <path style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" d="M -45,55 C -18,25 18,25 45,55"/>
+          </g>
+          <text class="lbl" x="218" y="72">q&#8321; (&#955;&#8321;=+1)</text>
+          <text class="lbl" x="218" y="212">q&#8322; (&#955;&#8322;=&#8722;1)</text>
+          <text class="lbl muted" x="150" y="20">q(y) = c &gt; 0 (solid), c &lt; 0 (dashed)</text>
+        </svg>
+        <figcaption>For the indefinite $B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$ (same eigenvectors as $A$, eigenvalues $+1,-1$), level sets are hyperbolas opening along $q_1$ for $c>0$ and along $q_2$ for $c<0$: a saddle, not a bowl.</figcaption>
+      </figure>
 
       <h2>The Hessian and convexity</h2>
       <p>Near a critical point $x_0$ (where $\nabla f(x_0)=0$), a smooth $f$ looks like its own quadratic form:</p>
@@ -100,6 +132,13 @@
         f(x_0+\Delta x) \approx f(x_0) + \tfrac12 \Delta x^TH\Delta x, \quad H = \nabla^2f(x_0) \text{ (the Hessian)}.
         $$
       </p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{\Delta x^T}_{1\times n}\ \underbrace{H}_{n\times n}\ \underbrace{\Delta x}_{n\times1} = \underbrace{\text{scalar}}_{1\times1}, \qquad H = H^T \ (n\times n\text{, symmetric}).
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: the Hessian is just another $A$ in $x^TAx$, built from an $n\times n$ grid of second partial derivatives, one feature pair at a time.</em></p>
       <p>
         $H$ positive definite: strict local minimum. $H$ negative definite: local maximum. $H$ indefinite: saddle point.
         $f$ is convex everywhere iff $H(x)$ is positive semidefinite everywhere.

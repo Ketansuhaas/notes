@@ -101,6 +101,28 @@
       <p class="example-label">Example</p>
       <p>Direction of $A^kx_0$ above: $(8,4)$, $(20,16)$, $(56,52)$, i.e. ratios $0.5, 0.8, 0.929,\dots \to 1$, converging to $v_1=(1,1)$.</p>
 
+      <figure class="figure">
+        <svg viewBox="0 0 320 260" role="img" aria-label="Successive points x0, Ax0, A squared x0, A cubed x0 drawn as rays from the origin, each closer in angle to the dominant eigenvector v1 than the last">
+          <text class="lbl" x="12" y="18">A&#7509;x&#8320; turns toward v&#8321;, k = 0,1,2,3</text>
+          <circle class="origin" cx="70" cy="230" r="3"/>
+          <line class="faint" x1="70" y1="230" x2="239" y2="61"/>
+          <text class="lbl muted" x="243" y="58">v&#8321; direction</text>
+          <line class="axis" x1="70" y1="230" x2="130" y2="230"/>
+          <circle class="pt" cx="130" cy="230" r="4"/>
+          <text class="lbl" x="134" y="246">x&#8320;</text>
+          <line class="axis" x1="70" y1="230" x2="150" y2="190"/>
+          <circle class="pt" cx="150" cy="190" r="4"/>
+          <text class="lbl" x="154" y="186">Ax&#8320;</text>
+          <line class="axis" x1="70" y1="230" x2="164" y2="155"/>
+          <circle class="pt" cx="164" cy="155" r="4"/>
+          <text class="lbl" x="168" y="150">A&#178;x&#8320;</text>
+          <line class="axis" x1="70" y1="230" x2="184" y2="125"/>
+          <circle class="pt" cx="184" cy="125" r="4"/>
+          <text class="lbl" x="188" y="118">A&#179;x&#8320;</text>
+        </svg>
+        <figcaption>Each multiplication by $A$ stretches the point by roughly $\lambda_1=3$ along its own direction, but since the $v_2$ part only grows at $\lambda_2=1$, the ray swings closer to $v_1=(1,1)$ every time.</figcaption>
+      </figure>
+
       <h2>Continuous time</h2>
       <p>The same expansion solves $\dot x = Ax$:</p>
       <p>
@@ -109,6 +131,33 @@
         $$
       </p>
       <p class="intuition"><em>Intuition: $\lambda_i>0$ grows, $\lambda_i<0$ decays, $\lambda_i$ complex rotates; same picture, continuous time instead of steps.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>Exactly the discrete formula with $\Lambda^k$ replaced by the matrix exponential $e^{\Lambda t}$, which for a diagonal matrix just exponentiates each entry:</p>
+      <p>
+        $$
+        \underbrace{x(t)}_{n\times1}=\underbrace{V}_{n\times n}\underbrace{\begin{pmatrix}e^{\lambda_1t}&&\\&\ddots&\\&&e^{\lambda_nt}\end{pmatrix}}_{e^{\Lambda t},\ n\times n}\underbrace{V^{-1}x_0}_{n\times1}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: same change-of-basis story as $A^k=V\Lambda^kV^{-1}$, with "raise to the $k$-th power" swapped for "exponentiate," since that is what solves $\dot y=\lambda y$ in each eigen-coordinate.</em></p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 320 260" role="img" aria-label="A smooth curve from x of 0 bending toward the dominant eigenvector direction as t grows, approaching but never crossing it">
+          <defs>
+            <marker id="dyn-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <text class="lbl" x="12" y="18">x(t) bends toward v&#8321; as t grows</text>
+          <circle class="origin" cx="70" cy="230" r="3"/>
+          <line class="faint" x1="70" y1="230" x2="239" y2="61"/>
+          <text class="lbl muted" x="243" y="58">v&#8321; direction</text>
+          <path d="M130,230 Q205,215 228,78" style="fill:none;stroke:currentColor;stroke-width:1.5" marker-end="url(#dyn-arrow)"/>
+          <circle class="pt" cx="130" cy="230" r="4"/>
+          <text class="lbl" x="134" y="246">x(0)</text>
+          <text class="lbl muted" x="150" y="202">t &#8594; &#8734;</text>
+        </svg>
+        <figcaption>As $t\to\infty$, $x(t)$ aligns with $v_1$: the faster-growing term $e^{\lambda_1t}v_1$ eventually swamps $e^{\lambda_2t}v_2$.</figcaption>
+      </figure>
 
       <h2>Why this matters</h2>
       <p>

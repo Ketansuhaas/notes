@@ -70,6 +70,35 @@
       </p>
       <p class="intuition"><em>Intuition: SVD finds one orthonormal basis for the input space and another for the output space, in which $A$ is just a (rectangular) diagonal scaling.</em></p>
 
+      <figure class="figure">
+        <svg viewBox="0 0 640 260" role="img" aria-label="A unit circle in the input space, spanned by orthogonal directions v1 and v2, mapped by A onto an ellipse in the output space with semi-axes sigma1 u1 and sigma2 u2">
+          <defs>
+            <marker id="svd-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <text class="lbl" x="60" y="20">Input: unit circle</text>
+          <text class="lbl" x="420" y="20">Output: A (unit circle)</text>
+          <circle cx="140" cy="150" r="80" style="fill:none;stroke:currentColor;stroke-width:1.5"/>
+          <circle class="origin" cx="140" cy="150" r="3"/>
+          <line class="axis" x1="140" y1="150" x2="220" y2="150" marker-end="url(#svd-arrow)"/>
+          <line class="axis" x1="140" y1="150" x2="140" y2="70" marker-end="url(#svd-arrow)"/>
+          <text class="lbl" x="226" y="154">v&#8321;</text>
+          <text class="lbl" x="118" y="62">v&#8322;</text>
+          <line class="axis" x1="260" y1="150" x2="380" y2="150" marker-end="url(#svd-arrow)"/>
+          <text class="lbl muted" x="312" y="140">A</text>
+          <g transform="rotate(-20 490 150)">
+            <ellipse cx="490" cy="150" rx="110" ry="40" style="fill:none;stroke:currentColor;stroke-width:1.5"/>
+            <line class="axis" x1="490" y1="150" x2="600" y2="150"/>
+            <line class="axis" x1="490" y1="150" x2="490" y2="110"/>
+          </g>
+          <circle class="origin" cx="490" cy="150" r="3"/>
+          <text class="lbl" x="598" y="110">&#963;&#8321;u&#8321;</text>
+          <text class="lbl" x="468" y="94">&#963;&#8322;u&#8322;</text>
+        </svg>
+        <figcaption>$A$ sends the orthonormal basis $v_1,v_2$ to the (generally differently oriented) orthogonal directions $\sigma_1u_1,\sigma_2u_2$: a unit circle always lands as an ellipse.</figcaption>
+      </figure>
+
       <h2>Construction</h2>
       <p>
         $A^TA$ ($n\times n$) and $AA^T$ ($m\times m$) are always symmetric and positive semidefinite,
@@ -80,6 +109,14 @@
         A^TA = V\Lambda V^T, \quad AA^T = U\Lambda' U^T, \quad \lambda_i = \sigma_i^2 \ \text{(shared nonzero eigenvalues)}.
         $$
       </p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{A^TA}_{n\times n}=\underbrace{V}_{n\times n}\ \underbrace{\Lambda}_{n\times n}\ \underbrace{V^T}_{n\times n}, \qquad
+        \underbrace{AA^T}_{m\times m}=\underbrace{U}_{m\times m}\ \underbrace{\Lambda'}_{m\times m}\ \underbrace{U^T}_{m\times m}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $A^TA$ and $AA^T$ are always square, even when $A$ itself is rectangular, which is exactly why the spectral theorem can always be applied to them.</em></p>
       <p>The columns of $V$ and $U$ are linked by $Av_i = \sigma_iu_i$ for every $\sigma_i>0$.</p>
       <p class="intuition"><em>Intuition: $A^TA$ and $AA^T$ are always symmetric, so they're never defective, giving SVD for literally any matrix.</em></p>
       <p class="example-label">Example</p>
@@ -116,8 +153,33 @@
         A = \sum_i \sigma_iu_iv_i^T.
         $$
       </p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{A}_{m\times n}=\sum_i\underbrace{\sigma_iu_i}_{m\times1}\ \underbrace{v_i^T}_{1\times n}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: each term pairs one output direction ($u_i$) with one input direction ($v_i$), scaled by how much $A$ cares about that pairing ($\sigma_i$); summing them, biggest first, rebuilds $A$ exactly.</em></p>
       <p>Keeping only the top $k$ terms gives the best possible rank-$k$ approximation to $A$ (Eckart-Young).</p>
       <p class="intuition"><em>Intuition: dropping the smallest singular values keeps the directions $A$ cares about most and discards the least important ones.</em></p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 640 170" role="img" aria-label="A built up as a sum of rank-one terms sigma_i u_i v_i transpose, each term shrinking as the singular values decrease">
+          <rect x="20" y="35" width="90" height="75" style="fill:none;stroke:currentColor;stroke-width:1.5"/>
+          <text class="lbl" x="22" y="130">&#963;&#8321;u&#8321;v&#8321;&#7488;</text>
+          <text class="lbl muted" x="122" y="80">+</text>
+          <rect x="148" y="52" width="62" height="48" style="fill:none;stroke:currentColor;stroke-width:1.5;opacity:0.6"/>
+          <text class="lbl muted" x="150" y="130">&#963;&#8322;u&#8322;v&#8322;&#7488;</text>
+          <text class="lbl muted" x="222" y="80">+</text>
+          <rect x="248" y="63" width="36" height="28" style="fill:none;stroke:currentColor;stroke-width:1.5;opacity:0.35"/>
+          <text class="lbl muted" x="244" y="130">&#963;&#8323;u&#8323;v&#8323;&#7488;</text>
+          <text class="lbl muted" x="296" y="80">+ &#8943;</text>
+          <text class="lbl" x="350" y="80">=</text>
+          <rect x="390" y="25" width="220" height="95" style="fill:none;stroke:currentColor;stroke-width:1.5"/>
+          <text class="lbl" x="488" y="138">A</text>
+        </svg>
+        <figcaption>Summing the rank-one terms from biggest singular value to smallest rebuilds $A$ exactly; stopping early gives the best rank-$k$ approximation.</figcaption>
+      </figure>
 
       <h2>The pseudoinverse</h2>
       <p>Inverting only the nonzero singular values gives the Moore-Penrose pseudoinverse:</p>

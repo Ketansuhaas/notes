@@ -60,6 +60,48 @@
       <p>The columns of $Q$ are the eigenvectors; the rows of $Q^T$ are the same vectors, laid flat. Orthonormality is the statement that every row of $Q^T$ dotted with every column of $Q$ gives $1$ on the diagonal and $0$ elsewhere, i.e. $Q^TQ=I$.</p>
       <p class="intuition"><em>Intuition: symmetric matrices are a rotation into perpendicular axes, a pure scaling along them, and a rotation back; nothing else can happen.</em></p>
 
+      <figure class="figure">
+        <svg viewBox="0 0 640 260" role="img" aria-label="A acting on a point by stretching its eigenbasis coordinates by lambda 1 and lambda 2">
+          <defs>
+            <marker id="spec-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <text class="lbl" x="12" y="14">x in the eigenbasis</text>
+          <text class="lbl" x="370" y="14">Ax, stretched along q&#8321;, q&#8322;</text>
+
+          <line class="axis" x1="111.7" y1="168.3" x2="203.6" y2="76.4"/>
+          <line class="axis" x1="111.7" y1="111.7" x2="203.6" y2="203.6"/>
+          <text class="lbl" x="207" y="72">q&#8321;</text>
+          <text class="lbl" x="207" y="212">q&#8322;</text>
+          <circle class="origin" cx="140" cy="140" r="3"/>
+
+          <circle class="pt" cx="165.5" cy="140" r="4.5"/>
+          <text class="lbl" x="171" y="136">x</text>
+          <line class="faint" x1="165.5" y1="140" x2="152.7" y2="127.3"/>
+          <line class="faint" x1="165.5" y1="140" x2="152.7" y2="152.7"/>
+          <circle class="pt" cx="152.7" cy="127.3" r="3"/>
+          <circle class="pt" cx="152.7" cy="152.7" r="3"/>
+
+          <line class="axis" x1="240" y1="140" x2="350" y2="140" marker-end="url(#spec-arrow)"/>
+          <text class="lbl" x="283" y="130">A</text>
+
+          <line class="axis" x1="451.7" y1="168.3" x2="571.9" y2="48.1"/>
+          <line class="axis" x1="451.7" y1="111.7" x2="571.9" y2="231.9"/>
+          <text class="lbl" x="576" y="44">q&#8321;</text>
+          <text class="lbl" x="576" y="226">q&#8322;</text>
+          <circle class="origin" cx="480" cy="140" r="3"/>
+
+          <circle class="pt" cx="530.9" cy="114.6" r="4.5"/>
+          <text class="lbl" x="536" y="110">Ax</text>
+          <line class="faint" x1="530.9" y1="114.6" x2="518.2" y2="101.8"/>
+          <line class="faint" x1="530.9" y1="114.6" x2="492.7" y2="152.7"/>
+          <circle class="pt" cx="518.2" cy="101.8" r="3"/>
+          <circle class="pt" cx="492.7" cy="152.7" r="3"/>
+        </svg>
+        <figcaption>$A$ rotates into the eigenbasis $(q_1,q_2)$, stretches by $\lambda_1=3$ along $q_1$ and $\lambda_2=1$ along $q_2$, then rotates back: from $x$ to $Ax=3(x\cdot q_1)q_1+1(x\cdot q_2)q_2$.</figcaption>
+      </figure>
+
       <h2>Eigenvalues are real</h2>
       <p>For $Av = \lambda v$ (allowing complex $\lambda, v$ for now), conjugate-transpose both sides and use $A^H = A^T = A$:</p>
       <p>
@@ -115,6 +157,22 @@
       </p>
       <p>Still, $\operatorname{rank}(A) = 1$: diagonalizable and low-rank are unrelated.</p>
       <p>Pick any orthonormal basis of that plane, e.g. $q_2 = \tfrac{1}{\sqrt2}(1,-1,0)$, $q_3 = \tfrac{1}{\sqrt6}(1,1,-2)$, and $q_1 = \tfrac{1}{\sqrt3}(1,1,1)$ for $\lambda=3$: all three pairwise orthogonal.</p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 400 260" role="img" aria-label="Any orthonormal basis of a repeated eigenvalue's eigenspace is a valid choice of eigenvectors">
+          <circle class="faint" cx="200" cy="140" r="90" style="fill:none"/>
+          <circle class="origin" cx="200" cy="140" r="3"/>
+          <line class="axis" x1="110" y1="140" x2="290" y2="140"/>
+          <line class="axis" x1="200" y1="50" x2="200" y2="230"/>
+          <text class="lbl" x="294" y="144">q&#8322;</text>
+          <text class="lbl" x="204" y="46">q&#8323;</text>
+          <line class="faint" x1="122.1" y1="95" x2="277.9" y2="185"/>
+          <line class="faint" x1="155" y1="62.1" x2="245" y2="217.9"/>
+          <text class="lbl muted" x="283" y="189">q&#8322;&#8242;</text>
+          <text class="lbl muted" x="249" y="224">q&#8323;&#8242;</text>
+        </svg>
+        <figcaption>Within a repeated eigenvalue's eigenspace, any orthonormal pair is a valid choice of eigenvectors: the solid $(q_2,q_3)$ and dashed $(q_2',q_3')$ axes work equally well.</figcaption>
+      </figure>
 
       <h2>$A$ as a sum of simple pieces</h2>
       <p>Multiplying out $Q\Lambda Q^T$ column by column gives a rank-1 sum:</p>

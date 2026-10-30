@@ -49,6 +49,13 @@
         $$
       </p>
       <p class="intuition"><em>Intuition: one free parameter $t$ sweeps out a straight, 1-dimensional path.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{x}_{n\times1}=\underbrace{p}_{n\times1}+t\,\underbrace{d}_{n\times1}, \qquad t\in\mathbb{R}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $x$, $p$, and $d$ are all columns of the same height $n$; $t$ is just a single dial that slides the point along the fixed direction $d$.</em></p>
       <p class="example-label">Example</p>
       <p>
         $$
@@ -56,6 +63,26 @@
         \quad x(0) = \begin{pmatrix}1\\0\end{pmatrix}, \ x(1) = \begin{pmatrix}2\\1\end{pmatrix}.
         $$
       </p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 300 260" role="img" aria-label="A line through p in direction d, with the points x(0)=p and x(1)=p+d marked">
+          <defs>
+            <marker id="geo-line-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <line class="faint" x1="36" y1="116" x2="144" y2="224"/>
+          <circle class="origin" cx="60" cy="200" r="3"/>
+          <text class="lbl muted" x="42" y="214">O</text>
+          <circle class="pt" cx="120" cy="200" r="4.5"/>
+          <text class="lbl" x="128" y="196">p</text>
+          <line class="axis" x1="120" y1="200" x2="180" y2="140" marker-end="url(#geo-line-arrow)"/>
+          <text class="lbl" x="142" y="162">d</text>
+          <circle class="pt" cx="180" cy="140" r="4.5"/>
+          <text class="lbl" x="188" y="136">x(1) = p + d</text>
+        </svg>
+        <figcaption>The line $x=p+td$: a fixed point $p$ plus a scalar multiple of the direction $d$; $t=0$ gives $p$, $t=1$ gives $p+d$.</figcaption>
+      </figure>
 
       <h2>Hyperplanes</h2>
       <p>A hyperplane through $p$ with normal $n \neq 0$ is all points whose "shadow" along $n$ is fixed:</p>
@@ -66,6 +93,13 @@
       </p>
       <p>One linear equation removes one degree of freedom, so a hyperplane in $\mathbb{R}^n$ is $(n{-}1)$-dimensional: a line when $n=2$, an ordinary plane when $n=3$.</p>
       <p class="intuition"><em>Intuition: a hyperplane is "everything at a fixed distance along one direction," flat, and one dimension smaller than the space it sits in.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{n^T}_{1\times n}\underbrace{x}_{n\times1}=\underbrace{c}_{1\times1}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $n\cdot x$ is secretly a $1\times n$ row times an $n\times1$ column, collapsing $n$ numbers down to one; every dot product in this post has this same row-times-column shape.</em></p>
       <p class="example-label">Example</p>
       <p>
         $$
@@ -73,6 +107,25 @@
         \quad (0,0,1) \text{ and } (1,0,0) \text{ both satisfy it.}
         $$
       </p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 260 260" role="img" aria-label="A hyperplane (a line in two dimensions) through p with its normal vector n perpendicular to it">
+          <defs>
+            <marker id="geo-normal-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <line class="axis" x1="36" y1="116" x2="144" y2="224"/>
+          <text class="lbl muted" x="108" y="232">n&middot;x = c</text>
+          <circle class="origin" cx="60" cy="200" r="3"/>
+          <text class="lbl muted" x="42" y="214">O</text>
+          <circle class="pt" cx="120" cy="200" r="4.5"/>
+          <text class="lbl" x="128" y="204">p</text>
+          <line class="faint" x1="120" y1="200" x2="180" y2="140" marker-end="url(#geo-normal-arrow)"/>
+          <text class="lbl" x="186" y="136">n</text>
+        </svg>
+        <figcaption>The hyperplane $n\cdot x=c$ (here a line) is perpendicular to its normal $n$: moving along the line never changes $n\cdot x$.</figcaption>
+      </figure>
 
       <h2>General $k$-dimensional flats</h2>
       <p>More directions, parametrically, or more equations, implicitly: same object, two descriptions.</p>
@@ -114,6 +167,13 @@
         $$
       </p>
       <p class="intuition"><em>Intuition: lines and hyperplanes are linear equations (flat); a sphere is a quadratic one (curved), a genuinely different shape.</em></p>
+      <p class="example-label">Shapes</p>
+      <p>
+        $$
+        \underbrace{(x-c)^T}_{1\times n}\underbrace{(x-c)}_{n\times1} = \underbrace{r^2}_{1\times1}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: squared distance is the same row-times-column shape as every dot product above, just applied to $x-c$ with itself; it's quadratic in $x$ because $x$ now appears twice.</em></p>
       <p class="example-label">Example</p>
       <p>
         $$
@@ -121,6 +181,20 @@
         \quad (1,0): \ 1^2+0^2=1. \ \checkmark
         $$
       </p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 300 300" role="img" aria-label="A circle of radius r centered at c, with a point x on the boundary and the radius drawn between them">
+          <circle cx="150" cy="150" r="80" style="fill:none;stroke:currentColor;stroke-width:1.5"/>
+          <circle class="origin" cx="150" cy="150" r="3"/>
+          <text class="lbl muted" x="132" y="170">c</text>
+          <line class="axis" x1="150" y1="150" x2="230" y2="150"/>
+          <text class="lbl" x="182" y="142">r</text>
+          <circle class="pt" cx="230" cy="150" r="4.5"/>
+          <text class="lbl" x="238" y="146">x</text>
+          <text class="lbl muted" x="104" y="252">&#8741;x&#8722;c&#8741; = r</text>
+        </svg>
+        <figcaption>The circle $\|x-c\|=r$: every point $x$ on the boundary sits at exactly distance $r$ from the center $c$.</figcaption>
+      </figure>
     </article>
   </main>
 

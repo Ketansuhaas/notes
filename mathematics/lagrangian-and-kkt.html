@@ -52,6 +52,27 @@
       <p class="example-label">Example</p>
       <p>$f(x,y)=x^2+y^2$, level set $x^2+y^2=4$ (a circle). At $(2,0)$: $\nabla f=(4,0)$, and the circle's tangent there is $(0,1)$. $(4,0)\cdot(0,1)=0.$ &#10003;</p>
 
+      <figure class="figure">
+        <svg viewBox="0 0 300 260" role="img" aria-label="A circle level set of f(x,y)=x^2+y^2 with the gradient at (2,0) pointing radially outward, perpendicular to the tangent direction">
+          <defs>
+            <marker id="lag-arrow1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <circle fill="none" class="axis" cx="150" cy="140" r="90"/>
+          <circle class="origin" cx="150" cy="140" r="3"/>
+          <text class="lbl muted" x="158" y="152">0</text>
+          <circle class="pt" cx="240" cy="140" r="4.5"/>
+          <text class="lbl" x="246" y="128">x = (2,0)</text>
+          <line class="axis" x1="240" y1="140" x2="285" y2="140" marker-end="url(#lag-arrow1)"/>
+          <text class="lbl" x="248" y="116">&#8711;f = (4,0)</text>
+          <line class="faint" x1="240" y1="106" x2="240" y2="174"/>
+          <text class="lbl muted" x="246" y="190">tangent v</text>
+          <text class="lbl muted" x="40" y="26">level set: f(x,y) = 4</text>
+        </svg>
+        <figcaption>At $(2,0)$ on the circle $x^2+y^2=4$, the gradient $\nabla f=(4,0)$ points straight outward, perpendicular to the tangent direction $(0,1)$.</figcaption>
+      </figure>
+
       <h2>Constrained optimization: a tangency condition</h2>
       <p>Minimize $f(x)$ subject to $g(x)=0$. At an optimum $x^*$ on the constraint surface, moving along any tangent direction $v$ of that surface (so $\nabla g(x^*)\cdot v=0$) can't improve $f$ to first order either, so $\nabla f(x^*)\cdot v=0$ for the same $v$'s. Both gradients are normal to the same tangent space, in $\mathbb{R}^2$ that forces them to be parallel:</p>
       <p>
@@ -62,6 +83,27 @@
       <p class="intuition"><em>Intuition: at the optimum, $f$'s contour must be tangent to the constraint surface; if they crossed instead, sliding along the constraint would still change $f$, so you couldn't be at an optimum yet.</em></p>
       <p class="example-label">Example</p>
       <p>Minimize $f(x,y)=x^2+y^2$ subject to $g(x,y)=x+y-1=0$. $\nabla f=(2x,2y)$, $\nabla g=(1,1)$. Setting $\nabla f=\lambda\nabla g$ gives $x=y$, and $x+y=1$ then gives $x=y=\tfrac12$, $\lambda=1$.</p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 300 300" role="img" aria-label="A circular level curve of f tangent to the constraint line g=0 at the optimum, where the gradients of f and g point in the same direction">
+          <defs>
+            <marker id="lag-arrow2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <circle class="faint" fill="none" cx="90" cy="210" r="71"/>
+          <circle class="origin" cx="90" cy="210" r="3"/>
+          <text class="lbl muted" x="74" y="228">0</text>
+          <text class="lbl muted" x="96" y="148">f(x,y) = &#189;</text>
+          <line class="axis" x1="60" y1="80" x2="220" y2="240"/>
+          <text class="lbl" x="178" y="232">g(x,y) = x+y&#8722;1 = 0</text>
+          <circle class="pt" cx="140" cy="160" r="4.5"/>
+          <text class="lbl" x="104" y="150">x* = (&#189;,&#189;)</text>
+          <line class="axis" x1="140" y1="160" x2="180" y2="120" marker-end="url(#lag-arrow2)"/>
+          <text class="lbl" x="184" y="112">&#8711;f = &#8711;g = (1,1)</text>
+        </svg>
+        <figcaption>At the optimum, $f$'s level curve is tangent to the constraint line, so $\nabla f$ and $\nabla g$ point the same way ($\lambda=1$ here).</figcaption>
+      </figure>
 
       <h2>The Lagrangian</h2>
       <p>$L(x,\lambda) := f(x) + \lambda g(x)$ packages the tangency condition as a single unconstrained stationarity condition:</p>
@@ -97,6 +139,14 @@
         \nabla f(x^*) + \sum_j \mu_j\nabla h_j(x^*) + \sum_i \lambda_i\nabla g_i(x^*) = 0 \quad \text{(stationarity)}
         $$
       </p>
+      <p class="example-label">Shapes</p>
+      <p>With $p$ inequality constraints $h:\mathbb{R}^n\to\mathbb{R}^p$ (Jacobian $J_h$, $p\times n$) and $m$ equality constraints $g$ (Jacobian $J_g$, $m\times n$) as before:</p>
+      <p>
+        $$
+        \underbrace{\nabla f(x^*)}_{n\times1} + \underbrace{J_h(x^*)^T}_{n\times p}\underbrace{\mu}_{p\times1} + \underbrace{J_g(x^*)^T}_{n\times m}\underbrace{\lambda}_{m\times1} = 0.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: same cancellation as the equality-only case, now with two groups of constraint gradients feeding into the same $n$-dimensional sum; complementary slackness is what zeroes out the multiplier of every inequality constraint that isn't actually touching the optimum.</em></p>
       <p>
         $$
         h_j(x^*)\leq0,\ \ g_i(x^*)=0 \quad \text{(primal feasibility)}, \qquad \mu_j\geq0 \quad \text{(dual feasibility)}
@@ -110,6 +160,26 @@
       <p class="example-label">Example</p>
       <p>Minimize $f(x,y)=x^2+y^2$ subject to $h(x,y)=1-x-y\leq0$ (i.e. $x+y\geq1$). The unconstrained minimum of $f$ is the origin, which has $h(0,0)=1>0$: infeasible, so the constraint is active at the optimum.</p>
       <p>Same computation as the equality case gives $x^*=y^*=\tfrac12$. Checking the multiplier's sign: $\nabla f(x^*)=(1,1)$, $\nabla h(x^*)=(-1,-1)$, and $\nabla f=-\mu\nabla h$ gives $\mu=1\geq0$. &#10003; Complementary slackness holds since $h(x^*)=0$ (active).</p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 300 300" role="img" aria-label="The unconstrained minimum at the origin is infeasible, so the constrained optimum sits on the active boundary of the feasible region, with the gradient pushed back from leaving it">
+          <defs>
+            <marker id="lag-arrow3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
+            </marker>
+          </defs>
+          <line class="axis" x1="60" y1="80" x2="220" y2="240"/>
+          <text class="lbl muted" x="168" y="90">feasible: x+y &#8805; 1</text>
+          <text class="lbl muted" x="60" y="260">infeasible: x+y &lt; 1</text>
+          <circle class="origin" cx="90" cy="210" r="3"/>
+          <text class="lbl" x="98" y="222">unconstrained min (0,0), h=1&gt;0</text>
+          <circle class="pt" cx="140" cy="160" r="4.5"/>
+          <text class="lbl" x="104" y="150">x* = (&#189;,&#189;), h=0 (active)</text>
+          <line class="axis" x1="140" y1="160" x2="180" y2="120" marker-end="url(#lag-arrow3)"/>
+          <text class="lbl" x="184" y="112">&#8711;f = &#8722;&#956;&#8711;h, &#956;=1&#8805;0</text>
+        </svg>
+        <figcaption>The unconstrained minimum is infeasible ($h>0$), so the optimum is pushed to the boundary $h=0$, where $\nabla f$ points back against the outward normal $\nabla h$.</figcaption>
+      </figure>
     </article>
   </main>
 
