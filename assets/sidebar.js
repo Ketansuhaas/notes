@@ -12,6 +12,7 @@
         ["posts/singular-value-decomposition.html", "Singular value decomposition"],
         ["posts/gradients-jacobians-and-hessians.html", "Gradients, Jacobians, and Hessians"],
         ["posts/lagrangian-and-kkt.html", "The Lagrangian and KKT conditions"],
+        ["posts/primal-and-dual-problems.html", "Primal and dual problems"],
         ["posts/principal-component-analysis.html", "Principal component analysis"],
         ["posts/variance-decomposition-and-the-eigenbasis.html", "Variance decomposition and the eigenbasis"]
       ]

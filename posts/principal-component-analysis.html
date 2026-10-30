@@ -113,7 +113,7 @@
       <p class="intuition"><em>Intuition: PCA is the spectral theorem applied to $C$, which is secretly the SVD of $X$; nothing new, just a direct application of what's already there.</em></p>
 
       <h2>Dimensionality reduction: projecting down</h2>
-      <p>Keep only the top $k<d$ components. Stack them as the columns of $V_k\in\mathbb{R}^{d\times k}$ (the first $k$ columns of $V$), and replace each $d$-dimensional point $x_i$ by its $k$ coordinates along them:</p>
+      <p>Keep only the top $k&lt;d$ components. Stack them as the columns of $V_k\in\mathbb{R}^{d\times k}$ (the first $k$ columns of $V$), and replace each $d$-dimensional point $x_i$ by its $k$ coordinates along them:</p>
       <p>
         $$
         z_i = V_k^Tx_i\in\mathbb{R}^k, \qquad Z = XV_k.
