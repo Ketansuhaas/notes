@@ -1,7 +1,7 @@
 # Deep Learning Notes: Mathematics & Theory
 
-A simple, static blog on mathematics, language modelling, and generative
-modelling. No build step: plain HTML/CSS, deployed via GitHub Pages.
+A simple, static blog on mathematics and deep learning. No build step:
+plain HTML/CSS, deployed via GitHub Pages.
 
 - White background, black text; follows system dark mode
   (`prefers-color-scheme`) by default, with a manual toggle in the header
@@ -11,30 +11,33 @@ modelling. No build step: plain HTML/CSS, deployed via GitHub Pages.
 - Every post ends with a "Cite this" block (plain-text citation + BibTeX),
   since posts are meant to be citable.
 - Post lists are in chronological order (oldest first).
+- All posts live in one flat list on the home page (no category folders).
+  Every post has one or more **tags** (`.tag` pills under the title and in
+  list entries); the home page has a `.tag-filter` button row (plain
+  vanilla JS, no build step) that shows/hides list items by `data-tags`.
 
 ## Structure
 
 ```
-index.html                              home page, lists categories
-assets/style.css                        shared styling (light/dark)
+index.html                              home page: unified post list + tag filter
+assets/style.css                        shared styling (light/dark, tags, tag-filter)
 assets/cite.js                          "copy BibTeX" button behaviour
 assets/theme.js                         dark/light toggle behaviour
-mathematics/index.html                  post list for the Mathematics category
-mathematics/linear-algebra-fundamentals.html
-mathematics/eigenvalues-and-defectiveness.html
+posts/linear-algebra-fundamentals.html
+posts/random-variables-and-notation.html
+posts/...                               every post, flat, no subfolders
 ```
 
 ## Adding a post
 
-1. Copy an existing post (e.g. `mathematics/linear-algebra-fundamentals.html`)
-   to `mathematics/your-slug.html`.
-2. Update the `<title>`, `<h1>`, date, and body content.
-3. Update the "Cite this" block at the bottom (title, URL, year, BibTeX key).
-4. Add a link to it in `mathematics/index.html`, in chronological order.
-
-Adding a new top-level category (e.g. `language-modelling/`) means copying
-the `mathematics/` folder's pattern and linking it from the root
-`index.html`.
+1. Copy an existing post (e.g. `posts/linear-algebra-fundamentals.html`)
+   to `posts/your-slug.html`.
+2. Update the `<title>`, `<h1>`, date, breadcrumb, and body content.
+3. Update the `<div class="tags">` under the post title.
+4. Update the "Cite this" block at the bottom (title, URL, year, BibTeX key).
+5. Add a `<li data-tags="...">` entry (with its own `.tags` pills) to
+   `index.html`'s `#notes-list`, in chronological order. If any tag is new,
+   add a button for it in `.tag-filter`.
 
 ## Running locally
 

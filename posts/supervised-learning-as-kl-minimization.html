@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Supervised learning as KL minimization - Deep Learning Notes</title>
+  <meta name="description" content="Supervised learning as minimizing forward KL between p_data(y|x) and p_theta(y|x): the derivation lands on maximum likelihood, and specializing the output distribution gives exactly the MSE and cross-entropy losses.">
+  <link rel="stylesheet" href="../assets/style.css?v=9">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Supervised learning as KL minimization</nav>
+
+  <main>
+    <article>
+      <h1>Supervised learning as KL minimization</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-30">30 October 2026</time></div>
+      <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">supervised-learning</span></div>
+
+      <h2>The model is a distribution, not a point estimate</h2>
+      <p>Supervised data $(x,y)$ is assumed drawn from a data-generating distribution, $(x,y)\sim p_{\text{data}}(x,y)=p_{\text{data}}(x)\,p_{\text{data}}(y\mid x)$ (Probability notation and random variables). A model with parameters $\theta$ should likewise define a conditional distribution $p_\theta(y\mid x)$ over outputs, not just a single predicted number: a regression network outputs the <em>mean</em> of a Gaussian over $y$, a classifier outputs the full <em>parameter vector</em> of a Categorical over $y$ (Common distributions).</p>
+      <p class="intuition"><em>Intuition: "the network predicts $y$" is shorthand for "the network predicts a distribution over $y$, and we report its mean/mode." Keeping the full distribution in view is exactly what makes the loss function fall out of probability rather than being chosen by hand.</em></p>
+
+      <h2>The objective: forward KL, averaged over $x$</h2>
+      <p>At each $x$, training should pull $p_\theta(y\mid x)$ toward $p_{\text{data}}(y\mid x)$. Since $p_{\text{data}}$ is the fixed target being approximated, this is a <strong>forward</strong> KL (Lebesgue measure and KL divergence), averaged over $x\sim p_{\text{data}}(x)$:</p>
+      <p>
+        $$
+        \min_\theta\ \mathbb{E}_{x\sim p_{\text{data}}}\Big[KL\big(p_{\text{data}}(y\mid x)\,\|\,p_\theta(y\mid x)\big)\Big].
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: forward KL is mode-covering and zero-avoiding &mdash; the right choice here, since missing mass that $p_{\text{data}}$ actually puts on some $y$ (for a given $x$) is exactly what a bad prediction looks like.</em></p>
+
+      <h2>This is maximum likelihood</h2>
+      <p>Expand the inner KL and drop the term with no $\theta$ in it:</p>
+      <p>
+        $$
+        KL\big(p_{\text{data}}(y\mid x)\,\|\,p_\theta(y\mid x)\big)
+        = \underbrace{\mathbb{E}_{y\sim p_{\text{data}}(y\mid x)}\big[\log p_{\text{data}}(y\mid x)\big]}_{-H(p_{\text{data}}(y\mid x)),\ \text{no }\theta}
+        \ -\ \mathbb{E}_{y\sim p_{\text{data}}(y\mid x)}\big[\log p_\theta(y\mid x)\big].
+        $$
+      </p>
+      <p>Averaging over $x\sim p_{\text{data}}$ and dropping that constant term, minimizing the KL objective is exactly equivalent to:</p>
+      <p>
+        $$
+        \max_\theta\ \mathbb{E}_{(x,y)\sim p_{\text{data}}}\big[\log p_\theta(y\mid x)\big],
+        $$
+      </p>
+      <p>i.e. maximum likelihood estimation (MLE). $p_{\text{data}}$ is never available directly, only through samples, so the expectation is approximated by its empirical average over the training set (law of large numbers), turning "maximize expected log-likelihood" into the familiar, computable:</p>
+      <p>
+        $$
+        \max_\theta\ \frac1N\sum_{i=1}^N \log p_\theta(y_i\mid x_i)
+        \qquad\Longleftrightarrow\qquad
+        \min_\theta\ \underbrace{-\frac1N\sum_{i=1}^N \log p_\theta(y_i\mid x_i)}_{\text{negative log-likelihood (NLL)}}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: forward-KL minimization, MLE, and "minimize the NLL loss" are three names for the same training objective, each one step more concrete than the last: distributional closeness, then an expectation, then a sum you can actually compute.</em></p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 320 170" role="img" aria-label="An observed label marked on the output axis, with the model's predicted distribution drawn as a bell curve centered at the network's output, which training moves to cover the observed point">
+          <line class="axis" x1="20" y1="140" x2="300" y2="140"/>
+          <path class="axis" d="M40,138 C80,138 105,40 170,40 C235,40 260,138 290,138" fill="none"/>
+          <line class="faint" x1="170" y1="140" x2="170" y2="40"/>
+          <text class="lbl" x="176" y="56">p&#952;(y|x), mean f&#952;(x)</text>
+          <circle class="pt" cx="205" cy="140" r="4.5"/>
+          <text class="lbl" x="200" y="160">y (observed)</text>
+        </svg>
+        <figcaption>$p_\theta(y\mid x)$ is a full distribution over $y$ (here Gaussian, mean $f_\theta(x)$); maximizing $\log p_\theta(y\mid x)$ at the observed $y$ pulls that distribution to place more mass there.</figcaption>
+      </figure>
+
+      <h2>Regression: Gaussian output gives MSE</h2>
+      <p>Let $p_\theta(y\mid x) = \mathcal{N}(y;\,f_\theta(x),\,\sigma^2)$ (Common distributions), with $f_\theta(x)$ the network's output and $\sigma^2$ fixed (not a function of $\theta$):</p>
+      <p>
+        $$
+        -\log p_\theta(y\mid x) = \frac{(y-f_\theta(x))^2}{2\sigma^2} + \underbrace{\tfrac12\log(2\pi\sigma^2)}_{\text{const. in }\theta}.
+        $$
+      </p>
+      <p>Minimizing NLL over $\theta$ therefore only depends on the first term, and since $\sigma^2>0$ is a positive constant multiplier, it is equivalent to minimizing the sum of squared errors:</p>
+      <p>
+        $$
+        \min_\theta\ \frac1N\sum_{i=1}^N\big(y_i-f_\theta(x_i)\big)^2, \qquad \text{the MSE loss.}
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: MSE is not an arbitrary engineering choice &mdash; it is exactly what maximum likelihood gives you the moment you assume $y$ given $x$ is Gaussian-distributed around the network's prediction.</em></p>
+
+      <h2>Classification: Categorical output gives cross-entropy</h2>
+      <p>Let $p_\theta(y\mid x) = \text{Categorical}\big(y;\,\text{softmax}(f_\theta(x))\big)$, with $f_\theta(x)=z\in\mathbb{R}^K$ the network's logits (Common distributions). For true label $y=k$:</p>
+      <p>
+        $$
+        -\log p_\theta(y\mid x) = -\log\big(\text{softmax}(f_\theta(x))_k\big),
+        $$
+      </p>
+      <p>which is precisely the cross-entropy loss between the one-hot label and the predicted class probabilities. This is not a coincidence of naming: for any two distributions $p,q$ on the same space, the cross-entropy $H(p,q):=-\mathbb{E}_{y\sim p}[\log q(y)]$ decomposes as</p>
+      <p>
+        $$
+        H(p,q) = -\mathbb{E}_{y\sim p}[\log p(y)] - \mathbb{E}_{y\sim p}\left[\log\frac{q(y)}{p(y)}\right] = \underbrace{H(p)}_{\text{entropy of }p} + \underbrace{KL(p\|q)}_{\text{forward KL}}.
+        $$
+      </p>
+      <p>Taking $p=p_{\text{data}}(y\mid x)$ (a one-hot point mass at the true label, in the usual hard-label setting) and $q=p_\theta(y\mid x)$: $H(p_{\text{data}})$ does not depend on $\theta$, so minimizing cross-entropy $H(p_{\text{data}},p_\theta)$ and minimizing forward $KL(p_{\text{data}}\|p_\theta)$ differ only by that constant &mdash; they have the same minimizer in $\theta$.</p>
+      <p class="intuition"><em>Intuition: cross-entropy loss is not a separate idea from KL divergence; it is forward KL plus a constant that doesn't move under training, so "minimize cross-entropy" and "minimize forward KL from the true label distribution" are the same instruction.</em></p>
+
+      <h2>One objective, two losses</h2>
+      <p>MSE and cross-entropy, the two most common losses in deep learning, are the same forward-KL/MLE objective from this post, specialized only by a choice of output-distribution family: Gaussian gives MSE, Categorical gives cross-entropy. The "loss function" is really two decisions bundled together &mdash; what family $p_\theta(y\mid x)$ belongs to, and forward KL as the closeness measure &mdash; and once those are fixed, the loss is derived, not designed.</p>
+      <p class="intuition"><em>Intuition: Generative modeling runs the same machinery one level up: instead of modeling $y$ given $x$, it models $x$ itself, $p_\theta(x)$ vs. $p_{\text{data}}(x)$, with the same KL divergence doing the work &mdash; and, as that post lays out, nearly every generative modeling method is best read as a different strategy for approximating $p_\theta$ under that same objective.</em></p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

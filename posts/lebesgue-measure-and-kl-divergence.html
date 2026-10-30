@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme");
+        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Lebesgue measure, densities, and KL divergence - Deep Learning Notes</title>
+  <meta name="description" content="Why P(X=x)=0 yet p(x)>0: measures, Lebesgue measure, and densities as Radon-Nikodym derivatives, then KL divergence, forward vs. reverse, and mode-covering vs. mode-seeking.">
+  <link rel="stylesheet" href="../assets/style.css?v=9">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Lebesgue measure, densities, and KL divergence</nav>
+
+  <main>
+    <article>
+      <h1>Lebesgue measure, densities, and KL divergence</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-30">30 October 2026</time></div>
+      <div class="tags"><span class="tag">probability</span><span class="tag">measure-theory</span><span class="tag">information-theory</span></div>
+
+      <h2>Why measure theory at all</h2>
+      <p>A probability measure $P$ assigns a number in $[0,1]$ to <em>events</em> (sets of outcomes), consistently: the measure of a countable disjoint union is the sum of the measures. On a discrete space, this is just bookkeeping &mdash; put a mass $p(x)\geq0$ on each point $x$, with $\sum_x p(x)=1$, and $P(A)=\sum_{x\in A}p(x)$.</p>
+      <p>On a continuous space like $\mathbb{R}$, that trick fails: there are uncountably many points, so if each carried positive mass the total would be infinite. The fix is to stop assigning mass to points and instead measure <em>sets by their extent</em>: the <strong>Lebesgue measure</strong> $\lambda$ gives an interval $[a,b]$ the measure $b-a$ (length), a region in $\mathbb{R}^2$ its area, and so on &mdash; it is the rigorous version of "length/area/volume," and it assigns every single point measure zero, consistent with the uncountability problem above.</p>
+      <p class="intuition"><em>Intuition: $\lambda$ is what lets you say "how big is this set" in a continuous space without ever asking "how much does this one point weigh," since the honest answer to the second question is always zero.</em></p>
+      <p>A probability measure $P$ on $\mathbb{R}$ is then built <em>relative to</em> $\lambda$ via a density $p(x)$, the rate at which $P$'s mass accumulates per unit of $\lambda$:</p>
+      <p>
+        $$
+        P(A) = \int_A p(x)\,d\lambda(x) \qquad \Big(\text{write } d\lambda(x) = dx \text{ as usual}\Big).
+        $$
+      </p>
+      <p>This $p = \tfrac{dP}{d\lambda}$ is the Radon-Nikodym derivative of $P$ with respect to $\lambda$: whatever function you'd have to integrate against $\lambda$ to recover $P$ exactly. You will not need more machinery than that one sentence for anything in this series.</p>
+
+      <h2>$P(X=x)=0$, yet $p(x)>0$</h2>
+      <p>Probability notation and random variables flagged this tension and deferred it here; measure theory is exactly where it resolves. $p(x)$ is a density with respect to $\lambda$, not a probability: it is the <em>local rate</em> of $P$, not $P$'s value at a point. A single point has $\lambda$-measure zero, so $P(X=x)=\int_{\{x\}}p\,d\lambda=0$ regardless of how large $p(x)$ is &mdash; multiplying any finite height by zero width still gives zero. Meanwhile $p(x)$ itself can be large (it can exceed $1$, e.g. $\mathcal{N}(0,0.01)$ at $x=0$, from Common distributions), because it is measuring concentration, not mass.</p>
+      <p class="intuition"><em>Intuition: $P$ answers "how much mass sits on this set," $p$ answers "how fast would mass accumulate if you widened the set a little, right here." A point has no width to widen, so the first question always returns zero there, no matter what the second question returns.</em></p>
+
+      <h2>One formula, two cases</h2>
+      <p>Discrete and continuous are the same statement against two different reference (base) measures: $\lambda$ for continuous spaces, and the counting measure $\nu$ (mass $1$ on every point) for discrete ones. Against $\nu$, $P(A)=\int_A p\,d\nu=\sum_{x\in A}p(x)$ recovers the ordinary sum exactly. This is why expectation, KL divergence, and nearly every other formula below are written with a single $\int p(x)\,d\mu(x)$ and are read as $\sum_x p(x)(\cdots)$ whenever $x$ is discrete &mdash; the integral sign is not asserting continuity, it is just not committing to a particular base measure.</p>
+
+      <h2>KL divergence</h2>
+      <p>For two densities $p,q$ against the same base measure, the Kullback-Leibler divergence from $q$ to $p$ is:</p>
+      <p>
+        $$
+        KL(p\|q) = \mathbb{E}_{x\sim p}\left[\log\frac{p(x)}{q(x)}\right] = \int p(x)\log\frac{p(x)}{q(x)}\,d\mu(x).
+        $$
+      </p>
+      <p>Non-negativity, $KL(p\|q)\geq0$ with equality iff $p=q$ (a.e.), follows from Jensen's inequality applied to the convex function $-\log$:</p>
+      <p>
+        $$
+        KL(p\|q) = \mathbb{E}_{x\sim p}\left[-\log\frac{q(x)}{p(x)}\right] \geq -\log\mathbb{E}_{x\sim p}\left[\frac{q(x)}{p(x)}\right] = -\log\int q(x)\,d\mu(x) = -\log 1 = 0.
+        $$
+      </p>
+      <p>But $KL(p\|q)\neq KL(q\|p)$ in general, and KL satisfies no triangle inequality &mdash; it is a <em>divergence</em>, a measure of dissimilarity, not a distance.</p>
+      <p class="intuition"><em>Intuition: $\log(p/q)$ is large exactly where $p$ puts much more mass than $q$ does; averaging that under $p$ (not $q$) means places $p$ visits often are weighted heavily &mdash; and since the roles of $p,q$ aren't interchangeable in that average, neither is the result.</em></p>
+
+      <h2>Forward vs. reverse KL</h2>
+      <p>Because KL is asymmetric, $KL(p\|q)$ (<strong>forward</strong>, $p$ fixed/target, $q$ the approximation) and $KL(q\|p)$ (<strong>reverse</strong>) ask different questions and are minimized by different-looking $q$'s:</p>
+      <ul>
+        <li><strong>Forward, $KL(p\|q)$ &mdash; mode-covering.</strong> The average is taken under $p$, so any region where $p(x)>0$ but $q(x)\to0$ makes $\log(p/q)\to\infty$ there, and $p$ actually weights that region. $q$ is therefore punished severely for missing any mass of $p$, and is pushed to spread out and cover every mode $p$ has, even at the cost of also covering low-density regions in between.</li>
+        <li><strong>Reverse, $KL(q\|p)$ &mdash; mode-seeking.</strong> The average is now under $q$, so $q$ only "pays" at points it actually visits; $q$ is free to ignore modes of $p$ entirely (if $q(x)\to0$ there, that term vanishes regardless of $p(x)$), but is punished for placing mass where $p(x)\to0$. $q$ therefore prefers to lock tightly onto a single mode of $p$ rather than spread thin across several.</li>
+      </ul>
+      <p class="intuition"><em>Intuition: forward KL is afraid of zeros in $q$ (zero-avoiding &rarr; covers everything); reverse KL is afraid of its own mass landing where $p$ is zero (zero-forcing &rarr; hugs one mode and ignores the rest).</em></p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 640 220" role="img" aria-label="A bimodal target density with two fitting curves: a wide curve covering both modes, typical of minimizing forward KL, and a narrow curve sitting on only the left mode, typical of minimizing reverse KL">
+          <text class="lbl" x="16" y="18">target p(x): two modes</text>
+          <line class="axis" x1="30" y1="190" x2="610" y2="190"/>
+          <path class="faint" d="M40,190 C90,190 110,70 150,70 C190,70 200,150 230,150 C260,150 270,60 310,60 C350,60 360,150 390,170 C410,180 420,190 430,190" fill="none"/>
+          <text class="lbl muted" x="135" y="55">mode 1</text>
+          <text class="lbl muted" x="295" y="45">mode 2</text>
+
+          <path class="axis" d="M40,190 C110,190 160,100 230,100 C300,100 350,190 400,190" fill="none"/>
+          <text class="lbl" x="420" y="150">forward KL(p&#8741;q): wide, covers both</text>
+
+          <path class="axis" style="stroke-dasharray:2 2" d="M90,190 C115,190 125,85 150,85 C175,85 185,190 210,190" fill="none"/>
+          <text class="lbl" x="30" y="205">reverse KL(q&#8741;p): narrow, picks one</text>
+        </svg>
+        <figcaption>Fitting a unimodal $q$ to a bimodal $p$: minimizing forward $KL(p\|q)$ spreads $q$ to avoid missing either mode; minimizing reverse $KL(q\|p)$ lets $q$ collapse onto whichever single mode it finds.</figcaption>
+      </figure>
+
+      <p class="intuition"><em>Intuition: forward KL is the divergence maximum likelihood estimation minimizes &mdash; the subject of Supervised learning as KL minimization next &mdash; while reverse KL (or objectives built from it) shows up in variational methods, part of the survey in Generative modeling.</em></p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

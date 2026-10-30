@@ -14,7 +14,7 @@
   </script>
   <title>Principal component analysis - Deep Learning Notes</title>
   <meta name="description" content="PCA derived two ways, maximizing variance and constrained optimization, both landing on the same eigenvectors of the covariance matrix, then tied to the SVD.">
-  <link rel="stylesheet" href="../assets/style.css?v=6">
+  <link rel="stylesheet" href="../assets/style.css?v=9">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -31,15 +31,15 @@
       <a class="site-title" href="../index.html">Deep Learning Notes</a>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
-    <div class="site-subtitle">Mathematics</div>
   </header>
 
-  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / <a href="index.html">Mathematics</a> / Principal component analysis</nav>
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Principal component analysis</nav>
 
   <main>
     <article>
       <h1>Principal component analysis</h1>
       <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
+      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span></div>
 
       <h2>Setup: variance along a direction</h2>
       <p>Given centered data points $x_1,\dots,x_n\in\mathbb{R}^d$ (mean already subtracted), stacked as rows of $X$, the sample covariance matrix is $C=\tfrac1n\sum_ix_ix_i^T=\tfrac1nX^TX$, symmetric and positive semidefinite.</p>

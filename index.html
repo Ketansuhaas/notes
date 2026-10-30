@@ -13,8 +13,8 @@
     })();
   </script>
   <title>Deep Learning Notes: Mathematics &amp; Theory</title>
-  <meta name="description" content="Deep Learning Notes: Mathematics &amp; Theory - notes on mathematics, language modelling, and generative modelling.">
-  <link rel="stylesheet" href="assets/style.css?v=6">
+  <meta name="description" content="Deep Learning Notes: Mathematics &amp; Theory - notes on mathematics and deep learning, filterable by tag.">
+  <link rel="stylesheet" href="assets/style.css?v=9">
 </head>
 <body>
   <header class="site-header">
@@ -22,24 +22,97 @@
       <a class="site-title" href="index.html">Deep Learning Notes</a>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
-    <div class="site-subtitle">Mathematics, language modelling, and generative modelling, by Ketan Suhaas Saichandran</div>
+    <div class="site-subtitle">Notes on mathematics and deep learning, by Ketan Suhaas Saichandran</div>
   </header>
 
   <main>
-    <ul class="category-list">
-      <li>
-        <a href="mathematics/index.html">Mathematics</a>
-        <div class="category-desc">Proofs, derivations, and ideas worth writing down.</div>
+    <div class="tag-filter">
+      <button type="button" data-tag="all" class="active">All</button>
+      <button type="button" data-tag="linear-algebra">linear-algebra</button>
+      <button type="button" data-tag="probability">probability</button>
+      <button type="button" data-tag="deep-learning">deep-learning</button>
+      <button type="button" data-tag="measure-theory">measure-theory</button>
+      <button type="button" data-tag="information-theory">information-theory</button>
+      <button type="button" data-tag="supervised-learning">supervised-learning</button>
+      <button type="button" data-tag="generative-modeling">generative-modeling</button>
+    </div>
+
+    <ul class="post-list" id="notes-list">
+      <li data-tags="linear-algebra">
+        <div class="title-row"><a href="posts/geometry-in-rn.html">Lines, planes, and spheres in R^n</a><time datetime="2026-10-27">2026-10-27</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span></div>
       </li>
-      <li>
-        <span class="coming-soon">Language modelling</span>
-        <div class="category-desc">Coming soon.</div>
+      <li data-tags="linear-algebra">
+        <div class="title-row"><a href="posts/linear-algebra-fundamentals.html">Rank, subspaces, and projections</a><time datetime="2026-10-28">2026-10-28</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span></div>
       </li>
-      <li>
-        <span class="coming-soon">Generative modelling</span>
-        <div class="category-desc">Coming soon.</div>
+      <li data-tags="linear-algebra">
+        <div class="title-row"><a href="posts/eigenvalues-and-defectiveness.html">Eigenvalues, eigenvectors, and defectiveness</a><time datetime="2026-10-28">2026-10-28</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span></div>
+      </li>
+      <li data-tags="linear-algebra">
+        <div class="title-row"><a href="posts/spectral-theorem.html">The spectral theorem</a><time datetime="2026-10-29">2026-10-29</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span></div>
+      </li>
+      <li data-tags="linear-algebra">
+        <div class="title-row"><a href="posts/dynamics-in-the-eigenbasis.html">Dynamics in the eigenbasis</a><time datetime="2026-10-29">2026-10-29</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span></div>
+      </li>
+      <li data-tags="linear-algebra">
+        <div class="title-row"><a href="posts/quadratic-forms-and-positive-definiteness.html">Quadratic forms and positive definiteness</a><time datetime="2026-10-29">2026-10-29</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span></div>
+      </li>
+      <li data-tags="linear-algebra">
+        <div class="title-row"><a href="posts/singular-value-decomposition.html">Singular value decomposition</a><time datetime="2026-10-29">2026-10-29</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span></div>
+      </li>
+      <li data-tags="linear-algebra deep-learning">
+        <div class="title-row"><a href="posts/gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a><time datetime="2026-10-29">2026-10-29</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span></div>
+      </li>
+      <li data-tags="linear-algebra">
+        <div class="title-row"><a href="posts/lagrangian-and-kkt.html">The Lagrangian and KKT conditions</a><time datetime="2026-10-29">2026-10-29</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span></div>
+      </li>
+      <li data-tags="linear-algebra deep-learning">
+        <div class="title-row"><a href="posts/principal-component-analysis.html">Principal component analysis</a><time datetime="2026-10-29">2026-10-29</time></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span></div>
+      </li>
+      <li data-tags="probability deep-learning">
+        <div class="title-row"><a href="posts/random-variables-and-notation.html">Probability notation and random variables</a><time datetime="2026-10-30">2026-10-30</time></div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span></div>
+      </li>
+      <li data-tags="probability deep-learning">
+        <div class="title-row"><a href="posts/common-distributions.html">Common distributions, and where they come from in deep learning</a><time datetime="2026-10-30">2026-10-30</time></div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span></div>
+      </li>
+      <li data-tags="probability measure-theory information-theory">
+        <div class="title-row"><a href="posts/lebesgue-measure-and-kl-divergence.html">Lebesgue measure, densities, and KL divergence</a><time datetime="2026-10-30">2026-10-30</time></div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">measure-theory</span><span class="tag">information-theory</span></div>
+      </li>
+      <li data-tags="information-theory deep-learning supervised-learning">
+        <div class="title-row"><a href="posts/supervised-learning-as-kl-minimization.html">Supervised learning as KL minimization</a><time datetime="2026-10-30">2026-10-30</time></div>
+        <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">supervised-learning</span></div>
+      </li>
+      <li data-tags="information-theory deep-learning generative-modeling">
+        <div class="title-row"><a href="posts/generative-modeling-and-kl-divergence.html">Generative modeling: approximating p&#952;</a><time datetime="2026-10-30">2026-10-30</time></div>
+        <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">generative-modeling</span></div>
       </li>
     </ul>
+    <script>
+      (function () {
+        var btns = document.querySelectorAll('.tag-filter button');
+        var items = document.querySelectorAll('#notes-list li');
+        function apply(tag) {
+          btns.forEach(function (b) { b.classList.toggle('active', b.dataset.tag === tag); });
+          items.forEach(function (li) {
+            var tags = (li.dataset.tags || '').split(' ');
+            li.hidden = tag !== 'all' && tags.indexOf(tag) === -1;
+          });
+        }
+        btns.forEach(function (b) { b.addEventListener('click', function () { apply(b.dataset.tag); }); });
+      })();
+    </script>
 
     <section class="cite-box">
       <h2>Cite this</h2>
