@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>The reparameterization trick - Deep Learning Notes</title>
+  <meta name="description" content="The reparameterization trick: rewriting a sample as a deterministic function of a fixed noise source, so a gradient of an expectation over a parameterized distribution can move inside the expectation.">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / The reparameterization trick</nav>
+
+  <main>
+    <article>
+      <h1>The reparameterization trick</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">deep-learning</span><span class="tag">generative-modeling</span><span class="tag">reparameterization-trick</span><span class="tag">gradients</span></div>
+
+      <h2>The formulation</h2>
+      <p>Goal: $\nabla_\phi\,\mathbb{E}_{z\sim q_\phi(z\mid x)}\big[f(z)\big]$, a gradient of an expectation over a $\phi$-dependent distribution. Write $z$ instead as a deterministic function of $\phi$ and a separate noise variable $\epsilon$ drawn from a fixed distribution with no $\phi$ in it:</p>
+      <p>
+        $$
+        z = g_\phi(\epsilon,x), \qquad \epsilon\sim p(\epsilon) \quad\text{(fixed, independent of $\phi$)}.
+        $$
+      </p>
+      <p>The expectation over $q_\phi$ becomes an expectation over the fixed $p(\epsilon)$:</p>
+      <p>
+        $$
+        \mathbb{E}_{z\sim q_\phi(z\mid x)}\big[f(z)\big] = \mathbb{E}_{\epsilon\sim p(\epsilon)}\big[f(g_\phi(\epsilon,x))\big].
+        $$
+      </p>
+      <p>$\phi$ now sits only inside the function being averaged, not in the distribution being averaged over, so $\nabla_\phi$ can move inside:</p>
+      <p>
+        $$
+        \nabla_\phi\,\mathbb{E}_{\epsilon\sim p(\epsilon)}\big[f(g_\phi(\epsilon,x))\big] = \mathbb{E}_{\epsilon\sim p(\epsilon)}\big[\nabla_\phi f(g_\phi(\epsilon,x))\big]
+        \ \approx\ \frac1S\sum_{s=1}^S\nabla_\phi f\big(g_\phi(\epsilon_s,x)\big), \quad \epsilon_s\sim p(\epsilon).
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: the randomness did not disappear, it moved to $\epsilon$, a part of the computation $\phi$ has no say over; everything downstream of $\epsilon$ is an ordinary differentiable function of $\phi$ again.</em></p>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

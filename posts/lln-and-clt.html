@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Law of large numbers and the central limit theorem - Deep Learning Notes</title>
+  <meta name="description" content="Convergence in probability, almost surely, and in distribution; the weak law of large numbers proved via Chebyshev's inequality, with the strong law and the central limit theorem stated and explained without proof.">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Law of large numbers and the central limit theorem</nav>
+
+  <main>
+    <article>
+      <h1>Law of large numbers and the central limit theorem</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">probability</span><span class="tag">statistics</span><span class="tag">law-of-large-numbers</span><span class="tag">central-limit-theorem</span><span class="tag">concentration-inequalities</span></div>
+
+      <h2>Setup</h2>
+      <p>$x_1,\dots,x_n$ i.i.d. (Probability notation and random variables) from $p$, with $\mu=\mathbb{E}[x]$, $\sigma^2=\operatorname{Var}(x)<\infty$. The sample mean:</p>
+      <p>
+        $$
+        \bar x_n = \frac1n\sum_{i=1}^n x_i.
+        $$
+      </p>
+      <p>$\bar x_n$ is itself a random variable (a different dataset gives a different $\bar x_n$), with $\mathbb{E}[\bar x_n]=\mu$ and:</p>
+      <p>
+        $$
+        \operatorname{Var}(\bar x_n) = \frac{\sigma^2}{n},
+        $$
+      </p>
+      <p>by independence (variances of independent sums add, and scale by $1/n^2$).</p>
+      <p class="intuition"><em>Intuition: the sample mean's own spread shrinks as $n$ grows; that shrinking variance is the entire engine behind both results below.</em></p>
+
+      <h2>Notation: three kinds of convergence</h2>
+      <p>
+        $$
+        X_n \xrightarrow{\ p\ } X: \quad \text{for every } \epsilon>0,\ \ P(|X_n-X|>\epsilon)\to0.
+        $$
+      </p>
+      <p>
+        $$
+        X_n \xrightarrow{\ \text{a.s.}\ } X: \quad P\Big(\lim_{n\to\infty}X_n = X\Big) = 1.
+        $$
+      </p>
+      <p>
+        $$
+        X_n \xrightarrow{\ d\ } X: \quad P(X_n\leq x)\to P(X\leq x) \ \text{at every continuity point } x.
+        $$
+      </p>
+      <p>Almost sure convergence is the strongest of the three: $\xrightarrow{\text{a.s.}}\ \Rightarrow\ \xrightarrow{p}\ \Rightarrow\ \xrightarrow{d}$ (the reverse implications fail in general).</p>
+      <p class="intuition"><em>Intuition: $\xrightarrow{\text{a.s.}}$ asks the actual sequence of outcomes to settle down, path by path; $\xrightarrow{p}$ only asks the probability of a large gap to shrink at each $n$, without ever requiring the sequence to settle; $\xrightarrow{d}$ asks even less, only that the histogram's shape settles, not the variables themselves.</em></p>
+
+      <h2>Weak law of large numbers</h2>
+      <p>
+        $$
+        \bar x_n \xrightarrow{\ p\ } \mu \quad \text{as } n\to\infty.
+        $$
+      </p>
+      <p>Quick proof, by Chebyshev's inequality (Concentration inequalities), for any $\epsilon>0$:</p>
+      <p>
+        $$
+        P(|\bar x_n-\mu|\geq\epsilon) \ \leq\ \frac{\operatorname{Var}(\bar x_n)}{\epsilon^2} = \frac{\sigma^2}{n\epsilon^2} \ \xrightarrow[n\to\infty]{}\ 0,
+        $$
+      </p>
+      <p>which is exactly the definition of $\bar x_n\xrightarrow{p}\mu$. &#10003;</p>
+      <p class="intuition"><em>Intuition: averaging cancels noise; enough independent samples and the sample mean has nowhere left to fluctuate to but $\mu$.</em></p>
+
+      <h2>Strong law of large numbers</h2>
+      <p>
+        $$
+        \bar x_n \xrightarrow{\ \text{a.s.}\ } \mu \quad \text{as } n\to\infty.
+        $$
+      </p>
+      <p>A stronger statement than the weak law: not just that $\bar x_n$ is unlikely to be far from $\mu$ at any given $n$, but that the actual sequence $\bar x_1,\bar x_2,\dots$ settles down to $\mu$ for good, with probability $1$. It requires only a finite mean (no variance needed at all), but the proof needs more machinery than fits here (typically the Borel&ndash;Cantelli lemma or a martingale argument), so it is stated without proof.</p>
+      <p class="intuition"><em>Intuition: the weak law only promises $\bar x_n$ is probably close to $\mu$ at each fixed $n$ separately; the strong law promises the whole infinite sequence of outcomes converges, path by path, not just one snapshot at a time.</em></p>
+
+      <h2>Central limit theorem</h2>
+      <p>The LLN says $\bar x_n\to\mu$ but says nothing about the error $\bar x_n-\mu$ on the way there. Rescale that error by $\sqrt n$ (exactly the rate needed to stop it from shrinking to $0$ or blowing up):</p>
+      <p>
+        $$
+        \sqrt n\,(\bar x_n - \mu) \ \xrightarrow{\ d\ }\ \mathcal{N}(0,\sigma^2).
+        $$
+      </p>
+      <p>Equivalently, for large $n$:</p>
+      <p>
+        $$
+        \bar x_n \ \approx\ \mathcal{N}\!\left(\mu,\ \frac{\sigma^2}{n}\right), \qquad
+        Z_n := \frac{\bar x_n-\mu}{\sigma/\sqrt n} \ \xrightarrow{\ d\ }\ \mathcal{N}(0,1).
+        $$
+      </p>
+      <p>This holds no matter what $p$ is (Bernoulli, uniform, wildly skewed), as long as $\sigma^2<\infty$: the Gaussian shape comes from the averaging, not from $p$.</p>
+      <p class="intuition"><em>Intuition: the sample mean's leftover error, viewed at exactly the $1/\sqrt n$ scale, always looks Gaussian; too coarse a scale and the error looks like a point ($0$), too fine and it looks unbounded.</em></p>
+      <p>The proof (typically via the moment generating function or, more generally, the characteristic function, showing it converges to the Gaussian's) needs more buildup than fits here, so it too is stated without proof.</p>
+
+      <h2>LLN vs. CLT</h2>
+      <p>
+        $$
+        \text{Weak LLN: } \bar x_n \xrightarrow{p} \underbrace{\mu}_{\text{a number}}, \qquad
+        \text{CLT: } \sqrt n(\bar x_n-\mu) \xrightarrow{d} \underbrace{\mathcal{N}(0,\sigma^2)}_{\text{a distribution}}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: LLN zooms out and says where the sample mean ends up; CLT zooms back in at the $\sqrt n$ scale and says what the leftover error looks like, regardless of where you started.</em></p>
+
+      <h2>Where this is used</h2>
+      <ul>
+        <li><strong>Confidence intervals.</strong> $Z_n\approx\mathcal{N}(0,1)$ justifies $\bar x_n \pm 1.96\,\sigma/\sqrt n$ as a 95% interval for $\mu$, for essentially any $p$ with finite variance; when $\sigma$ itself has to be estimated, this becomes the $t$-statistic instead (Confidence intervals: the z and t statistics).</li>
+        <li><strong>Monte Carlo estimation.</strong> Any expectation $\mathbb{E}[f(x)]$ estimated by averaging samples has error shrinking like $\sigma/\sqrt n$ (LLN) and approximately Gaussian (CLT), which is exactly where the standard "error bars" on a Monte Carlo estimate come from.</li>
+        <li><strong>Minibatch gradients.</strong> A minibatch gradient is a sample mean over examples; LLN is why larger batches give less noisy gradient estimates, and CLT is why that noise is often modeled as approximately Gaussian.</li>
+      </ul>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Weight initialization and variance propagation - Deep Learning Notes</title>
+  <meta name="description" content="Why a deep network needs constant activation variance layer to layer, the exact variance-propagation computation, and how LeCun, Xavier/Glorot, and He initialization are each derived from forcing that per-layer factor to 1.">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Weight initialization and variance propagation</nav>
+
+  <main>
+    <article>
+      <h1>Weight initialization and variance propagation</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">deep-learning</span><span class="tag">variance</span><span class="tag">weight-initialization</span></div>
+
+      <h2>The problem: variance drifts layer to layer</h2>
+      <p>One linear layer, $y=Wx$, $x\in\mathbb{R}^{n_{\text{in}}}$, $W\in\mathbb{R}^{n_{\text{out}}\times n_{\text{in}}}$ with i.i.d. entries, mean $0$, variance $\sigma_W^2$, independent of $x$. For independent, mean-$0$ $A,B$: $\operatorname{Var}(AB)=\operatorname{Var}(A)\operatorname{Var}(B)$ exactly (both cross terms in $\mathbb{E}[A^2B^2]-(\mathbb{E}[AB])^2$ factor cleanly). So, for $x_i$ i.i.d. with variance $\sigma_x^2$:</p>
+      <p>
+        $$
+        \operatorname{Var}(y_j) = \operatorname{Var}\Big(\sum_{i=1}^{n_{\text{in}}}W_{ji}x_i\Big) = \sum_{i=1}^{n_{\text{in}}}\operatorname{Var}(W_{ji})\operatorname{Var}(x_i) = n_{\text{in}}\,\sigma_W^2\,\sigma_x^2.
+        $$
+      </p>
+      <p>Each layer multiplies variance by a fixed factor, $n_{\text{in}}\sigma_W^2$. Across $L$ layers that compounds to the $L$-th power of that factor.</p>
+      <p class="intuition"><em>Intuition: this is Dynamics in the eigenbasis again, one step removed, repeated multiplication by a factor above $1$ blows up, below $1$ collapses to $0$; here the factor is $n_{\text{in}}\sigma_W^2$ and depth plays the role of the exponent.</em></p>
+
+      <h2>The fix: force the per-layer factor to 1</h2>
+      <p>Require $\operatorname{Var}(y_j) = \operatorname{Var}(x_i)$, i.e. the factor equals $1$:</p>
+      <p>
+        $$
+        n_{\text{in}}\,\sigma_W^2 = 1 \quad\Longrightarrow\quad \sigma_W^2 = \frac1{n_{\text{in}}}.
+        $$
+      </p>
+      <p>This is LeCun initialization: sample each weight from a distribution with variance $1/n_{\text{in}}$ (e.g. $\mathcal{N}(0,1/n_{\text{in}})$), and the forward-pass variance neither grows nor shrinks with depth.</p>
+      <p class="intuition"><em>Intuition: wider layers (larger $n_{\text{in}}$) sum more terms, so each individual weight must be proportionally smaller to keep the total sum's variance the same.</em></p>
+
+      <h2>Xavier/Glorot: balancing forward and backward</h2>
+      <p>The backward pass has its own variance-propagation equation. Backprop sends a gradient through $W^T$ (Backpropagation via Jacobian-vector products), so by the same computation with the roles of $n_{\text{in}}$ and $n_{\text{out}}$ swapped:</p>
+      <p>
+        $$
+        \operatorname{Var}\big(\nabla_x\mathcal{L}\big) = n_{\text{out}}\,\sigma_W^2\,\operatorname{Var}\big(\nabla_y\mathcal{L}\big).
+        $$
+      </p>
+      <p>Matching the forward factor ($n_{\text{in}}\sigma_W^2=1$) and the backward factor ($n_{\text{out}}\sigma_W^2=1$) at once is only possible if $n_{\text{in}}=n_{\text{out}}$. Xavier/Glorot initialization compromises with their average:</p>
+      <p>
+        $$
+        \sigma_W^2 = \frac{2}{n_{\text{in}}+n_{\text{out}}}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: you cannot satisfy two different constraints on one shared parameter $\sigma_W^2$ unless they happen to agree; split the difference instead of favoring one direction and letting the other drift.</em></p>
+
+      <h2>He initialization: correcting for ReLU</h2>
+      <p>$\text{ReLU}(z)=\max(z,0)$ zeros out roughly half of a zero-mean, symmetric pre-activation. For $z$ symmetric around $0$:</p>
+      <p>
+        $$
+        \mathbb{E}\big[\text{ReLU}(z)^2\big] = \mathbb{E}\big[z^2 \mid z>0\big]\,P(z>0) = \tfrac12\,\mathbb{E}[z^2],
+        $$
+      </p>
+      <p>since the positive half is left untouched and contributes exactly half of $\mathbb{E}[z^2]$ by symmetry. So ReLU halves the variance that would otherwise pass through. Doubling $\sigma_W^2$ exactly compensates:</p>
+      <p>
+        $$
+        \sigma_W^2 = \frac{2}{n_{\text{in}}}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: He initialization is LeCun initialization with the ReLU tax priced in up front, since the earlier derivation implicitly assumed the nonlinearity preserves variance, which only $\sigma_W^2=1/n_{\text{in}}$ needs, and ReLU does not.</em></p>
+
+      <h2>Why this matters: compounding over depth</h2>
+      <p>With the per-layer factor off by even a small multiplicative error $1+\epsilon$, variance after $L$ layers scales by $(1+\epsilon)^L$: exponential in depth. A network with hundreds of layers makes even a slightly wrong $\sigma_W^2$ catastrophic, pushing activations (and, by the same mechanism, backpropagated gradients) to $0$ or $\infty$ long before training can do anything useful.</p>
+      <p class="intuition"><em>Intuition: initialization is not a detail, it is the boundary condition on a multiplicative recurrence; get the per-layer factor to exactly $1$, or depth itself amplifies the error for you, in either direction.</em></p>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

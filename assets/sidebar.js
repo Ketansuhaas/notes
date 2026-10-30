@@ -22,15 +22,54 @@
       posts: [
         ["posts/random-variables-and-notation.html", "Probability notation and random variables"],
         ["posts/common-distributions.html", "Common distributions, and where they come from in deep learning"],
+        ["posts/concentration-inequalities.html", "Concentration inequalities"],
+        ["posts/lln-and-clt.html", "Law of large numbers and the central limit theorem"],
+        ["posts/sample-variance-and-degrees-of-freedom.html", "Sample variance and degrees of freedom"],
+        ["posts/confidence-intervals.html", "Confidence intervals: the z and t statistics"],
         ["posts/lebesgue-measure-and-kl-divergence.html", "Lebesgue measure, densities, and KL divergence"],
         ["posts/supervised-learning-as-kl-minimization.html", "Supervised learning as KL minimization"],
         ["posts/generative-modeling-and-kl-divergence.html", "Generative modeling: approximating pθ"]
       ]
+    },
+    {
+      title: "Deep Learning",
+      posts: [
+        ["posts/backpropagation-via-jvps.html", "Backpropagation via Jacobian-vector products"],
+        ["posts/weight-initialization-and-variance.html", "Weight initialization and variance propagation"],
+        ["posts/reparameterization-trick.html", "The reparameterization trick"]
+      ]
     }
   ];
 
+  var SCROLL_KEY = "toc-scroll";
+
   function escapeHtml(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function restoreScroll(mount) {
+    var saved = null;
+    try { saved = sessionStorage.getItem(SCROLL_KEY); } catch (e) {}
+    if (saved !== null) {
+      mount.scrollTop = parseInt(saved, 10) || 0;
+      return;
+    }
+    var active = mount.querySelector("a.active");
+    if (active) {
+      mount.scrollTop = Math.max(0, active.offsetTop - mount.clientHeight / 2);
+    }
+  }
+
+  function persistScrollOnScroll(mount) {
+    var ticking = false;
+    mount.addEventListener("scroll", function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        try { sessionStorage.setItem(SCROLL_KEY, String(mount.scrollTop)); } catch (e) {}
+        ticking = false;
+      });
+    });
   }
 
   function render() {
@@ -41,8 +80,7 @@
     var prefix = inPosts ? "../" : "";
     var currentFile = location.pathname.replace(/\/$/, "").split("/").pop();
 
-    var html = '<a class="toc-home" href="' + prefix + 'index.html">Deep Learning Notes</a>';
-    html += '<div class="toc-heading">Contents</div>';
+    var html = '<a class="toc-heading" href="' + prefix + 'index.html">Contents</a>';
     SECTIONS.forEach(function (section) {
       html += '<div class="toc-section"><div class="toc-section-title">' + escapeHtml(section.title) + '</div><ul class="toc-list">';
       section.posts.forEach(function (entry) {
@@ -56,6 +94,8 @@
       html += "</ul></div>";
     });
     mount.innerHTML = html;
+    restoreScroll(mount);
+    persistScrollOnScroll(mount);
   }
 
   function setupToggle() {

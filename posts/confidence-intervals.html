@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Confidence intervals: the z and t statistics - Deep Learning Notes</title>
+  <meta name="description" content="What a confidence interval actually claims, the z-statistic when sigma is known, and why replacing sigma with its sample estimate forces the heavier-tailed t-distribution with n-1 degrees of freedom instead of the normal.">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Confidence intervals: the z and t statistics</nav>
+
+  <main>
+    <article>
+      <h1>Confidence intervals: the z and t statistics</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">probability</span><span class="tag">statistics</span><span class="tag">confidence-intervals</span><span class="tag">t-distribution</span></div>
+
+      <h2>What a confidence interval claims</h2>
+      <p>$\mu$ is a fixed, unknown number; it is not random. A $(1-\alpha)$ confidence interval is a random interval, built from the sample $x_1,\dots,x_n$, with the property:</p>
+      <p>
+        $$
+        P\big(L(x_1,\dots,x_n) \leq \mu \leq U(x_1,\dots,x_n)\big) = 1-\alpha,
+        $$
+      </p>
+      <p>a statement about the random endpoints $L,U$, evaluated before any data is drawn. Once a specific sample is observed and $L,U$ become specific numbers, $\mu$ either is or is not between them: there is no probability left in that statement at all.</p>
+      <p class="intuition"><em>Intuition: "$95\%$ confidence" describes the procedure, not any one interval it produces; if you repeated the whole sampling process many times and built an interval each time, about $95\%$ of those intervals would contain $\mu$, but any single interval you are looking at either hit or missed.</em></p>
+
+      <h2>The z-statistic, when $\sigma$ is known</h2>
+      <p>From the central limit theorem (Law of large numbers and the central limit theorem):</p>
+      <p>
+        $$
+        Z_n := \frac{\bar x_n-\mu}{\sigma/\sqrt n} \ \xrightarrow{\ d\ }\ \mathcal{N}(0,1).
+        $$
+      </p>
+      <p>Let $z_{\alpha/2}$ be the value with $P(Z>z_{\alpha/2})=\alpha/2$ for $Z\sim\mathcal{N}(0,1)$ (e.g. $z_{0.025}=1.96$). For large $n$, $P(-z_{\alpha/2}\leq Z_n\leq z_{\alpha/2})\approx1-\alpha$. Rearranging the inequality to isolate $\mu$ in the middle:</p>
+      <p>
+        $$
+        P\Big(\bar x_n - z_{\alpha/2}\,\frac{\sigma}{\sqrt n} \ \leq\ \mu \ \leq\ \bar x_n + z_{\alpha/2}\,\frac{\sigma}{\sqrt n}\Big) \approx 1-\alpha,
+        \qquad \text{i.e.} \qquad \mu \in \bar x_n \pm z_{\alpha/2}\frac{\sigma}{\sqrt n}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: the interval is just "sample mean, plus or minus a safety margin"; the margin is the standard error of $\bar x_n$, $\sigma/\sqrt n$, scaled by however many standard deviations the normal distribution needs to cover $1-\alpha$ of its mass.</em></p>
+
+      <h2>The problem: $\sigma$ is usually unknown too</h2>
+      <p>$\sigma$ is rarely known in practice. The natural fix is to plug in the unbiased sample estimate $\hat\sigma$ (Sample variance and degrees of freedom), dividing by $n-1$:</p>
+      <p>
+        $$
+        T_n := \frac{\bar x_n-\mu}{\hat\sigma/\sqrt n}.
+        $$
+      </p>
+      <p>$T_n$ has the same form as $Z_n$, but $\hat\sigma$ is itself random, estimated from the same $n$ points as $\bar x_n$. For large $n$, $\hat\sigma\to\sigma$ (law of large numbers again), so $T_n$ behaves like $Z_n$. For small $n$, the extra randomness in $\hat\sigma$ makes $T_n$ swing further from $0$ than $Z_n$ would, more often than a true $\mathcal{N}(0,1)$ allows.</p>
+      <p class="intuition"><em>Intuition: $\hat\sigma$ occasionally comes out too small just by chance, since it too is only an estimate; when that happens $T_n$'s denominator is too small and $T_n$ overshoots, so $T_n$'s distribution needs heavier tails than the normal to stay honest.</em></p>
+
+      <h2>The t-distribution</h2>
+      <p>If the $x_i$ are themselves $\mathcal{N}(\mu,\sigma^2)$, then exactly, for every $n$ (not just approximately):</p>
+      <p>
+        $$
+        T_n \ \sim\ t_{n-1},
+        $$
+      </p>
+      <p>Student's $t$-distribution with $n-1$ degrees of freedom, the same $n-1$ as the degrees of freedom spent estimating $\hat\sigma$ (Sample variance and degrees of freedom). If the $x_i$ are not Gaussian but $n$ is reasonably large, $T_n$ is only approximately $t_{n-1}$ (via the CLT and $\hat\sigma\to\sigma$), which is the more common situation in practice. As $n\to\infty$, $t_{n-1}\to\mathcal{N}(0,1)$: more data makes $\hat\sigma$ more reliable, and the correction for estimating it shrinks away.</p>
+      <p class="intuition"><em>Intuition: $t_{n-1}$ is exactly $\mathcal{N}(0,1)$ with its tails fattened by one extra, controllable source of uncertainty, not knowing $\sigma$; fewer degrees of freedom (smaller $n$) means that uncertainty is larger and the tails are fatter, and more degrees of freedom shrinks it back toward the normal.</em></p>
+
+      <h2>The resulting interval</h2>
+      <p>Let $t_{n-1,\alpha/2}$ be the value with $P(T>t_{n-1,\alpha/2})=\alpha/2$ for $T\sim t_{n-1}$. The same rearrangement as before, with $\hat\sigma$ and $t_{n-1,\alpha/2}$ in place of $\sigma$ and $z_{\alpha/2}$:</p>
+      <p>
+        $$
+        \mu \in \bar x_n \pm t_{n-1,\alpha/2}\,\frac{\hat\sigma}{\sqrt n}.
+        $$
+      </p>
+      <p>$t_{n-1,\alpha/2}$ is always at least as large as $z_{\alpha/2}$, so this interval is never narrower than the $z$-interval would be with the true $\sigma$: the price of not knowing $\sigma$ is paid honestly, as a wider interval, not ignored.</p>
+
+      <h2>z vs. t, side by side</h2>
+      <p>
+        $$
+        \text{$\sigma$ known: } \ \mu \in \bar x_n \pm z_{\alpha/2}\frac{\sigma}{\sqrt n},
+        \qquad
+        \text{$\sigma$ estimated: } \ \mu \in \bar x_n \pm t_{n-1,\alpha/2}\frac{\hat\sigma}{\sqrt n}.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: same formula, "estimate plus or minus a margin"; every unknown quantity that has to be estimated from the data, rather than handed to you, adds its own share of uncertainty to the margin, and here that share is exactly the gap between $t_{n-1}$ and $\mathcal{N}(0,1)$.</em></p>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

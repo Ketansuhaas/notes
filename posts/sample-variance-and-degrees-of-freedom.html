@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Sample variance and degrees of freedom - Deep Learning Notes</title>
+  <meta name="description" content="What an unbiased estimator means, a fully-expanded proof that dividing by n underestimates variance, why n-1 exactly corrects it, and the geometric reason: the residuals lose one degree of freedom to the constraint that forces them to sum to zero.">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Sample variance and degrees of freedom</nav>
+
+  <main>
+    <article>
+      <h1>Sample variance and degrees of freedom</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">probability</span><span class="tag">statistics</span><span class="tag">variance</span><span class="tag">degrees-of-freedom</span></div>
+
+      <h2>What "unbiased" means</h2>
+      <p>An <strong>estimator</strong> is a formula that turns a random sample $x_1,\dots,x_n$ into a guess $\hat\theta$ for some fixed, unknown number $\theta$ (a <strong>parameter</strong> of the distribution the sample came from, such as its mean or variance). Because the sample is random, $\hat\theta$ is itself a random variable: a different sample gives a different guess.</p>
+      <p>
+        $$
+        \hat\theta = \hat\theta(x_1,\dots,x_n) \quad \text{is an estimator of the fixed number } \theta.
+        $$
+      </p>
+      <p>$\hat\theta$ is <strong>unbiased</strong> if its average value, over every possible sample, lands exactly on the true parameter:</p>
+      <p>
+        $$
+        \mathbb{E}[\hat\theta] = \theta.
+        $$
+      </p>
+      <p>If instead $\mathbb{E}[\hat\theta]\neq\theta$, the gap $\mathbb{E}[\hat\theta]-\theta$ is called the estimator's <strong>bias</strong>.</p>
+      <p class="intuition"><em>Intuition: unbiased does not mean any single guess is correct, real samples will still be off; it means the errors do not lean systematically high or low, so averaged over infinitely many samples they cancel to exactly zero.</em></p>
+
+      <h2>The naive estimator is biased</h2>
+      <p>$x_1,\dots,x_n$ i.i.d. with unknown mean $\mu:=\mathbb{E}[x]$ and unknown variance $\sigma^2:=\operatorname{Var}(x)$, the parameter to be estimated. The sample mean, itself an estimator of $\mu$:</p>
+      <p>
+        $$
+        \bar x_n := \frac1n\sum_{i=1}^nx_i.
+        $$
+      </p>
+      <p>Plugging $\bar x_n$ in for $\mu$ in the definition of variance gives the most direct estimator of $\sigma^2$:</p>
+      <p>
+        $$
+        S_n^2 := \frac1n\sum_{i=1}^n(x_i-\bar x_n)^2.
+        $$
+      </p>
+      <p>Applying the definition above, $S_n^2$ is unbiased only if $\mathbb{E}[S_n^2]=\sigma^2$. It is not: $\mathbb{E}[S_n^2]=\tfrac{n-1}{n}\sigma^2$, proved below, which is strictly less than $\sigma^2$ for every finite $n$. The fix, used everywhere, is to divide by $n-1$ instead:</p>
+      <p>
+        $$
+        \hat\sigma^2 := \frac{1}{n-1}\sum_{i=1}^n(x_i-\bar x_n)^2.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $\bar x_n$ is built from the very data the deviations are measured against, so the deviations are a little too well-behaved around it, systematically understating the true spread.</em></p>
+
+      <h2>The proof</h2>
+      <p>Expand the square, for each $i$ separately:</p>
+      <p>
+        $$
+        (x_i-\bar x_n)^2 = x_i^2 - 2x_i\bar x_n + \bar x_n^2.
+        $$
+      </p>
+      <p>Sum over $i=1,\dots,n$. $\bar x_n$ does not depend on $i$, so it comes out of the sum, and $\bar x_n^2$ added to itself $n$ times is $n\bar x_n^2$:</p>
+      <p>
+        $$
+        \sum_{i=1}^n(x_i-\bar x_n)^2 = \sum_ix_i^2 \ -\ 2\bar x_n\sum_ix_i \ +\ n\bar x_n^2.
+        $$
+      </p>
+      <p>By definition of the sample mean, $\sum_ix_i=n\bar x_n$. Substituting that in for the middle term only:</p>
+      <p>
+        $$
+        \sum_i(x_i-\bar x_n)^2 = \sum_ix_i^2 \ -\ 2\bar x_n(n\bar x_n) \ +\ n\bar x_n^2 = \sum_ix_i^2 - 2n\bar x_n^2 + n\bar x_n^2.
+        $$
+      </p>
+      <p>$-2n\bar x_n^2+n\bar x_n^2=-n\bar x_n^2$, so:</p>
+      <p>
+        $$
+        \sum_i(x_i-\bar x_n)^2 = \sum_ix_i^2 - n\bar x_n^2. \qquad(\star)
+        $$
+      </p>
+      <p>Now take $\mathbb{E}[\cdot]$ of both sides of $(\star)$. Expectation is linear (the expectation of a sum is the sum of expectations, and a constant factor like $n$ comes straight out):</p>
+      <p>
+        $$
+        \mathbb{E}\Big[\sum_i(x_i-\bar x_n)^2\Big] = \mathbb{E}\Big[\sum_ix_i^2\Big] - n\,\mathbb{E}\big[\bar x_n^2\big] = \sum_i\mathbb{E}[x_i^2] \ -\ n\,\mathbb{E}\big[\bar x_n^2\big].
+        $$
+      </p>
+      <p>Two pieces are needed: $\mathbb{E}[x_i^2]$ and $\mathbb{E}[\bar x_n^2]$. Both follow from rearranging the definition of variance, $\operatorname{Var}(X):=\mathbb{E}[X^2]-(\mathbb{E}[X])^2$, into $\mathbb{E}[X^2]=\operatorname{Var}(X)+(\mathbb{E}[X])^2$:</p>
+      <p>
+        $$
+        \mathbb{E}[x_i^2] = \operatorname{Var}(x_i) + (\mathbb{E}[x_i])^2 = \sigma^2+\mu^2 \qquad\text{(every $x_i$ has mean $\mu$, variance $\sigma^2$, by assumption)},
+        $$
+      </p>
+      <p>
+        $$
+        \mathbb{E}[\bar x_n^2] = \operatorname{Var}(\bar x_n) + (\mathbb{E}[\bar x_n])^2 = \frac{\sigma^2}{n}+\mu^2 \qquad\text{(}\mathbb{E}[\bar x_n]=\mu\text{ and }\operatorname{Var}(\bar x_n)=\sigma^2/n\text{, Law of large numbers and the central limit theorem)}.
+        $$
+      </p>
+      <p>Substitute both into the expression above, then expand every term before cancelling anything:</p>
+      <p>
+        $$
+        \sum_i\mathbb{E}[x_i^2] - n\,\mathbb{E}[\bar x_n^2] = n(\sigma^2+\mu^2) \ -\ n\Big(\frac{\sigma^2}{n}+\mu^2\Big) = n\sigma^2 + n\mu^2 \ -\ n\cdot\frac{\sigma^2}{n} \ -\ n\mu^2.
+        $$
+      </p>
+      <p>$n\cdot\sigma^2/n=\sigma^2$, and the two $n\mu^2$ terms are identical with opposite sign, so they cancel exactly:</p>
+      <p>
+        $$
+        n\sigma^2 + n\mu^2 - \sigma^2 - n\mu^2 = n\sigma^2 - \sigma^2 = (n-1)\sigma^2.
+        $$
+      </p>
+      <p>Putting the chain together:</p>
+      <p>
+        $$
+        \mathbb{E}\Big[\sum_i(x_i-\bar x_n)^2\Big] = (n-1)\sigma^2. \qquad(\star\star)
+        $$
+      </p>
+      <p>$S_n^2$ is $(\star\star)$ divided by $n$ (expectation is linear, so the $\tfrac1n$ pulls straight through):</p>
+      <p>
+        $$
+        \mathbb{E}[S_n^2] = \mathbb{E}\Big[\frac1n\sum_i(x_i-\bar x_n)^2\Big] = \frac1n\,\mathbb{E}\Big[\sum_i(x_i-\bar x_n)^2\Big] = \frac1n(n-1)\sigma^2 = \frac{n-1}{n}\sigma^2.
+        $$
+      </p>
+      <p>Since $\tfrac{n-1}{n}$ is strictly less than $1$ for every finite $n$, $S_n^2$ underestimates $\sigma^2$ on average: it is biased low. $\hat\sigma^2$ is $(\star\star)$ divided by $n-1$ instead, and that factor cancels completely:</p>
+      <p>
+        $$
+        \mathbb{E}[\hat\sigma^2] = \mathbb{E}\Big[\frac{1}{n-1}\sum_i(x_i-\bar x_n)^2\Big] = \frac{1}{n-1}\,\mathbb{E}\Big[\sum_i(x_i-\bar x_n)^2\Big] = \frac{1}{n-1}(n-1)\sigma^2 = \sigma^2. \qquad \checkmark
+        $$
+      </p>
+
+      <h2>Degrees of freedom, geometrically</h2>
+      <p>The $(n-1)\sigma^2$ result above is a fact about expectations, averaged over every possible sample. This section explains the same factor a second way, as a fact about any single, fixed sample: the $n$ residuals $e_i:=x_i-\bar x_n$ are not $n$ independent numbers. Once $n-1$ of them are known, the last is already determined, no randomness left in it at all. Here is exactly why, and exactly how much freedom that costs (one dimension, no more).</p>
+
+      <p class="example-label">The key contrast: true mean vs. estimated mean</p>
+      <p>Deviations from the true mean $\mu$ do not sum to zero. They sum to something that depends on the sample, and is only zero on average:</p>
+      <p>
+        $$
+        \sum_{i=1}^n(x_i-\mu) = \Big(\sum_ix_i\Big) - n\mu = n\bar x_n - n\mu = n(\bar x_n-\mu),
+        $$
+      </p>
+      <p>a random quantity, nonzero for almost every sample (it is only $0$ in the special case $\bar x_n=\mu$ exactly). Deviations from the <em>estimated</em> mean $\bar x_n$ behave completely differently:</p>
+      <p>
+        $$
+        \sum_{i=1}^ne_i = \sum_i(x_i-\bar x_n) = \Big(\sum_ix_i\Big) - n\bar x_n = n\bar x_n - n\bar x_n = 0,
+        $$
+      </p>
+      <p>exactly $0$, for every sample, with no randomness left in that sum at all. This is a genuine algebraic identity, true before any data is even collected, not a coincidence of expectation. It is the one price of plugging $\bar x_n$, built from the very same $x_i$'s, in for $\mu$: doing so forces the $n$ deviations into a single linear relationship they would not otherwise obey.</p>
+      <p class="intuition"><em>Intuition: $\mu$ is a fixed outside number, so centering at $\mu$ places no constraint on the data; $\bar x_n$ is computed from the data, so centering at $\bar x_n$ feeds the data back into its own constraint, and that feedback is exactly $\sum_ie_i=0$.</em></p>
+
+      <p class="example-label">The same fact, as a projection</p>
+      <p>Stack the sample into a vector $x:=(x_1,\dots,x_n)\in\mathbb{R}^n$, and let $\mathbb{1}:=(1,1,\dots,1)\in\mathbb{R}^n$ denote the all-ones vector. Finding $\bar x_n$ is literally the "onto $C(A)$" projection problem from Rank, subspaces, and projections, with $A=\mathbb{1}$ (an $n\times1$ matrix, one column):</p>
+      <p>
+        $$
+        \hat x = (A^TA)^{-1}A^Tb \quad\Longrightarrow\quad \hat c := (\mathbb{1}^T\mathbb{1})^{-1}\mathbb{1}^Tx = \frac1n\sum_ix_i = \bar x_n.
+        $$
+      </p>
+      <p>So $\bar x_n$ is not merely an average by convention: it is exactly the coefficient that makes $\bar x_n\mathbb{1}$ the closest point to $x$ among every scalar multiple of $\mathbb{1}$, in the same least-squares sense as that post's projection. That same post shows a projection's residual is always perpendicular to the subspace projected onto, so:</p>
+      <p>
+        $$
+        e := x-\bar x_n\mathbb{1} \ \perp\ \operatorname{span}(\mathbb{1}).
+        $$
+      </p>
+      <p>$\operatorname{span}(\mathbb{1})$ is $1$-dimensional (every point on it is a multiple of the single vector $\mathbb{1}$), and a subspace together with its orthogonal complement always fill up all of $\mathbb{R}^n$, with dimensions adding to $n$ (The big picture, same post). So the orthogonal complement here, the subspace $e$ is forced into, has dimension exactly $n-1$: the same $n-1$ as the zero-sum constraint above, now visible as a dimension count instead of a single equation.</p>
+      <p class="intuition"><em>Intuition: one dimension of freedom in $\mathbb{R}^n$ was spent choosing where along $\operatorname{span}(\mathbb{1})$ to place the projection, i.e. estimating $\mu$ by $\bar x_n$; only the remaining $n-1$ dimensions are left over to measure spread with, and dividing by that true count, not by $n$, is what makes $\hat\sigma^2$ honest.</em></p>
+
+      <p>When $\mu$ is known in advance rather than estimated from this sample, none of this applies: $\sum_i(x_i-\mu)$ is not forced to vanish (shown above, it equals $n(\bar x_n-\mu)$, generally nonzero), so there is no constraint and no dimension lost. $\tfrac1n\sum_i(x_i-\mu)^2$ is then unbiased for $\sigma^2$ exactly as it stands, dividing by the full $n$. The $n-1$ correction exists only because $\mu$ had to be estimated from the same sample whose spread is being measured.</p>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

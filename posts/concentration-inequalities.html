@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Concentration inequalities - Deep Learning Notes</title>
+  <meta name="description" content="Markov's inequality, proved in three lines, then Chebyshev from Markov applied to a squared deviation, then Chernoff from Markov applied to an exponential, then Hoeffding: each assumption bought buys a sharper tail bound.">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Concentration inequalities</nav>
+
+  <main>
+    <article>
+      <h1>Concentration inequalities</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">probability</span><span class="tag">statistics</span><span class="tag">concentration-inequalities</span></div>
+
+      <h2>Markov's inequality</h2>
+      <p>For $X\geq0$ and $a>0$:</p>
+      <p>
+        $$
+        P(X\geq a) \leq \frac{\mathbb{E}[X]}{a}.
+        $$
+      </p>
+      <p>Proof, in one line: since $X\geq0$,</p>
+      <p>
+        $$
+        \mathbb{E}[X] \ \geq\ \mathbb{E}\big[X\cdot\mathbb{1}[X\geq a]\big] \ \geq\ \mathbb{E}\big[a\cdot\mathbb{1}[X\geq a]\big] = a\,P(X\geq a).
+        $$
+      </p>
+      <p>Divide by $a$.</p>
+      <p class="intuition"><em>Intuition: a non-negative variable can't put much mass far out past $a$ without dragging its own average up past where it actually sits; this needs only non-negativity and a mean, nothing else.</em></p>
+
+      <h2>Chebyshev's inequality</h2>
+      <p>Apply Markov to the non-negative variable $(X-\mu)^2$, with threshold $k^2$, for $X$ with mean $\mu$ and variance $\sigma^2$:</p>
+      <p>
+        $$
+        P\big((X-\mu)^2\geq k^2\big) \leq \frac{\mathbb{E}[(X-\mu)^2]}{k^2} = \frac{\sigma^2}{k^2}.
+        $$
+      </p>
+      <p>$(X-\mu)^2\geq k^2 \iff |X-\mu|\geq k$ for $k>0$, so:</p>
+      <p>
+        $$
+        P(|X-\mu|\geq k) \leq \frac{\sigma^2}{k^2}.
+        $$
+      </p>
+      <p>Take $X=\bar x_n=\tfrac1n\sum_ix_i$, the mean of $n$ i.i.d. copies of a variable with variance $\sigma^2$. Independence lets variance distribute over the sum, and $\operatorname{Var}(cY)=c^2\operatorname{Var}(Y)$ handles the $\tfrac1n$:</p>
+      <p>
+        $$
+        \operatorname{Var}(\bar x_n) = \frac{1}{n^2}\sum_{i=1}^n\operatorname{Var}(x_i) = \frac{n\sigma^2}{n^2} = \frac{\sigma^2}{n}.
+        $$
+      </p>
+      <p>Plugging this into Chebyshev's inequality above gives $P(|\bar x_n-\mu|\geq k)\leq\sigma^2/(nk^2)\to0$ for every fixed $k$: this is exactly the mechanism behind the law of large numbers (Law of large numbers and the central limit theorem).</p>
+      <p class="intuition"><em>Intuition: knowing the variance, not just the mean, lets the same one-line Markov argument say something about spread on both sides of $\mu$, not just about staying below one far-off threshold.</em></p>
+
+      <h2>Chernoff bound</h2>
+      <p>Apply Markov to $e^{tX}$, non-negative for any real $t$, then optimize over $t>0$:</p>
+      <p>
+        $$
+        P(X\geq a) = P\big(e^{tX}\geq e^{ta}\big) \leq \frac{\mathbb{E}[e^{tX}]}{e^{ta}} = e^{-ta}\,M_X(t), \qquad M_X(t):=\mathbb{E}[e^{tX}] \ \text{(moment generating function)}.
+        $$
+      </p>
+      <p>Minimizing the right side over $t>0$ gives the tightest bound this route can produce. Because $M_X(t)$ encodes every moment of $X$, not just the first two, the resulting bound decays exponentially in the deviation, not polynomially like Chebyshev's $1/k^2$.</p>
+      <p class="intuition"><em>Intuition: each inequality so far is the same one-line Markov argument, applied to a cleverer non-negative function of $X$; using more of the distribution's structure (here, its entire moment generating function) buys a sharper tail.</em></p>
+
+      <h2>Hoeffding's inequality</h2>
+      <p>Specialize the Chernoff bound to a sum of independent, bounded variables, $x_i\in[a_i,b_i]$, which is exactly the sample-mean setting:</p>
+      <p>
+        $$
+        P\big(|\bar x_n-\mu|\geq t\big) \ \leq\ 2\exp\!\left(-\frac{2n^2t^2}{\sum_i(b_i-a_i)^2}\right).
+        $$
+      </p>
+      <p>For i.i.d. $x_i\in[a,b]$, this reads $P(|\bar x_n-\mu|\geq t)\leq2\exp\!\big(-2nt^2/(b-a)^2\big)$: exponential in $n$, where Chebyshev applied to the same quantity only gives polynomial decay, $O(\sigma^2/(nt^2))$.</p>
+      <p class="intuition"><em>Intuition: boundedness is a strong assumption, and it is repaid with the strongest bound in this post, decaying exponentially fast in the sample size rather than just inversely in it.</em></p>
+
+      <h2>The pattern</h2>
+      <p>
+        $$
+        \underbrace{\text{Markov}}_{X\geq0,\ \mathbb{E}[X]}: \ O\!\left(\frac1a\right)
+        \quad\Rightarrow\quad
+        \underbrace{\text{Chebyshev}}_{+\ \operatorname{Var}(X)}: \ O\!\left(\frac1{k^2}\right)
+        \quad\Rightarrow\quad
+        \underbrace{\text{Hoeffding}}_{+\ \text{bounded, independent}}: \ O\!\left(e^{-cnt^2}\right).
+        $$
+      </p>
+      <p>Each bound is the same Markov argument in disguise, applied to a more informative non-negative function of $X$; each extra assumption buys a strictly sharper tail. This is also why concentration bounds, not just the limit statements of the law of large numbers, are the tool used for finite-sample guarantees: confidence intervals, A/B tests, and generalization bounds in learning theory all ultimately quote a bound of this shape.</p>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
