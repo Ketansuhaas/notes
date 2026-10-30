@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Variance decomposition and the eigenbasis - Deep Learning Notes</title>
+  <meta name="description" content="Variance along a direction is a quadratic form; in the eigenbasis it becomes a cosine-weighted mix of eigenvalues bounded by the Rayleigh-Ritz inequality, and the total variance (the trace) never changes no matter which basis you look from.">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Variance decomposition and the eigenbasis</nav>
+
+  <main>
+    <article>
+      <h1>Variance decomposition and the eigenbasis</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">probability</span><span class="tag">statistics</span><span class="tag">variance</span><span class="tag">covariance</span><span class="tag">eigenvalues</span><span class="tag">eigenbasis</span><span class="tag">rayleigh-quotient</span></div>
+
+      <p>Variance is not one number per dataset; it is one number per direction. This note: what $\operatorname{Var}(u^Tx)$ means, how it relates to eigenvalues, and why $\sum_i\operatorname{Var}(x_i)$ is fixed regardless of basis.</p>
+
+      <h2>Variance along a direction is a quadratic form</h2>
+      <p>Let $x\in\mathbb{R}^d$ be centered data ($\mathbb{E}[x]=0$) with covariance $\Sigma=\mathbb{E}[xx^T]$. Pick any unit direction $u$ ($\|u\|=1$) and project each point onto it: $z=u^Tx$, a scalar. The variance of that scalar is:</p>
+      <p>
+        $$
+        \operatorname{Var}(u^Tx) = \mathbb{E}[(u^Tx)^2] = \mathbb{E}[u^Txx^Tu] = u^T\mathbb{E}[xx^T]u = u^T\Sigma u.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: $\Sigma$ encodes the spread of the data in every direction at once; squeezing it between $u^T$ and $u$ reads off the spread in one specific direction, exactly as in Quadratic forms and positive definiteness.</em></p>
+
+      <h2>Re-expressing a direction in the eigenbasis</h2>
+      <p>By the spectral theorem, $\Sigma=Q\Lambda Q^T$ with orthonormal eigenvectors $q_1,\dots,q_d$ and eigenvalues $\lambda_1\geq\cdots\geq\lambda_d\geq0$. Substitute and let $v=Q^Tu$, i.e. $u$'s own coordinates in the eigenbasis:</p>
+      <p>
+        $$
+        u^T\Sigma u = u^T(Q\Lambda Q^T)u = (Q^Tu)^T\Lambda(Q^Tu) = v^T\Lambda v = \sum_{i=1}^d\lambda_iv_i^2.
+        $$
+      </p>
+      <p>Because $Q$ is a rotation, it preserves length: $\|v\|^2=v^Tv=u^TQQ^Tu=u^Tu=1$. So the weights $v_i^2$ sum to $1$, and $v_i=\cos\theta_i$ is exactly the cosine of the angle between $u$ and eigenvector $q_i$. The variance formula becomes:</p>
+      <p>
+        $$
+        \operatorname{Var}(u^Tx) = \sum_{i=1}^d\lambda_i\cos^2\theta_i.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: every direction's variance is a weighted average of the eigenvalues, weighted by how much that direction aligns with each eigenvector.</em></p>
+      <p class="example-label">Example</p>
+      <p>Take the running $\Sigma=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, eigenvalues $\lambda_1=3,\lambda_2=1$ with eigenvectors $q_1=\tfrac1{\sqrt2}(1,1)$, $q_2=\tfrac1{\sqrt2}(1,-1)$. For $u=(1,0)$, the angle to $q_1$ is $45^\circ$, so $\cos^2\theta_1=\cos^2\theta_2=\tfrac12$:</p>
+      <p>
+        $$
+        \operatorname{Var}(u^Tx) = 3\cdot\tfrac12 + 1\cdot\tfrac12 = 2,
+        $$
+      </p>
+      <p>matching $u^T\Sigma u=\Sigma_{11}=2$ directly. As $u$ sweeps around the circle, $\operatorname{Var}(u^Tx)$ oscillates smoothly between $1$ and $3$, never outside that range:</p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 500 220" role="img" aria-label="Variance along direction u as a function of the angle from the first eigenvector, oscillating between the smaller and larger eigenvalue">
+          <line class="axis" x1="40" y1="190" x2="470" y2="190"/>
+          <line class="axis" x1="40" y1="190" x2="40" y2="15"/>
+          <line class="faint" x1="40" y1="44.3" x2="460" y2="44.3"/>
+          <line class="faint" x1="40" y1="141.4" x2="460" y2="141.4"/>
+          <text class="lbl muted" x="465" y="47">&#955;&#8321;=3</text>
+          <text class="lbl muted" x="465" y="145">&#955;&#8322;=1</text>
+          <polyline style="fill:none;stroke:currentColor;stroke-width:2"
+            points="40,44.3 92.5,58.5 145,92.9 197.5,127.2 250,141.4 302.5,127.2 355,92.9 407.5,58.5 460,44.3"/>
+          <circle class="pt" cx="145" cy="92.9" r="4.5"/>
+          <text class="lbl" x="152" y="85">u=(1,0), &#952;=45&deg;, Var=2</text>
+          <text class="lbl" x="35" y="207">0&deg;</text>
+          <text class="lbl" x="240" y="207">90&deg;</text>
+          <text class="lbl" x="445" y="207">180&deg;</text>
+          <text class="lbl" x="200" y="12">Var(u) = &#955;&#8321;cos&#178;&#952; + &#955;&#8322;sin&#178;&#952;</text>
+        </svg>
+        <figcaption>Variance in direction $u$ as the angle $\theta$ from $q_1$ varies: a cosine-weighted mix of $\lambda_1$ and $\lambda_2$, bottoming out at $\lambda_{\min}$ and peaking at $\lambda_{\max}$, never outside that band.</figcaption>
+      </figure>
+
+      <h2>The Rayleigh&ndash;Ritz bounds</h2>
+      <p>Since $u^T\Sigma u=\sum_i\lambda_iv_i^2$ is a weighted mean of the eigenvalues with nonnegative weights $v_i^2$ summing to $1$, it can never fall outside the range spanned by the eigenvalues themselves. This is the Rayleigh&ndash;Ritz bound (the quantity $u^T\Sigma u$ for unit $u$ is called the Rayleigh quotient of $\Sigma$):</p>
+      <p>
+        $$
+        \lambda_{\min} \ \leq\ u^T\Sigma u \ \leq\ \lambda_{\max} \qquad \text{for every unit vector } u.
+        $$
+      </p>
+      <p>The bounds are attained, not just approached. Setting $u=q_1$ collapses the weights to $v_1^2=1,\,v_{i>1}=0$, giving the largest possible mean, $\lambda_{\max}$; setting $u=q_d$ (the eigenvector of the smallest eigenvalue) gives $\lambda_{\min}$ the same way. Every other direction is a genuine compromise, an interpolation across the principal axes governed entirely by the direction cosines $\cos^2\theta_i$, strictly between the two extremes unless it happens to coincide with an edge eigenvector.</p>
+      <p class="intuition"><em>Intuition: $q_1,q_d$ realize the best and worst case, which is exactly why the top eigenvector solves PCA's "maximize variance" problem (Principal component analysis).</em></p>
+      <p class="example-label">Example</p>
+      <p>For our running $\Sigma$, the bound reads $1\leq u^T\Sigma u\leq3$ for every unit $u$. The direction $u=(1,0)$ scored $2$, comfortably inside; $u=q_1=\tfrac1{\sqrt2}(1,1)$ scores exactly $3$; $u=q_2=\tfrac1{\sqrt2}(1,-1)$ scores exactly $1$. No direction can do better or worse than these two.</p>
+
+      <h2>Rotating the data itself: the covariance diagonalizes</h2>
+      <p>The previous section rotated the <em>direction</em> $u$ into eigen-coordinates. Rotating the <em>data</em> the same way, $y=Q^Tx$, has a cleaner consequence: the cross terms vanish entirely. The covariance of $y$ is:</p>
+      <p>
+        $$
+        \Sigma_y = \mathbb{E}[yy^T] = \mathbb{E}[Q^Txx^TQ] = Q^T\mathbb{E}[xx^T]Q = Q^T\Sigma Q = Q^T(Q\Lambda Q^T)Q = \Lambda,
+        $$
+      </p>
+      <p>using $Q^TQ=I$. So in the eigenbasis, the covariance matrix is exactly diagonal: $\operatorname{Var}(y_i)=\lambda_i$ and $\operatorname{Cov}(y_i,y_j)=0$ for $i\neq j$.</p>
+      <p class="intuition"><em>Intuition: the eigenbasis is the one coordinate system where spread splits cleanly into independent pieces, one number per axis.</em></p>
+
+      <h2>Total variance never changes</h2>
+      <p>Summing variance over all original dimensions, $\sum_i\operatorname{Var}(x_i)=\operatorname{tr}(\Sigma)$. Summing over the eigenbasis instead, $\sum_i\operatorname{Var}(y_i)=\operatorname{tr}(\Lambda)=\sum_i\lambda_i$. These are the same number, by the cyclic property of the trace:</p>
+      <p>
+        $$
+        \operatorname{tr}(\Sigma) = \operatorname{tr}(Q\Lambda Q^T) = \operatorname{tr}(\Lambda Q^TQ) = \operatorname{tr}(\Lambda) = \sum_{i=1}^d\lambda_i.
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: rotating axes redistributes variance but cannot create or destroy it: the eigenbasis just splits that fixed total with no cross terms.</em></p>
+      <p class="example-label">Example</p>
+      <p>$\operatorname{tr}(\Sigma)=2+2=4$; $\lambda_1+\lambda_2=3+1=4$. &#10003; Same total, however you slice it.</p>
+
+      <h2>Putting it together</h2>
+      <p>
+        $$
+        \underbrace{\operatorname{tr}(\Sigma)}_{\text{conserved total}} = \sum_i\lambda_i, \qquad
+        \underbrace{\lambda_{\min}\leq u^T\Sigma u\leq\lambda_{\max}}_{\text{any direction}}, \qquad
+        \underbrace{\Sigma_y=\Lambda}_{\text{eigenbasis: zero cross-terms}}.
+        $$
+      </p>
+      <p>PCA asks which direction claims the largest share of that fixed total (Principal component analysis).</p>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

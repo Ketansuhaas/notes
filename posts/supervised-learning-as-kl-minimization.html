@@ -6,15 +6,14 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem("notes-theme");
-        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        var t = localStorage.getItem("notes-theme") || "light";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
   </script>
   <title>Supervised learning as KL minimization - Deep Learning Notes</title>
   <meta name="description" content="Supervised learning as minimizing forward KL between p_data(y|x) and p_theta(y|x): the derivation lands on maximum likelihood, and specializing the output distribution gives exactly the MSE and cross-entropy losses.">
-  <link rel="stylesheet" href="../assets/style.css?v=9">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -28,22 +27,34 @@
 <body>
   <header class="site-header">
     <div class="site-header-top">
-      <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
   </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
 
   <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Supervised learning as KL minimization</nav>
 
   <main>
     <article>
       <h1>Supervised learning as KL minimization</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-30">30 October 2026</time></div>
-      <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">supervised-learning</span></div>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">supervised-learning</span><span class="tag">kl-divergence</span><span class="tag">maximum-likelihood</span><span class="tag">cross-entropy</span></div>
 
       <h2>The model is a distribution, not a point estimate</h2>
-      <p>Supervised data $(x,y)$ is assumed drawn from a data-generating distribution, $(x,y)\sim p_{\text{data}}(x,y)=p_{\text{data}}(x)\,p_{\text{data}}(y\mid x)$ (Probability notation and random variables). A model with parameters $\theta$ should likewise define a conditional distribution $p_\theta(y\mid x)$ over outputs, not just a single predicted number: a regression network outputs the <em>mean</em> of a Gaussian over $y$, a classifier outputs the full <em>parameter vector</em> of a Categorical over $y$ (Common distributions).</p>
-      <p class="intuition"><em>Intuition: "the network predicts $y$" is shorthand for "the network predicts a distribution over $y$, and we report its mean/mode." Keeping the full distribution in view is exactly what makes the loss function fall out of probability rather than being chosen by hand.</em></p>
+      <p>
+        $$
+        (x,y)\sim p_{\text{data}}(x,y)=p_{\text{data}}(x)\,p_{\text{data}}(y\mid x), \qquad \text{model: } p_\theta(y\mid x) \text{ (not a single number).}
+        $$
+      </p>
+      <p>A regression network outputs the <em>mean</em> of a Gaussian over $y$; a classifier outputs the full <em>parameter vector</em> of a Categorical over $y$ (Common distributions).</p>
+      <p class="intuition"><em>Intuition: "the network predicts $y$" really means "predicts a distribution over $y$," reporting its mean/mode; keeping that distribution in view is what makes the loss fall out of probability, not hand-design.</em></p>
 
       <h2>The objective: forward KL, averaged over $x$</h2>
       <p>At each $x$, training should pull $p_\theta(y\mid x)$ toward $p_{\text{data}}(y\mid x)$. Since $p_{\text{data}}$ is the fixed target being approximated, this is a <strong>forward</strong> KL (Lebesgue measure and KL divergence), averaged over $x\sim p_{\text{data}}(x)$:</p>
@@ -52,7 +63,7 @@
         \min_\theta\ \mathbb{E}_{x\sim p_{\text{data}}}\Big[KL\big(p_{\text{data}}(y\mid x)\,\|\,p_\theta(y\mid x)\big)\Big].
         $$
       </p>
-      <p class="intuition"><em>Intuition: forward KL is mode-covering and zero-avoiding &mdash; the right choice here, since missing mass that $p_{\text{data}}$ actually puts on some $y$ (for a given $x$) is exactly what a bad prediction looks like.</em></p>
+      <p class="intuition"><em>Intuition: forward KL is mode-covering and zero-avoiding: the right choice here, since missing mass that $p_{\text{data}}$ actually puts on some $y$ (for a given $x$) is exactly what a bad prediction looks like.</em></p>
 
       <h2>This is maximum likelihood</h2>
       <p>Expand the inner KL and drop the term with no $\theta$ in it:</p>
@@ -69,7 +80,7 @@
         \max_\theta\ \mathbb{E}_{(x,y)\sim p_{\text{data}}}\big[\log p_\theta(y\mid x)\big],
         $$
       </p>
-      <p>i.e. maximum likelihood estimation (MLE). $p_{\text{data}}$ is never available directly, only through samples, so the expectation is approximated by its empirical average over the training set (law of large numbers), turning "maximize expected log-likelihood" into the familiar, computable:</p>
+      <p>i.e. maximum likelihood estimation (MLE). $p_{\text{data}}$ is unavailable directly, so the expectation becomes its empirical average over the training set (law of large numbers):</p>
       <p>
         $$
         \max_\theta\ \frac1N\sum_{i=1}^N \log p_\theta(y_i\mid x_i)
@@ -104,7 +115,7 @@
         \min_\theta\ \frac1N\sum_{i=1}^N\big(y_i-f_\theta(x_i)\big)^2, \qquad \text{the MSE loss.}
         $$
       </p>
-      <p class="intuition"><em>Intuition: MSE is not an arbitrary engineering choice &mdash; it is exactly what maximum likelihood gives you the moment you assume $y$ given $x$ is Gaussian-distributed around the network's prediction.</em></p>
+      <p class="intuition"><em>Intuition: MSE is not an arbitrary engineering choice: it is exactly what maximum likelihood gives you the moment you assume $y$ given $x$ is Gaussian-distributed around the network's prediction.</em></p>
 
       <h2>Classification: Categorical output gives cross-entropy</h2>
       <p>Let $p_\theta(y\mid x) = \text{Categorical}\big(y;\,\text{softmax}(f_\theta(x))\big)$, with $f_\theta(x)=z\in\mathbb{R}^K$ the network's logits (Common distributions). For true label $y=k$:</p>
@@ -119,19 +130,91 @@
         H(p,q) = -\mathbb{E}_{y\sim p}[\log p(y)] - \mathbb{E}_{y\sim p}\left[\log\frac{q(y)}{p(y)}\right] = \underbrace{H(p)}_{\text{entropy of }p} + \underbrace{KL(p\|q)}_{\text{forward KL}}.
         $$
       </p>
-      <p>Taking $p=p_{\text{data}}(y\mid x)$ (a one-hot point mass at the true label, in the usual hard-label setting) and $q=p_\theta(y\mid x)$: $H(p_{\text{data}})$ does not depend on $\theta$, so minimizing cross-entropy $H(p_{\text{data}},p_\theta)$ and minimizing forward $KL(p_{\text{data}}\|p_\theta)$ differ only by that constant &mdash; they have the same minimizer in $\theta$.</p>
+      <p>With $p=p_{\text{data}}(y\mid x)$ (one-hot at the true label) and $q=p_\theta(y\mid x)$: $H(p_{\text{data}})$ has no $\theta$, so $H(p_{\text{data}},p_\theta)$ and $KL(p_{\text{data}}\|p_\theta)$ differ by a constant: same minimizer.</p>
       <p class="intuition"><em>Intuition: cross-entropy loss is not a separate idea from KL divergence; it is forward KL plus a constant that doesn't move under training, so "minimize cross-entropy" and "minimize forward KL from the true label distribution" are the same instruction.</em></p>
 
+      <h2>Why forward KL: both losses seek a mean</h2>
+      <p>Minimize each loss pointwise at a fixed $x$, over the free parameter of the output family, and check what the minimizer actually is.</p>
+      <p class="example-label">Regression</p>
+      <p>
+        $$
+        m^\star = \operatorname*{arg\,min}_{m\in\mathbb{R}}\ \mathbb{E}_{y\sim p_{\text{data}}(y\mid x)}\big[(y-m)^2\big]
+        \ \ \Longrightarrow\ \
+        \frac{d}{dm}\mathbb{E}\big[(y-m)^2\big] = -2\,\mathbb{E}[y-m] = 0
+        \ \ \Longrightarrow\ \
+        m^\star = \mathbb{E}_{p_{\text{data}}}[y\mid x].
+        $$
+      </p>
+      <p>Minimizing MSE sets $f_\theta(x)\to\mathbb{E}_{p_{\text{data}}}[y\mid x]$: the conditional mean of $y$, not any single observed value.</p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 320 190" role="img" aria-label="Several observed y values for a fixed x marked on a line, with the fitted Gaussian's peak landing exactly on their average rather than on any single observed value">
+          <line class="axis" x1="20" y1="150" x2="300" y2="150"/>
+          <path class="axis" d="M48,148 C83,148 107,55 138,55 C169,55 193,148 228,148" fill="none"/>
+          <line class="faint" x1="138" y1="150" x2="138" y2="55"/>
+          <circle class="pt" cx="70" cy="150" r="4"/>
+          <circle class="pt" cx="95" cy="150" r="4"/>
+          <circle class="pt" cx="150" cy="150" r="4"/>
+          <circle class="pt" cx="165" cy="150" r="4"/>
+          <circle class="pt" cx="210" cy="150" r="4"/>
+          <text class="lbl" x="144" y="46">f&#952;(x) &rarr; E[y|x]</text>
+          <text class="lbl muted" x="68" y="170">observed y's at this x</text>
+        </svg>
+        <figcaption>Minimizing squared error pulls $f_\theta(x)$ to the average of the observed $y$'s at this $x$, the conditional mean, not any single draw.</figcaption>
+      </figure>
+
+      <p class="example-label">Classification</p>
+      <p>Minimize cross-entropy over $q\in\mathbb{R}^K$ on the simplex, $\sum_k q_k=1$, via a Lagrangian (The Lagrangian and KKT conditions):</p>
+      <p>
+        $$
+        \min_q\ -\sum_{k=1}^K p_{\text{data}}(y{=}k\mid x)\log q_k \ \ \text{s.t.}\ \ \sum_k q_k = 1
+        \ \ \Longrightarrow\ \
+        q_k^\star = p_{\text{data}}(y{=}k\mid x).
+        $$
+      </p>
+      <p>Since $p_{\text{data}}(y{=}k\mid x) = \mathbb{E}_{p_{\text{data}}}\big[\mathbb{1}[y{=}k]\mid x\big]$, the optimal softmax output is exactly the mean of the one-hot label vector:</p>
+      <p>
+        $$
+        \text{softmax}(f_\theta(x)) \ \to\ \mathbb{E}_{p_{\text{data}}}\big[e_y \mid x\big], \qquad e_y := \text{one-hot}(y).
+        $$
+      </p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 320 190" role="img" aria-label="Bar chart comparing the true class frequency to the softmax output for three classes, with the predicted bar matching the true bar's height in each class">
+          <rect style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" x="20" y="14" width="14" height="10"/>
+          <text class="lbl muted" x="38" y="23">true p_data(y=k|x)</text>
+          <rect style="fill:currentColor;opacity:0.85" x="190" y="14" width="14" height="10"/>
+          <text class="lbl" x="208" y="23">softmax output</text>
+          <line class="axis" x1="20" y1="160" x2="300" y2="160"/>
+          <rect style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" x="40" y="120" width="16" height="40"/>
+          <rect style="fill:currentColor;opacity:0.85" x="60" y="120" width="16" height="40"/>
+          <rect style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" x="140" y="70" width="16" height="90"/>
+          <rect style="fill:currentColor;opacity:0.85" x="160" y="70" width="16" height="90"/>
+          <rect style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" x="240" y="140" width="16" height="20"/>
+          <rect style="fill:currentColor;opacity:0.85" x="260" y="140" width="16" height="20"/>
+          <text class="lbl muted" x="48" y="175">class 1</text>
+          <text class="lbl muted" x="148" y="175">class 2</text>
+          <text class="lbl muted" x="248" y="175">class 3</text>
+        </svg>
+        <figcaption>Minimizing cross-entropy pulls each softmax probability to the true class frequency at this $x$, the mean of the one-hot label.</figcaption>
+      </figure>
+
+      <p class="intuition"><em>Intuition: $T(y)=y$ for regression, $T(y)=e_y$ for classification; in both cases forward KL/MLE sets $f_\theta(x)\to\mathbb{E}_{p_{\text{data}}}[T(y)\mid x]$, the mean of whatever the output family is built to predict. That is why forward KL, not some other divergence: it is the one choice that reduces to "match the mean" for these families.</em></p>
+
       <h2>One objective, two losses</h2>
-      <p>MSE and cross-entropy, the two most common losses in deep learning, are the same forward-KL/MLE objective from this post, specialized only by a choice of output-distribution family: Gaussian gives MSE, Categorical gives cross-entropy. The "loss function" is really two decisions bundled together &mdash; what family $p_\theta(y\mid x)$ belongs to, and forward KL as the closeness measure &mdash; and once those are fixed, the loss is derived, not designed.</p>
-      <p class="intuition"><em>Intuition: Generative modeling runs the same machinery one level up: instead of modeling $y$ given $x$, it models $x$ itself, $p_\theta(x)$ vs. $p_{\text{data}}(x)$, with the same KL divergence doing the work &mdash; and, as that post lays out, nearly every generative modeling method is best read as a different strategy for approximating $p_\theta$ under that same objective.</em></p>
+      <p>Same forward-KL/MLE objective, specialized only by output family: Gaussian $\to$ MSE, Categorical $\to$ cross-entropy. Fix the family and forward KL, and the loss is derived, not designed.</p>
+      <p class="intuition"><em>Intuition: Generative modeling runs the same machinery one level up, modeling $x$ itself instead of $y\mid x$.</em></p>
     </article>
   </main>
+
+    </div>
+  </div>
 
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

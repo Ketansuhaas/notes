@@ -6,15 +6,14 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem("notes-theme");
-        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        var t = localStorage.getItem("notes-theme") || "light";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
   </script>
   <title>Common distributions, and where they come from in deep learning - Deep Learning Notes</title>
   <meta name="description" content="Bernoulli, Categorical, Gaussian, multivariate Gaussian, Laplace and Uniform: pmf/pdf, mean/variance, and exactly where each one shows up in deep learning.">
-  <link rel="stylesheet" href="../assets/style.css?v=9">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -28,18 +27,25 @@
 <body>
   <header class="site-header">
     <div class="site-header-top">
-      <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
   </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
 
   <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Common distributions, and where they come from in deep learning</nav>
 
   <main>
     <article>
       <h1>Common distributions, and where they come from in deep learning</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-30">30 October 2026</time></div>
-      <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span></div>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">distributions</span><span class="tag">gaussian</span></div>
 
       <p>A quick reference, not a course: for each distribution, its pmf/pdf, mean and variance, and the one-line reason it is the default choice for a particular kind of output (from Probability notation and random variables).</p>
 
@@ -58,7 +64,7 @@
         $$
       </p>
       <p>A softmax layer $p_k=\dfrac{e^{z_k}}{\sum_j e^{z_j}}$ turns arbitrary real logits $z\in\mathbb{R}^K$ into a valid Categorical parameter vector.</p>
-      <p class="intuition"><em>Intuition: Categorical is Bernoulli generalized from 2 outcomes to $K$; it is the only distribution over a finite unordered set of labels, which is exactly a multi-class label, with softmax doing the job of mapping unconstrained network output onto the probability simplex.</em></p>
+      <p class="intuition"><em>Intuition: Categorical is Bernoulli generalized from 2 outcomes to $K$; softmax maps unconstrained logits onto the probability simplex.</em></p>
 
       <figure class="figure">
         <svg viewBox="0 0 300 160" role="img" aria-label="A categorical distribution over four classes shown as bars of different heights that sum to one">
@@ -73,7 +79,7 @@
           <text class="lbl muted" x="202" y="155">4</text>
           <text class="lbl" x="60" y="40">p&#8321;</text>
         </svg>
-        <figcaption>Categorical over $K=4$ classes: four bar heights, one per class, summing to 1 &mdash; softmax's output shape.</figcaption>
+        <figcaption>Categorical over $K=4$ classes: four bar heights, one per class, summing to 1, softmax's output shape.</figcaption>
       </figure>
 
       <h2>Gaussian $\mathcal{N}(\mu,\sigma^2)$</h2>
@@ -82,8 +88,8 @@
         p(x) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\frac{(x-\mu)^2}{2\sigma^2}\right), \qquad \mathbb{E}[X]=\mu, \qquad \operatorname{Var}(X)=\sigma^2.
         $$
       </p>
-      <p>Shows up as: regression targets ("predict a number"), weight initialization, the latent prior in a VAE, and the noise added/removed at each diffusion step.</p>
-      <p class="intuition"><em>Intuition: the Gaussian is the maximum-entropy distribution for a fixed mean and variance &mdash; the least additional assumption you can make beyond "it has this average and this spread." That is exactly the right amount of assumption when you have no reason to expect anything more specific, so "predict a number, assume Gaussian noise" is the default.</em></p>
+      <p>Shows up as: regression targets, weight initialization, the VAE latent prior, diffusion noise.</p>
+      <p class="intuition"><em>Intuition: the Gaussian is the max-entropy distribution for a fixed mean and variance: the least you can assume beyond "this average, this spread."</em></p>
 
       <figure class="figure">
         <svg viewBox="0 0 320 160" role="img" aria-label="A bell-shaped Gaussian density curve centered at its mean, with one standard deviation marked on either side">
@@ -96,7 +102,7 @@
           <text class="lbl muted" x="100" y="155">&#956;&#8722;&#963;</text>
           <text class="lbl muted" x="195" y="155">&#956;+&#963;</text>
         </svg>
-        <figcaption>$\mathcal{N}(\mu,\sigma^2)$: a single peak at $\mu$, spread set by $\sigma$ &mdash; narrower for small $\sigma$, wider for large $\sigma$.</figcaption>
+        <figcaption>$\mathcal{N}(\mu,\sigma^2)$: a single peak at $\mu$, spread set by $\sigma$: narrower for small $\sigma$, wider for large $\sigma$.</figcaption>
       </figure>
 
       <h2>Multivariate Gaussian $\mathcal{N}(\mu,\Sigma)$</h2>
@@ -105,20 +111,33 @@
         p(x) = \frac{1}{\sqrt{(2\pi)^d\det\Sigma}}\exp\!\left(-\tfrac12(x-\mu)^T\Sigma^{-1}(x-\mu)\right), \qquad \underbrace{\mu}_{d\times1}, \ \underbrace{\Sigma}_{d\times d}\text{ (symmetric, PSD)}.
         $$
       </p>
-      <p>$(x-\mu)^T\Sigma^{-1}(x-\mu)$ is exactly the quadratic form from Quadratic forms and positive definiteness, and $\Sigma$'s eigenvectors/eigenvalues are its principal axes/variances, as in Principal component analysis. In practice $\Sigma$ is usually restricted to diagonal ($d$ numbers instead of $\tfrac{d(d+1)}2$), i.e. independent coordinates with their own variances, since the full covariance is expensive to parameterize and invert in high dimensions.</p>
-      <p class="intuition"><em>Intuition: the multivariate Gaussian is $d$ single Gaussians coupled by a covariance matrix; dropping the off-diagonal terms is exactly the independence assumption $p(x)=\prod_i p(x_i)$ from the notation post, traded for tractability.</em></p>
+      <p>$(x-\mu)^T\Sigma^{-1}(x-\mu)$ is the quadratic form from Quadratic forms and positive definiteness; $\Sigma$'s eigenvectors/eigenvalues are its principal axes/variances (Principal component analysis). Usually restricted to diagonal $\Sigma$ ($d$ numbers, not $\tfrac{d(d+1)}2$):</p>
+      <p>
+        $$
+        \Sigma = \operatorname{diag}(\sigma_1^2,\dots,\sigma_d^2) \ \ \Longleftrightarrow\ \ p(x) = \prod_{i=1}^d p(x_i).
+        $$
+      </p>
+      <p class="intuition"><em>Intuition: a multivariate Gaussian is $d$ single Gaussians coupled by a covariance matrix; dropping the off-diagonal terms is the independence assumption, traded for tractability.</em></p>
 
       <h2>A couple more, briefly</h2>
-      <p><strong>Laplace</strong>($\mu,b$): $p(x)=\tfrac1{2b}\exp(-|x-\mu|/b)$, a sharper peak and heavier tails than Gaussian. Maximizing its log-likelihood is exactly minimizing $|x-\mu|$, so a Laplace noise assumption is what sits behind an L1 (mean absolute error) loss, the way Gaussian sits behind L2 (MSE).</p>
-      <p><strong>Uniform</strong>($a,b$): $p(x)=\tfrac1{b-a}$ on $[a,b]$, 0 elsewhere &mdash; used for weight initialization ranges and for sampling augmentation parameters, whenever every value in a range is meant to be equally likely a priori.</p>
-      <p class="intuition"><em>Intuition: the common thread across this whole post &mdash; every distribution here is a noise/shape assumption baked into a loss function or a module. Supervised learning as KL minimization makes that connection exact: choosing a distributional assumption for $p_\theta(y\mid x)$ and maximizing likelihood is where MSE and cross-entropy actually come from.</em></p>
+      <p>
+        $$
+        \textbf{Laplace}(\mu,b):\ p(x)=\tfrac1{2b}e^{-|x-\mu|/b}, \qquad \textbf{Uniform}(a,b):\ p(x)=\tfrac1{b-a} \text{ on } [a,b].
+        $$
+      </p>
+      <p>Laplace: sharper peak, heavier tails than Gaussian; maximizing its log-likelihood minimizes $|x-\mu|$, so Laplace noise $\to$ L1 loss, the way Gaussian noise $\to$ L2 (MSE). Uniform: weight initialization ranges, augmentation parameters: every value a priori equally likely.</p>
+      <p class="intuition"><em>Intuition: every distribution here is a noise/shape assumption baked into a loss, made exact in Supervised learning as KL minimization.</em></p>
     </article>
   </main>
+
+    </div>
+  </div>
 
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

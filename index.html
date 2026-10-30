@@ -6,24 +6,30 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem("notes-theme");
-        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        var t = localStorage.getItem("notes-theme") || "light";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
   </script>
   <title>Deep Learning Notes: Mathematics &amp; Theory</title>
   <meta name="description" content="Deep Learning Notes: Mathematics &amp; Theory - notes on mathematics and deep learning, filterable by tag.">
-  <link rel="stylesheet" href="assets/style.css?v=9">
+  <link rel="stylesheet" href="assets/style.css?v=10">
 </head>
 <body>
   <header class="site-header">
     <div class="site-header-top">
-      <a class="site-title" href="index.html">Deep Learning Notes</a>
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="index.html">Deep Learning Notes</a>
+      </div>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
     <div class="site-subtitle">Notes on mathematics and deep learning, by Ketan Suhaas Saichandran</div>
   </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
 
   <main>
     <div class="tag-filter">
@@ -35,82 +41,138 @@
       <button type="button" data-tag="information-theory">information-theory</button>
       <button type="button" data-tag="supervised-learning">supervised-learning</button>
       <button type="button" data-tag="generative-modeling">generative-modeling</button>
+      <button type="button" data-tag="optimization">optimization</button>
+      <button type="button" data-tag="statistics">statistics</button>
+      <button type="button" data-tag="eigenvalues">eigenvalues</button>
+      <button type="button" data-tag="eigenbasis">eigenbasis</button>
+      <button type="button" data-tag="diagonalization">diagonalization</button>
+      <button type="button" data-tag="symmetric-matrices">symmetric-matrices</button>
+      <button type="button" data-tag="dynamical-systems">dynamical-systems</button>
+      <button type="button" data-tag="quadratic-forms">quadratic-forms</button>
+      <button type="button" data-tag="positive-definiteness">positive-definiteness</button>
+      <button type="button" data-tag="hessian">hessian</button>
+      <button type="button" data-tag="gradients">gradients</button>
+      <button type="button" data-tag="calculus">calculus</button>
+      <button type="button" data-tag="lagrangian">lagrangian</button>
+      <button type="button" data-tag="constrained-optimization">constrained-optimization</button>
+      <button type="button" data-tag="svd">svd</button>
+      <button type="button" data-tag="matrix-factorization">matrix-factorization</button>
+      <button type="button" data-tag="pca">pca</button>
+      <button type="button" data-tag="covariance">covariance</button>
+      <button type="button" data-tag="variance">variance</button>
+      <button type="button" data-tag="dimensionality-reduction">dimensionality-reduction</button>
+      <button type="button" data-tag="rank">rank</button>
+      <button type="button" data-tag="subspaces">subspaces</button>
+      <button type="button" data-tag="projections">projections</button>
+      <button type="button" data-tag="vectors">vectors</button>
+      <button type="button" data-tag="geometry">geometry</button>
+      <button type="button" data-tag="random-variables">random-variables</button>
+      <button type="button" data-tag="expectation">expectation</button>
+      <button type="button" data-tag="distributions">distributions</button>
+      <button type="button" data-tag="gaussian">gaussian</button>
+      <button type="button" data-tag="kl-divergence">kl-divergence</button>
+      <button type="button" data-tag="densities">densities</button>
+      <button type="button" data-tag="maximum-likelihood">maximum-likelihood</button>
+      <button type="button" data-tag="cross-entropy">cross-entropy</button>
+      <button type="button" data-tag="rayleigh-quotient">rayleigh-quotient</button>
+      <button type="button" data-tag="sigma-algebra">sigma-algebra</button>
     </div>
 
     <ul class="post-list" id="notes-list">
-      <li data-tags="linear-algebra">
-        <div class="title-row"><a href="posts/geometry-in-rn.html">Lines, planes, and spheres in R^n</a><time datetime="2026-10-27">2026-10-27</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span></div>
+      <li data-tags="linear-algebra vectors geometry">
+        <div class="title-row"><a href="posts/geometry-in-rn.html">Lines, planes, and spheres in R^n</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">vectors</span><span class="tag">geometry</span></div>
       </li>
-      <li data-tags="linear-algebra">
-        <div class="title-row"><a href="posts/linear-algebra-fundamentals.html">Rank, subspaces, and projections</a><time datetime="2026-10-28">2026-10-28</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span></div>
+      <li data-tags="linear-algebra rank subspaces projections">
+        <div class="title-row"><a href="posts/linear-algebra-fundamentals.html">Rank, subspaces, and projections</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">rank</span><span class="tag">subspaces</span><span class="tag">projections</span></div>
       </li>
-      <li data-tags="linear-algebra">
-        <div class="title-row"><a href="posts/eigenvalues-and-defectiveness.html">Eigenvalues, eigenvectors, and defectiveness</a><time datetime="2026-10-28">2026-10-28</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span></div>
+      <li data-tags="linear-algebra eigenvalues diagonalization">
+        <div class="title-row"><a href="posts/eigenvalues-and-defectiveness.html">Eigenvalues, eigenvectors, and defectiveness</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">diagonalization</span></div>
       </li>
-      <li data-tags="linear-algebra">
-        <div class="title-row"><a href="posts/spectral-theorem.html">The spectral theorem</a><time datetime="2026-10-29">2026-10-29</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span></div>
+      <li data-tags="linear-algebra eigenvalues diagonalization symmetric-matrices">
+        <div class="title-row"><a href="posts/spectral-theorem.html">The spectral theorem</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">diagonalization</span><span class="tag">symmetric-matrices</span></div>
       </li>
-      <li data-tags="linear-algebra">
-        <div class="title-row"><a href="posts/dynamics-in-the-eigenbasis.html">Dynamics in the eigenbasis</a><time datetime="2026-10-29">2026-10-29</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span></div>
+      <li data-tags="linear-algebra eigenvalues eigenbasis dynamical-systems">
+        <div class="title-row"><a href="posts/dynamics-in-the-eigenbasis.html">Dynamics in the eigenbasis</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">eigenbasis</span><span class="tag">dynamical-systems</span></div>
       </li>
-      <li data-tags="linear-algebra">
-        <div class="title-row"><a href="posts/quadratic-forms-and-positive-definiteness.html">Quadratic forms and positive definiteness</a><time datetime="2026-10-29">2026-10-29</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span></div>
+      <li data-tags="linear-algebra optimization quadratic-forms positive-definiteness hessian eigenvalues">
+        <div class="title-row"><a href="posts/quadratic-forms-and-positive-definiteness.html">Quadratic forms and positive definiteness</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">optimization</span><span class="tag">quadratic-forms</span><span class="tag">positive-definiteness</span><span class="tag">hessian</span><span class="tag">eigenvalues</span></div>
       </li>
-      <li data-tags="linear-algebra">
-        <div class="title-row"><a href="posts/singular-value-decomposition.html">Singular value decomposition</a><time datetime="2026-10-29">2026-10-29</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span></div>
+      <li data-tags="linear-algebra eigenvalues svd matrix-factorization">
+        <div class="title-row"><a href="posts/singular-value-decomposition.html">Singular value decomposition</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">svd</span><span class="tag">matrix-factorization</span></div>
       </li>
-      <li data-tags="linear-algebra deep-learning">
-        <div class="title-row"><a href="posts/gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a><time datetime="2026-10-29">2026-10-29</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span></div>
+      <li data-tags="linear-algebra deep-learning optimization gradients hessian calculus">
+        <div class="title-row"><a href="posts/gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span><span class="tag">optimization</span><span class="tag">gradients</span><span class="tag">hessian</span><span class="tag">calculus</span></div>
       </li>
-      <li data-tags="linear-algebra">
-        <div class="title-row"><a href="posts/lagrangian-and-kkt.html">The Lagrangian and KKT conditions</a><time datetime="2026-10-29">2026-10-29</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span></div>
+      <li data-tags="linear-algebra optimization lagrangian constrained-optimization">
+        <div class="title-row"><a href="posts/lagrangian-and-kkt.html">The Lagrangian and KKT conditions</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">optimization</span><span class="tag">lagrangian</span><span class="tag">constrained-optimization</span></div>
       </li>
-      <li data-tags="linear-algebra deep-learning">
-        <div class="title-row"><a href="posts/principal-component-analysis.html">Principal component analysis</a><time datetime="2026-10-29">2026-10-29</time></div>
-        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span></div>
+      <li data-tags="linear-algebra deep-learning statistics pca covariance variance eigenvalues dimensionality-reduction">
+        <div class="title-row"><a href="posts/principal-component-analysis.html">Principal component analysis</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">pca</span><span class="tag">covariance</span><span class="tag">variance</span><span class="tag">eigenvalues</span><span class="tag">dimensionality-reduction</span></div>
       </li>
-      <li data-tags="probability deep-learning">
-        <div class="title-row"><a href="posts/random-variables-and-notation.html">Probability notation and random variables</a><time datetime="2026-10-30">2026-10-30</time></div>
-        <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span></div>
+      <li data-tags="probability deep-learning statistics random-variables expectation">
+        <div class="title-row"><a href="posts/random-variables-and-notation.html">Probability notation and random variables</a></div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">random-variables</span><span class="tag">expectation</span></div>
       </li>
-      <li data-tags="probability deep-learning">
-        <div class="title-row"><a href="posts/common-distributions.html">Common distributions, and where they come from in deep learning</a><time datetime="2026-10-30">2026-10-30</time></div>
-        <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span></div>
+      <li data-tags="probability deep-learning statistics distributions gaussian">
+        <div class="title-row"><a href="posts/common-distributions.html">Common distributions, and where they come from in deep learning</a></div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">distributions</span><span class="tag">gaussian</span></div>
       </li>
-      <li data-tags="probability measure-theory information-theory">
-        <div class="title-row"><a href="posts/lebesgue-measure-and-kl-divergence.html">Lebesgue measure, densities, and KL divergence</a><time datetime="2026-10-30">2026-10-30</time></div>
-        <div class="tags"><span class="tag">probability</span><span class="tag">measure-theory</span><span class="tag">information-theory</span></div>
+      <li data-tags="probability measure-theory information-theory kl-divergence densities sigma-algebra">
+        <div class="title-row"><a href="posts/lebesgue-measure-and-kl-divergence.html">Lebesgue measure, densities, and KL divergence</a></div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">measure-theory</span><span class="tag">information-theory</span><span class="tag">kl-divergence</span><span class="tag">densities</span><span class="tag">sigma-algebra</span></div>
       </li>
-      <li data-tags="information-theory deep-learning supervised-learning">
-        <div class="title-row"><a href="posts/supervised-learning-as-kl-minimization.html">Supervised learning as KL minimization</a><time datetime="2026-10-30">2026-10-30</time></div>
-        <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">supervised-learning</span></div>
+      <li data-tags="information-theory deep-learning supervised-learning kl-divergence maximum-likelihood cross-entropy">
+        <div class="title-row"><a href="posts/supervised-learning-as-kl-minimization.html">Supervised learning as KL minimization</a></div>
+        <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">supervised-learning</span><span class="tag">kl-divergence</span><span class="tag">maximum-likelihood</span><span class="tag">cross-entropy</span></div>
       </li>
-      <li data-tags="information-theory deep-learning generative-modeling">
-        <div class="title-row"><a href="posts/generative-modeling-and-kl-divergence.html">Generative modeling: approximating p&#952;</a><time datetime="2026-10-30">2026-10-30</time></div>
-        <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">generative-modeling</span></div>
+      <li data-tags="information-theory deep-learning generative-modeling kl-divergence maximum-likelihood">
+        <div class="title-row"><a href="posts/generative-modeling-and-kl-divergence.html">Generative modeling: approximating p&#952;</a></div>
+        <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">generative-modeling</span><span class="tag">kl-divergence</span><span class="tag">maximum-likelihood</span></div>
+      </li>
+      <li data-tags="linear-algebra probability statistics variance covariance eigenvalues eigenbasis rayleigh-quotient">
+        <div class="title-row"><a href="posts/variance-decomposition-and-the-eigenbasis.html">Variance decomposition and the eigenbasis</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">probability</span><span class="tag">statistics</span><span class="tag">variance</span><span class="tag">covariance</span><span class="tag">eigenvalues</span><span class="tag">eigenbasis</span><span class="tag">rayleigh-quotient</span></div>
       </li>
     </ul>
     <script>
       (function () {
         var btns = document.querySelectorAll('.tag-filter button');
         var items = document.querySelectorAll('#notes-list li');
-        function apply(tag) {
-          btns.forEach(function (b) { b.classList.toggle('active', b.dataset.tag === tag); });
+        var selected = new Set();
+        function apply() {
+          btns.forEach(function (b) {
+            b.classList.toggle('active', b.dataset.tag === 'all' ? selected.size === 0 : selected.has(b.dataset.tag));
+          });
           items.forEach(function (li) {
             var tags = (li.dataset.tags || '').split(' ');
-            li.hidden = tag !== 'all' && tags.indexOf(tag) === -1;
+            var matches = true;
+            selected.forEach(function (tag) { if (tags.indexOf(tag) === -1) { matches = false; } });
+            li.hidden = selected.size > 0 && !matches;
           });
         }
-        btns.forEach(function (b) { b.addEventListener('click', function () { apply(b.dataset.tag); }); });
+        btns.forEach(function (b) {
+          b.addEventListener('click', function () {
+            if (b.dataset.tag === 'all') {
+              selected.clear();
+            } else if (selected.has(b.dataset.tag)) {
+              selected.delete(b.dataset.tag);
+            } else {
+              selected.add(b.dataset.tag);
+            }
+            apply();
+          });
+        });
+        apply();
       })();
     </script>
 
@@ -131,12 +193,16 @@
     </section>
   </main>
 
+    </div>
+  </div>
+
   <footer class="site-footer">
     <!-- TODO: link to your GitHub profile / repo once published -->
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="assets/cite.js?v=2"></script>
   <script src="assets/theme.js?v=2"></script>
+  <script src="assets/sidebar.js?v=1"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -3,9 +3,8 @@
 A simple, static blog on mathematics and deep learning. No build step:
 plain HTML/CSS, deployed via GitHub Pages.
 
-- White background, black text; follows system dark mode
-  (`prefers-color-scheme`) by default, with a manual toggle in the header
-  (persisted via `localStorage`).
+- White background, black text; defaults to light mode, with a manual
+  dark-mode toggle in the header (persisted via `localStorage`).
 - Math is rendered with [KaTeX](https://katex.org) (loaded from a CDN,
   `$...$` for inline, `$$...$$` for display).
 - Every post ends with a "Cite this" block (plain-text citation + BibTeX),
@@ -56,3 +55,18 @@ Repo: https://github.com/Ketansuhaas/notes
 1. In the repo settings, enable **Pages** → **Deploy from a branch** →
    branch `main`, folder `/ (root)`.
 2. The site will be published at `https://ketansuhaas.github.io/notes/`.
+
+## Cite this
+
+Ketan Suhaas Saichandran, "Deep Learning Notes: Mathematics & Theory," 2026.
+https://ketansuhaas.github.io/notes/
+
+```bibtex
+@misc{saichandran2026notes,
+  author       = {Saichandran, Ketan Suhaas},
+  title        = {Deep Learning Notes: Mathematics \& Theory},
+  howpublished = {\url{https://ketansuhaas.github.io/notes/}},
+  year         = {2026},
+  note         = {Accessed: YYYY-MM-DD}
+}
+```

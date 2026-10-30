@@ -6,15 +6,14 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem("notes-theme");
-        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        var t = localStorage.getItem("notes-theme") || "light";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
   </script>
   <title>The Lagrangian and KKT conditions - Deep Learning Notes</title>
   <meta name="description" content="Why a gradient is normal to a level set, how that forces the Lagrange tangency condition for equality constraints, and the KKT conditions for inequality constraints.">
-  <link rel="stylesheet" href="../assets/style.css?v=9">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -28,18 +27,25 @@
 <body>
   <header class="site-header">
     <div class="site-header-top">
-      <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
   </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
 
   <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / The Lagrangian and KKT conditions</nav>
 
   <main>
     <article>
       <h1>The Lagrangian and KKT conditions</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
-      <div class="tags"><span class="tag">linear-algebra</span></div>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">optimization</span><span class="tag">lagrangian</span><span class="tag">constrained-optimization</span></div>
 
       <h2>Gradients are normal to level sets</h2>
       <p>A level set of $f$ is $\{x : f(x)=c\}$, a contour. Walking along it in a tangent direction $v$ doesn't change $f$ at all, so the directional derivative must vanish:</p>
@@ -183,10 +189,14 @@
     </article>
   </main>
 
+    </div>
+  </div>
+
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

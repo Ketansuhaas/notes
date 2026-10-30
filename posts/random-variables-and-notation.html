@@ -6,15 +6,14 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem("notes-theme");
-        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        var t = localStorage.getItem("notes-theme") || "light";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
   </script>
   <title>Probability notation and random variables - Deep Learning Notes</title>
   <meta name="description" content="Random variables vs. realizations, P(X=x) vs p(x), random vectors, expectation notation, and the data-generating distribution p_data that all of machine learning is trying to approximate.">
-  <link rel="stylesheet" href="../assets/style.css?v=9">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -28,22 +27,34 @@
 <body>
   <header class="site-header">
     <div class="site-header-top">
-      <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
   </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
 
   <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Probability notation and random variables</nav>
 
   <main>
     <article>
       <h1>Probability notation and random variables</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-30">30 October 2026</time></div>
-      <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span></div>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">random-variables</span><span class="tag">expectation</span></div>
 
       <h2>Random variable vs. realization</h2>
-      <p>A random variable $X$ is a map from a sample space $\Omega$ (outcomes of some random experiment) to a value space, usually $\mathbb{R}$ or $\mathbb{R}^d$. A realization $x$ is one particular output: $X$ is the machine, $x$ is one thing it produced.</p>
-      <p class="intuition"><em>Intuition: capital $X$ is "a number not yet seen"; lowercase $x$ is "a number already seen." Every formula below is really a statement about $X$, instantiated at a specific $x$.</em></p>
+      <p>
+        $$
+        X : \Omega \to \mathbb{R}^d, \qquad x = X(\omega) \ \text{ for a specific outcome } \omega.
+        $$
+      </p>
+      <p>$X$ is the map; $x$ is one realized output.</p>
+      <p class="intuition"><em>Intuition: $X$ is a number not yet seen, $x$ is one already seen.</em></p>
       <p class="example-label">Example</p>
       <p>Flip a coin: $\Omega=\{H,T\}$, $X(H)=1$, $X(T)=0$. $X$ is the variable; $x=1$ is what happened on a given flip.</p>
 
@@ -56,8 +67,13 @@
         \text{continuous: } P(X\in A) = \int_A p(x)\,dx.
         $$
       </p>
-      <p>In the discrete case $p(x)$ is itself a probability, $\sum_x p(x)=1$. In the continuous case $p(x)$ is a <em>density</em>, not a probability: it can exceed 1, only $\int p(x)\,dx=1$ is required, and in fact $P(X=x)=0$ for every single point $x$ (a single point has zero width to integrate over). What a continuous density gives you is relative likelihood: $p(x)\,dx\approx P(X\in[x,x+dx])$ for small $dx$.</p>
-      <p class="intuition"><em>Intuition: $P$ answers "how likely is this set of outcomes," $p$ answers "how concentrated is the distribution right here." Why a single point can carry zero probability yet a nonzero density is really a question about measure, not probability, so it gets its own treatment in Lebesgue measure and KL divergence &mdash; for now, take the two displayed definitions as the working rules.</em></p>
+      <p>
+        $$
+        \text{discrete: } \textstyle\sum_x p(x)=1 \ \text{(itself a probability)}, \qquad \text{continuous: } \int p(x)\,dx=1, \ p(x) \text{ can exceed } 1.
+        $$
+      </p>
+      <p>A continuous density gives relative likelihood: $p(x)\,dx\approx P(X\in[x,x+dx])$, and $P(X=x)=0$ for every point $x$.</p>
+      <p class="intuition"><em>Intuition: $P$ measures sets, $p$ measures local concentration (made rigorous in Lebesgue measure and KL divergence).</em></p>
       <p class="example-label">Example</p>
       <p>Fair coin: $p(1)=p(0)=\tfrac12$, each a genuine probability. Standard uniform $X\sim\text{Unif}[0,2]$: $p(x)=\tfrac12$ for $x\in[0,2]$, a density, and $P(X=1)=0$ even though $p(1)=\tfrac12>0$.</p>
 
@@ -101,16 +117,16 @@
         \text{independence: } p(x,y)=p(x)\,p(y).
         $$
       </p>
-      <p class="intuition"><em>Intuition: marginalizing sums (or integrates) a variable away because you no longer care what value it took; conditioning restricts to a slice where $x$ is fixed and renormalizes; independence is the special case where conditioning on $x$ changes nothing about $y$.</em></p>
+      <p class="intuition"><em>Intuition: marginal sums a variable away, conditional restricts and renormalizes, independence means conditioning changes nothing.</em></p>
       <p>Repeated conditioning gives the chain rule, true for any ordering of the variables:</p>
       <p>
         $$
         p(x_1,\dots,x_n) = \prod_{i=1}^n p(x_i\mid x_1,\dots,x_{i-1}).
         $$
       </p>
-      <p class="intuition"><em>Intuition: generate the coordinates one at a time, each conditioned on everything generated so far; multiplying those one-at-a-time probabilities together rebuilds the full joint. This is the exact mechanism behind autoregressive models.</em></p>
+      <p class="intuition"><em>Intuition: generate one coordinate at a time, each conditioned on what came before: the mechanism behind autoregressive models.</em></p>
       <p class="example-label">Example</p>
-      <p>Two coin flips, independent: $p(x_1,x_2)=p(x_1)p(x_2)=\tfrac14$ for every outcome. If instead $x_2$ always copies $x_1$: $p(x_2\mid x_1)=1$ when $x_2=x_1$ and $0$ otherwise, so $p(x_1,x_2)=p(x_1)p(x_2\mid x_1)=\tfrac12$ exactly when $x_1=x_2$, and $0$ otherwise &mdash; no independence, but the chain rule factorization still holds.</p>
+      <p>Two coin flips, independent: $p(x_1,x_2)=p(x_1)p(x_2)=\tfrac14$ for every outcome. If instead $x_2$ always copies $x_1$: $p(x_2\mid x_1)=1$ when $x_2=x_1$ and $0$ otherwise, so $p(x_1,x_2)=p(x_1)p(x_2\mid x_1)=\tfrac12$ exactly when $x_1=x_2$, and $0$ otherwise; no independence, but the chain rule factorization still holds.</p>
 
       <h2>Expectation notation</h2>
       <p>$\mathbb{E}_{x\sim p}[f(x)]$ averages $f$ over $x$ drawn from $p$:</p>
@@ -119,7 +135,7 @@
         \mathbb{E}_{x\sim p}[f(x)] = \sum_x p(x)f(x) \quad \text{or} \quad \int p(x)f(x)\,dx.
         $$
       </p>
-      <p class="intuition"><em>Intuition: the subscript under $\mathbb{E}$ is not decoration, it names which distribution the randomness runs under. The moment two or more distributions are in play (true for essentially every post after this one, where $p_{\text{data}}$ and a model distribution both appear), dropping the subscript makes an expression ambiguous.</em></p>
+      <p class="intuition"><em>Intuition: the subscript names which distribution the randomness runs under: never drop it once two distributions are in play.</em></p>
 
       <h2>The data-generating distribution</h2>
       <p>Machine learning starts from a dataset, $\{x_i\}_{i=1}^n$ or $\{(x_i,y_i)\}_{i=1}^n$, and the standard working assumption is that these are i.i.d. (independent, identically distributed) samples from some fixed but unknown true distribution:</p>
@@ -128,15 +144,19 @@
         x_i \overset{\text{i.i.d.}}{\sim} p_{\text{data}}(x), \qquad \text{or} \qquad (x_i,y_i)\overset{\text{i.i.d.}}{\sim} p_{\text{data}}(x,y).
         $$
       </p>
-      <p>$p_{\text{data}}$ is never directly observed, only sampled from, finitely many times. Nearly every method in this category of notes is best understood as trying to characterize, or approximate, some piece of $p_{\text{data}}$ using only that finite sample: a classifier approximates $p_{\text{data}}(y\mid x)$, a generative model approximates $p_{\text{data}}(x)$ itself.</p>
-      <p class="intuition"><em>Intuition: $p_{\text{data}}$ is the thing you actually want; the dataset is just a flashlight shining a few samples' worth of light on it. Common distributions next looks at concrete shapes $p_{\text{data}}$ or a model might take; Lebesgue measure and KL divergence makes the $P$ vs. $p$ distinction above fully rigorous and introduces the tool (KL divergence) used throughout the rest of this category to measure how close an approximation is to $p_{\text{data}}$.</em></p>
+      <p>$p_{\text{data}}$ is observed only through finitely many samples. A classifier approximates $p_{\text{data}}(y\mid x)$; a generative model approximates $p_{\text{data}}(x)$ itself.</p>
+      <p class="intuition"><em>Intuition: $p_{\text{data}}$ is the target; the dataset is a flashlight shining a few samples of light on it.</em></p>
     </article>
   </main>
+
+    </div>
+  </div>
 
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

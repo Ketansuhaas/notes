@@ -6,15 +6,14 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem("notes-theme");
-        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        var t = localStorage.getItem("notes-theme") || "light";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
   </script>
   <title>Gradients, Jacobians, and Hessians - Deep Learning Notes</title>
   <meta name="description" content="Gradients, Jacobians, and Hessians explained through their shapes: the derivative's shape is always (outputs) x (inputs), and the Hessian is just the Jacobian of the gradient.">
-  <link rel="stylesheet" href="../assets/style.css?v=9">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -28,18 +27,25 @@
 <body>
   <header class="site-header">
     <div class="site-header-top">
-      <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
   </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
 
   <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Gradients, Jacobians, and Hessians</nav>
 
   <main>
     <article>
       <h1>Gradients, Jacobians, and Hessians</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-29">29 October 2026</time></div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span></div>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">deep-learning</span><span class="tag">optimization</span><span class="tag">gradients</span><span class="tag">hessian</span><span class="tag">calculus</span></div>
 
       <h2>The gradient</h2>
       <p>For a scalar function $f:\mathbb{R}^n\to\mathbb{R}$, the gradient collects all $n$ partial derivatives into a vector, same shape as $x$:</p>
@@ -148,8 +154,8 @@
         \underbrace{u^T}_{1\times m}\,\underbrace{J}_{m\times n}=\underbrace{u^TJ}_{1\times n}, \qquad\text{vs.}\qquad \underbrace{J}_{m\times n}\,\underbrace{v}_{n\times1}=\underbrace{Jv}_{m\times1}.
         $$
       </p>
-      <p>$Jv$ (a JVP) is what <strong>forward-mode</strong> autodiff propagates layer by layer, $J_k v = J_h(J_gv)$, cheap when there are few inputs to differentiate against. $u^TJ$ (a <strong>vector-Jacobian product</strong>, VJP) is the dual object, $u^TJ_k=(u^TJ_h)J_g$, propagated backward from a scalar loss ($u=1$ at the output) &mdash; this row-vector-backward pass is exactly backpropagation from the Chain rule and shapes section above, now named.</p>
-      <p class="intuition"><em>Intuition: a JVP asks "if the input moves this way, how does the output move?"; a VJP asks "if I care about the output this way, how should I adjust the input?" &mdash; forward-mode computes the first, reverse-mode (backprop) computes the second, and deep learning almost always wants the second, since a scalar loss has exactly one output to seed from.</em></p>
+      <p>$Jv$ (a JVP) is what <strong>forward-mode</strong> autodiff propagates layer by layer, $J_k v = J_h(J_gv)$, cheap when there are few inputs to differentiate against. $u^TJ$ (a <strong>vector-Jacobian product</strong>, VJP) is the dual object, $u^TJ_k=(u^TJ_h)J_g$, propagated backward from a scalar loss ($u=1$ at the output); this row-vector-backward pass is exactly backpropagation from the Chain rule and shapes section above, now named.</p>
+      <p class="intuition"><em>Intuition: a JVP asks "if the input moves this way, how does the output move?"; a VJP asks "if I care about the output this way, how should I adjust the input?" Forward-mode computes the first, reverse-mode (backprop) computes the second; deep learning almost always wants the second, since a scalar loss has exactly one output to seed from.</em></p>
 
       <h2>The Hessian</h2>
       <p>$\nabla f$ is itself a map $\mathbb{R}^n\to\mathbb{R}^n$ (gradient in, gradient out), so it has its own Jacobian:</p>
@@ -240,10 +246,14 @@
     </article>
   </main>
 
+    </div>
+  </div>
+
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

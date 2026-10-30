@@ -6,15 +6,14 @@
   <script>
     (function () {
       try {
-        var t = localStorage.getItem("notes-theme");
-        if (!t) { t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; }
+        var t = localStorage.getItem("notes-theme") || "light";
         document.documentElement.setAttribute("data-theme", t);
       } catch (e) {}
     })();
   </script>
   <title>Generative modeling: approximating p&#952; - Deep Learning Notes</title>
   <meta name="description" content="Generative modeling is the same forward-KL/MLE objective as supervised learning, applied to p(x) itself; nearly every method (autoregressive, flows, VAEs, GANs, diffusion) is a different trick for making that objective computable.">
-  <link rel="stylesheet" href="../assets/style.css?v=9">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -28,46 +27,57 @@
 <body>
   <header class="site-header">
     <div class="site-header-top">
-      <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
       <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
     </div>
   </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
 
   <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Generative modeling: approximating p&#952;</nav>
 
   <main>
     <article>
       <h1>Generative modeling: approximating p&#952;</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran &middot; <time datetime="2026-10-30">30 October 2026</time></div>
-      <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">generative-modeling</span></div>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">generative-modeling</span><span class="tag">kl-divergence</span><span class="tag">maximum-likelihood</span></div>
 
       <h2>Same objective, one level up</h2>
-      <p>Now $x$ itself is the random object &mdash; an image, a sentence, a molecule &mdash; drawn from $p_{\text{data}}(x)$, and a generative model is a distribution $p_\theta(x)$. Swap $y\mid x\to x$ in Supervised learning as KL minimization and nothing else changes: forward KL minimization is MLE,</p>
+      <p>Now $x$ itself (image, sentence, molecule) is drawn from $p_{\text{data}}(x)$, and the model is a distribution $p_\theta(x)$. Swap $y\mid x\to x$ in Supervised learning as KL minimization; forward KL is still MLE:</p>
       <p>
         $$
         \min_\theta\ KL\big(p_{\text{data}}(x)\,\|\,p_\theta(x)\big) \ \Longleftrightarrow\ \max_\theta\ \mathbb{E}_{x\sim p_{\text{data}}}\big[\log p_\theta(x)\big].
         $$
       </p>
 
-      <p class="intuition"><em>The objective was never the hard part &mdash; it's always some form of matching $p_\theta$ to $p_{\text{data}}$. The hard part is that $p_\theta(x)$ is intractable to evaluate or sample from for almost any model family expressive enough to be useful. Nearly every method below is just a different trick for making $\max_\theta\mathbb{E}[\log p_\theta(x)]$, or a workable stand-in for it, computable &mdash; nearly every method is just approximating $p_\theta$.</em></p>
+      <p class="intuition"><em>Intuition: the objective was never the hard part; $p_\theta(x)$ being intractable to evaluate or sample is. Every method below is a different trick for making $\max_\theta\mathbb{E}[\log p_\theta(x)]$, or a stand-in for it, computable.</em></p>
 
       <h2>A map of the methods</h2>
       <ul>
-        <li><strong>Autoregressive models</strong> (e.g. language models): factor $p_\theta(x)=\prod_i p_\theta(x_i\mid x_{<i})$ by the chain rule (Probability notation and random variables). Exact likelihood, directly optimized by forward KL/MLE &mdash; no approximation needed, at the cost of sequential generation.</li>
+        <li><strong>Autoregressive models</strong> (e.g. language models): factor $p_\theta(x)=\prod_i p_\theta(x_i\mid x_{<i})$ by the chain rule (Probability notation and random variables). Exact likelihood, directly optimized by forward KL/MLE; no approximation needed, at the cost of sequential generation.</li>
         <li><strong>Normalizing flows</strong>: an invertible $x=f_\theta(z)$ from a simple base density; change of variables gives $p_\theta(x)$ exactly via a Jacobian determinant (Gradients, Jacobians, and Hessians). Also exact likelihood, but the architecture must stay invertible.</li>
         <li><strong>Variational autoencoders (VAEs)</strong>: $p_\theta(x)=\int p_\theta(x\mid z)p(z)\,dz$ is intractable, so introduce $q_\phi(z\mid x)$ and optimize the ELBO, a tractable lower bound on $\log p_\theta(x)$ built around $KL(q_\phi(z\mid x)\,\|\,p(z))$. Approximates the marginal likelihood via a bound; that inner KL is a reverse-KL, variational-inference term (Lebesgue measure and KL divergence).</li>
-        <li><strong>GANs</strong>: no explicit $p_\theta(x)$ at all, just a sampler, trained adversarially against a discriminator. At the optimal discriminator the implicit objective relates to the Jensen&ndash;Shannon divergence &mdash; still "match $p_\theta$ to $p_{\text{data}}$", but with likelihood evaluation traded for sample quality and a different (symmetrized) divergence than KL.</li>
-        <li><strong>Diffusion / score-based models</strong>: sidestep $p_\theta(x)$ by learning the score $\nabla_x\log p_\theta(x)$ instead (equivalently, denoising at many noise levels). Training reduces to a tractable regression loss that is provably bounded in relation to the log-likelihood &mdash; approximate MLE without ever forming $p_\theta(x)$ itself.</li>
+        <li><strong>GANs</strong>: no explicit $p_\theta(x)$ at all, just a sampler, trained adversarially against a discriminator. At the optimal discriminator the implicit objective relates to the Jensen&ndash;Shannon divergence; still "match $p_\theta$ to $p_{\text{data}}$", but with likelihood evaluation traded for sample quality and a different (symmetrized) divergence than KL.</li>
+        <li><strong>Diffusion / score-based models</strong>: sidestep $p_\theta(x)$ by learning the score $\nabla_x\log p_\theta(x)$ instead (equivalently, denoising at many noise levels). Training reduces to a tractable regression loss that is provably bounded in relation to the log-likelihood; approximate MLE without ever forming $p_\theta(x)$ itself.</li>
       </ul>
 
       <p>Exact factorization, an invertible change of variables, a variational bound, a different divergence, a score instead of a density: five disguises for the same project, fitting $p_\theta$ to $p_{\text{data}}$.</p>
     </article>
   </main>
 
+    </div>
+  </div>
+
   <footer class="site-footer">
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=1"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
