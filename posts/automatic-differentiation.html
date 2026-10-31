@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Automatic differentiation - Deep Learning Notes</title>
+  <meta name="description" content="The computation graph, forward-mode and reverse-mode automatic differentiation as the general algorithms behind JVPs and VJPs, why reverse mode needs the forward pass stored first, the sum-over-children rule for shared nodes, and backpropagation as its special case.">
+  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Automatic differentiation</nav>
+
+  <main>
+    <article>
+      <h1>Automatic differentiation</h1>
+      <div class="post-meta">Ketan Suhaas Saichandran</div>
+      <div class="tags"><span class="tag">deep-learning</span><span class="tag">gradients</span><span class="tag">automatic-differentiation</span><span class="tag">jacobian</span><span class="tag">backpropagation</span></div>
+
+      <h2>The computation graph</h2>
+      <p>Any numerical computation, however complicated, is a sequence of elementary operations: $v_1,\dots,v_k$ are the inputs, and every later $v_i$ ($i>k$) is computed from some of the earlier $v_j$'s, called its parents, through one elementary function with a known local Jacobian:</p>
+      <p>
+        $$
+        v_i = f_i\big(\{v_j : j \in \operatorname{parents}(i)\}\big).
+        $$
+      </p>
+      <p>$v_n$, the last node, is the final output (a scalar $\mathcal{L}$, for a loss). This is exactly the layered network from Backpropagation via Jacobian-vector products, written in full generality: there, $z_\ell$ and $h_\ell$ were nodes, $W_\ell h_{\ell-1}+b_\ell$ and $\sigma(\cdot)$ were the $f_i$'s, and the graph happened to be a plain chain, one parent per node.</p>
+      <p class="intuition"><em>Intuition: a computation graph is just a dependency diagram of every intermediate value a program computes, in the exact order each one becomes available.</em></p>
+
+      <h2>Forward-mode: push derivatives forward</h2>
+      <p>Pick a direction for the inputs and track, alongside each node's ordinary value $v_i$, its directional derivative (tangent) $\dot v_i$ along that direction. Inputs are seeded directly; every later node's tangent is a sum of JVPs over its parents, computed in the same order the values themselves are computed:</p>
+      <p>
+        $$
+        \dot v_i = \sum_{j\,\in\,\operatorname{parents}(i)} J_{f_i}(v_j)\,\dot v_j.
+        $$
+      </p>
+      <p>Value and tangent can be computed together, node by node, in one forward sweep, because $\dot v_i$ only ever needs tangents of nodes already finished earlier in that same sweep.</p>
+      <p class="intuition"><em>Intuition: forward mode asks "if the inputs move this way, how does every downstream value move," and answers it in the same order the computation already runs.</em></p>
+      <p>One sweep produces one column of the full Jacobian (the directional derivative along one input direction); a full Jacobian with $n_{\text{in}}$ input dimensions needs $n_{\text{in}}$ sweeps, one seed direction at a time.</p>
+
+      <h2>Reverse-mode: push derivatives backward</h2>
+      <p>Run the ordinary forward pass first, storing every intermediate value $v_i$ (not just the final output). Then define the adjoint $\bar v_i := \partial\mathcal{L}/\partial v_i$, seeded at the output, $\bar v_n=1$, and sweep backward, in the reverse of the order the values were computed. A node's adjoint sums one VJP contribution from every child that used it:</p>
+      <p>
+        $$
+        \bar v_j = \sum_{i\,:\,j\,\in\,\operatorname{parents}(i)} \bar v_i\ J_{f_i}(v_j).
+        $$
+      </p>
+      <p>This is the exact recursion from Backpropagation via Jacobian-vector products ($g_{\ell-1}=g_{z_\ell}W_\ell$, etc.), with one difference made explicit: the sum. A plain chain has one child per node, so the sum there was always one term; a general graph does not.</p>
+      <p class="intuition"><em>Intuition: reverse mode asks "how much should this node change to move the one final output," one question per node, answered in exactly the reverse of the order the forward pass discovered them.</em></p>
+
+      <h2>Why a node's adjoint sums over every child</h2>
+      <p>Take $y = x^2 + x$, with $x$ feeding two places at once: $v_1=x$, $v_2=v_1\cdot v_1$, $v_3=v_2+v_1$, output $y=v_3$. Reverse sweep:</p>
+      <p>
+        $$
+        \bar v_3 = 1, \qquad \bar v_2 \mathrel{+}= \bar v_3\cdot\frac{\partial v_3}{\partial v_2}=1, \qquad \bar v_1 \mathrel{+}= \bar v_3\cdot\frac{\partial v_3}{\partial v_1}=1.
+        $$
+      </p>
+      <p>$v_1$ has a second child, $v_2$, not yet processed. Continuing to it adds a second contribution to the same $\bar v_1$:</p>
+      <p>
+        $$
+        \bar v_1 \mathrel{+}= \bar v_2\cdot\frac{\partial v_2}{\partial v_1} = 1\cdot 2v_1 = 2x, \qquad\text{total: } \bar v_1 = 1+2x.
+        $$
+      </p>
+      <p>$dy/dx=2x+1$ directly confirms it. &#10003;</p>
+      <p class="intuition"><em>Intuition: if a value is reused, every path it was reused along contributes its own share of blame (or credit) to the final output, and those shares add; skipping any one of them would silently undercount the gradient.</em></p>
+
+      <h2>Why reverse mode needs the forward pass stored first</h2>
+      <p>Forward mode's recursion only ever needs tangents of already-finished parents, so it can compute values and tangents together in one pass. Reverse mode's recursion needs $J_{f_i}(v_j)$, the local Jacobian evaluated at the actual value $v_j$ took during the computation, before any adjoint can be propagated through it. Those values are only known once the whole forward pass has finished, so reverse mode is unavoidably two passes: forward (compute and store every value), then backward (compute every adjoint using those stored values).</p>
+      <p class="intuition"><em>Intuition: forward mode builds its answer as it goes; reverse mode has to see where the computation ended up before it can work out how it got there.</em></p>
+
+      <h2>Cost: $n_{\text{in}}$ sweeps vs. $n_{\text{out}}$ sweeps</h2>
+      <p>A full Jacobian of a function with $n_{\text{in}}$ inputs and $n_{\text{out}}$ outputs costs $n_{\text{in}}$ forward-mode sweeps or $n_{\text{out}}$ reverse-mode sweeps. A scalar loss has $n_{\text{out}}=1$, so reverse mode needs exactly one sweep regardless of how many millions of parameters feed into it, which is why it is the only sane choice for training. The reverse holds too: a function with one input and a million outputs is a single forward-mode sweep away from its full Jacobian, and would cost a million reverse-mode sweeps instead.</p>
+      <p class="intuition"><em>Intuition: pick the mode that only has to run once, which means counting whichever side of the function, inputs or outputs, is smaller.</em></p>
+
+      <h2>Backpropagation is reverse-mode autodiff, specialized</h2>
+      <p>Backpropagation via Jacobian-vector products is this exact algorithm, run on one particular, simple graph: a chain, each node a matmul or an elementwise nonlinearity, one child per node, so the sum in the adjoint recursion never has more than one term to add. General autodiff handles arbitrary graphs, branches, shared weights, skip connections, anything where a value is reused, and the one new rule it needs beyond that post is exactly the sum over children derived above.</p>
+      <p class="intuition"><em>Intuition: every automatic differentiation library is running the same two recursions on whatever graph your code happens to build; a feedforward network is simply the case where that graph is a straight line.</em></p>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=2"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

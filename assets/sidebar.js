@@ -35,6 +35,7 @@
       title: "Deep Learning",
       posts: [
         ["posts/backpropagation-via-jvps.html", "Backpropagation via Jacobian-vector products"],
+        ["posts/automatic-differentiation.html", "Automatic differentiation"],
         ["posts/weight-initialization-and-variance.html", "Weight initialization and variance propagation"],
         ["posts/reparameterization-trick.html", "The reparameterization trick"]
       ]
