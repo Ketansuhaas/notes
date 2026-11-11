@@ -91,6 +91,9 @@
         </svg>
         <figcaption>Each program loads one tile. The last tile overhangs the data, so a mask switches off the extra lanes.</figcaption>
       </figure>
+      <p>Program <code>pid</code> owns offsets <code>pid*BLOCK</code> to <code>pid*BLOCK + BLOCK - 1</code>, the same formula as CUDA's thread index with a whole vector in place of <code>threadIdx.x</code>. Same ceil-division as in <a href="cuda-programming-model.html">CUDA</a>:</p>
+      <p>$$\text{grid}=\Big\lceil\frac{900}{256}\Big\rceil=\lceil3.52\rceil=4,\qquad 4\cdot256=1024\ \text{slots}.$$</p>
+      <p>$$\text{pid }3:\ \text{offsets }768,\dots,1023;\qquad \underbrace{900-768=132}_{\text{mask true}},\quad \underbrace{1024-900=124}_{\text{masked off}}.$$</p>
 
       <h2>A complete kernel: vector add</h2>
       <p class="idea">Find your tile, build its offsets, guard the tail, load, compute, store.</p>
@@ -108,7 +111,8 @@ def add_kernel(x_ptr, y_ptr, out_ptr, n, BLOCK: tl.constexpr):
 out = torch.empty_like(x)
 grid = (triton.cdiv(x.numel(), 256),)      # 4 programs
 add_kernel[grid](x, y, out, x.numel(), BLOCK=256)</code></pre>
-      <p>With <code>num_warps=4</code> (128 threads), each thread handles $256/128=2$ elements. You never wrote that mapping.</p>
+      <p>$$\texttt{num\_warps}=4\ \Rightarrow\ 4\cdot32=128\ \text{threads},\qquad \frac{256\ \text{elements}}{128\ \text{threads}}=2\ \text{elements per thread}.$$</p>
+      <p>You never wrote that mapping.</p>
       <p>This is the form torch.compile's Inductor emits. Run with <code>TORCH_LOGS="output_code"</code> to read its kernels.</p>
 
       <section class="exercise">
@@ -125,7 +129,12 @@ num = tl.exp(x)                              # masked lanes: exp(-inf) = 0
 den = tl.sum(num, axis=0)
 tl.store(out_ptr + row*stride + offs, num / den, mask=mask)</code></pre>
           <p>One HBM read and one write per row; max, exp, sum, divide all happen in registers.</p>
-          <p>Shifting is free: $\frac{e^{x_j-m}}{\sum_k e^{x_k-m}}=\frac{e^{x_j}}{\sum_k e^{x_k}}$. Without it, $e^{x}$ overflows for $x\gt 88$ in fp32 (about $11$ in fp16) and gives $\infty/\infty$. With it, every exponent is $\le0$ and the denominator is $\ge1$.</p>
+          <p><strong>Shifting is free.</strong> $e^{x-m}=e^{x}e^{-m}$, and the common factor $e^{-m}$ cancels between top and bottom:</p>
+          <p>$$\frac{e^{x_j-m}}{\sum_k e^{x_k-m}}=\frac{e^{-m}\,e^{x_j}}{e^{-m}\sum_k e^{x_k}}=\frac{e^{x_j}}{\sum_k e^{x_k}}.$$</p>
+          <p><strong>Without it, overflow.</strong> $e^x$ exceeds the largest float $x_{\max}$ (<a href="floating-point-and-mixed-precision.html">floating point</a>) when $x\gt\ln x_{\max}$:</p>
+          <p>$$\text{fp32: }\ln(3.4\times10^{38})\approx88.7,\qquad \text{fp16: }\ln65504\approx11.1.$$</p>
+          <p>Past that, top and bottom are both $\infty$ and the result is $\infty/\infty=$ NaN.</p>
+          <p><strong>With it, safe.</strong> $m=\max_kx_k$, so every $x_k-m\le0$ and every term $e^{x_k-m}\in(0,1]$: nothing overflows. The max entry gives $e^0=1$, so the denominator is $\ge1$: no division by a number that underflowed to $0$. Masked lanes hold $-\infty$: they never win the max, and $e^{-\infty}=0$ adds nothing to the sum.</p>
         </details>
       </section>
     </article>
@@ -138,7 +147,7 @@ tl.store(out_ptr + row*stride + offs, num / den, mask=mask)</code></pre>
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

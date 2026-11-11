@@ -56,33 +56,51 @@
 
       <h2>The primal</h2>
       <p class="idea">The original constrained problem. Its Lagrangian charges a price for each constraint: $\mu_j\ge0$ per inequality, $\lambda_i$ per equality.</p>
-      <p>$$p^\star=\min_x f(x)\ \text{ s.t. } h_j(x)\le0,\ g_i(x)=0, \qquad L(x,\mu,\lambda)=f(x)+\mu^Th(x)+\lambda^Tg(x).$$</p>
+      <p>$$p^\star=\min_x f(x)\ \text{ s.t. } h_j(x)\le0,\ g_i(x)=0,$$</p>
+      <p>$$L(x,\mu,\lambda)=f(x)+\mu^Th(x)+\lambda^Tg(x).$$</p>
       <p class="example-label">Running example</p>
-      <p>$\min x^2+y^2$ s.t. $h=1-x-y\le0$. From KKT: $x^\star=(\tfrac12,\tfrac12)$, $p^\star=\tfrac12$, $\mu^\star=1$.</p>
+      <p>$\min x^2+y^2$ s.t. $h=1-x-y\le0$. Solved in <a href="lagrangian-and-kkt.html">the KKT note</a>: $x^\star=(\tfrac12,\tfrac12)$, $p^\star=\tfrac14+\tfrac14=\tfrac12$, $\mu^\star=1$.</p>
 
       <h2>The dual function</h2>
       <p class="idea">Fix the prices, then minimize over $x$ with no constraints at all. The result is always concave, whatever $f$ is: a minimum of straight lines bends down.</p>
-      <p>$$d(\mu,\lambda)=\min_x L(x,\mu,\lambda) \qquad (\text{a min over } x \text{ of functions affine in } (\mu,\lambda)\ \Rightarrow\ \text{concave}).$$</p>
+      <p>$$d(\mu,\lambda)=\min_x L(x,\mu,\lambda).$$</p>
+      <p><strong>Why concave.</strong> For each fixed $x$, $L$ is affine in $z=(\mu,\lambda)$, so it splits exactly over a mix $z=\theta a+(1-\theta)b$, $\theta\in[0,1]$:</p>
+      <p>$$L(x,\theta a+(1-\theta)b)=\theta L(x,a)+(1-\theta)L(x,b).$$</p>
+      <p>Minimize over $x$. Minimizing a sum gives at least the sum of the separate minima (each piece can pick its own $x$):</p>
+      <p>$$d(\theta a+(1-\theta)b)\ \ge\ \theta\min_xL(x,a)+(1-\theta)\min_xL(x,b)$$</p>
+      <p>$$=\theta\,d(a)+(1-\theta)\,d(b).$$</p>
+      <p>That is the chord test for concavity, with no assumption on $f$, $h$, $g$.</p>
       <p class="example-label">Example</p>
-      <p>$$L=x^2+y^2+\mu(1-x-y), \quad \nabla_{x,y}L=0:\ x=y=\tfrac\mu2$$ $$\Rightarrow\ d(\mu)=\tfrac{\mu^2}4+\tfrac{\mu^2}4+\mu(1-\mu)=\mu-\tfrac{\mu^2}2.$$</p>
+      <p>$$L=x^2+y^2+\mu(1-x-y).$$</p>
+      <p>For fixed $\mu$, $L$ is a convex bowl in $(x,y)$, so its minimum is where the gradient vanishes:</p>
+      <p>$$\partial_xL=2x-\mu=0,\quad \partial_yL=2y-\mu=0 \quad\Rightarrow\quad x=y=\tfrac\mu2.$$</p>
+      <p>Plug back in ($1-x-y=1-\mu$):</p>
+      <p>$$d(\mu)=\tfrac{\mu^2}4+\tfrac{\mu^2}4+\mu(1-\mu)=\tfrac{\mu^2}2+\mu-\mu^2=\mu-\tfrac{\mu^2}2.$$</p>
+      <p>A downward parabola: concave, as promised.</p>
 
       <h2>Weak duality: $d^\star\le p^\star$, always</h2>
       <p class="idea">On the feasible set the penalty terms are $\le0$, so $L$ underestimates $f$. Every $\mu\ge0$ gives a lower bound; the dual asks for the best one.</p>
-      <p>$$x \text{ feasible},\ \mu\ge0: \qquad d(\mu,\lambda)\le L(x,\mu,\lambda)=f(x)+\underbrace{\mu^Th(x)}_{\le0}+\underbrace{\lambda^Tg(x)}_{=0}\le f(x)$$</p>
-      <p>$$\Rightarrow\quad d^\star=\max_{\mu\ge0,\,\lambda}\ d(\mu,\lambda)\ \le\ p^\star.$$</p>
-      <p class="example-label">Example</p>
+      <p>Take any feasible $x$ and any $\mu\ge0$, $\lambda$. The min over all $x'$ is at most the value at this $x$:</p>
+      <p>$$d(\mu,\lambda)\le L(x,\mu,\lambda)=f(x)+\underbrace{\mu^Th(x)}_{\le0:\ \mu\ge0,\ h\le0}+\underbrace{\lambda^Tg(x)}_{=0}\le f(x).$$</p>
+      <p>The left side doesn't depend on $x$, so minimize the right side over feasible $x$, then maximize the left over $\mu\ge0,\lambda$:</p>
+      <p>$$d(\mu,\lambda)\le p^\star \quad\Rightarrow\quad d^\star=\max_{\mu\ge0,\,\lambda}\ d(\mu,\lambda)\ \le\ p^\star.$$</p>
+      <p class="example-label">Example: $d(\mu)=\mu-\mu^2/2$</p>
       <table>
         <tr><td>$\mu$</td><td>$0$</td><td>$0.5$</td><td>$1$</td><td>$2$</td></tr>
-        <tr><td>$d(\mu)$</td><td>$0$</td><td>$0.375$</td><td>$0.5$</td><td>$0$</td></tr>
+        <tr><td>$d(\mu)$</td><td>$0-0=0$</td><td>$0.5-0.125=0.375$</td><td>$1-0.5=0.5$</td><td>$2-2=0$</td></tr>
       </table>
       <p>Every bound is $\le p^\star=\tfrac12$.</p>
 
       <h2>Strong duality: the gap closes</h2>
       <p class="idea">For a convex problem with one strictly feasible point, the best lower bound is exact. The optimal $(x^\star,\mu^\star,\lambda^\star)$ then satisfy KKT.</p>
       <p>$$f,h_j \text{ convex},\ g_i \text{ affine},\ \exists x:\ h_j(x)\lt0\ \forall j\ \ (\text{Slater}) \quad\Rightarrow\quad d^\star=p^\star.$$</p>
+      <p><em>Proof idea</em> (one inequality, no equalities). Collect every achievable pair $(u,t)$ with $u\ge h(x)$, $t\ge f(x)$ for some $x$. Convexity of $f,h$ makes this set convex, and $p^\star$ is the lowest $t$ it reaches over $u\le0$. A line of slope $-\mu$ that stays below the set meets the $t$-axis at height $\min_x\big(f(x)+\mu h(x)\big)=d(\mu)$. A convex set has a supporting line through its boundary point $(0,p^\star)$ (separating hyperplane theorem); Slater's point, with $u\lt0$, stops that line from being vertical, so its slope is a finite $-\mu^\star$ and $d(\mu^\star)=p^\star$. A full proof makes the separation step precise.</p>
+      <p><strong>Then KKT holds.</strong> If $d^\star=p^\star$ with optimal $x^\star$ and $(\mu^\star,\lambda^\star)$, chain the weak duality steps at $x^\star$:</p>
+      <p>$$f(x^\star)=d(\mu^\star,\lambda^\star)=\min_xL(x,\mu^\star,\lambda^\star)$$</p>
+      <p>$$\le L(x^\star,\mu^\star,\lambda^\star)=f(x^\star)+\mu^{\star T}h(x^\star)+0\le f(x^\star).$$</p>
+      <p>Both ends are $f(x^\star)$, so both $\le$ are equalities. First: $x^\star$ minimizes $L(\cdot,\mu^\star,\lambda^\star)$, so $\nabla_xL=0$ (stationarity). Second: $\mu^{\star T}h(x^\star)=0$, a sum of terms each $\le0$, so every $\mu_j^\star h_j(x^\star)=0$ (complementary slackness).</p>
       <p class="example-label">Example</p>
-      <p>$d'(\mu)=1-\mu=0$: $\mu^\star=1$, $d^\star=\tfrac12=p^\star$. Slater holds: $(1,1)$ has $h=-1\lt0$.</p>
-
+      <p>Maximize $d(\mu)=\mu-\mu^2/2$: $d'(\mu)=1-\mu=0$ gives $\mu^\star=1\ge0$, and $d^\star=1-\tfrac12=\tfrac12=p^\star$. Slater holds: $(1,1)$ has $h=1-1-1=-1\lt0$. And $\mu^\star=1$ is the KKT multiplier found before.</p>
       <figure class="figure">
         <svg width="280" viewBox="0 0 330 175" role="img" aria-label="The concave dual function d of mu equals mu minus mu squared over 2, always below the primal value p* = 1/2 and touching it at its peak mu = 1.">
           <line class="axis" x1="40" y1="150" x2="304" y2="150"/>
@@ -113,13 +131,33 @@
         <tr><td>SVMs</td><td>The dual sees the data only through $x_i^Tx_j$. Swap in a kernel $k(x_i,x_j)$ and get a nonlinear boundary for free.</td></tr>
         <tr><td>Linear programs</td><td>Strong duality holds whenever an optimum exists: max-flow = min-cut, the minimax theorem.</td></tr>
       </table>
+      <p><strong>Shadow price, derived.</strong> Redo the dual with $h=b-x-y$. Stationarity again gives $x=y=\mu/2$, so</p>
+      <p>$$d(\mu;b)=\tfrac{\mu^2}2+\mu(b-\mu)=\mu b-\tfrac{\mu^2}2.$$</p>
+      <p>$\partial_\mu d=b-\mu=0$ gives $\mu^\star=b$, and by strong duality</p>
+      <p>$$p^\star(b)=d(b;b)=b^2-\tfrac{b^2}2=\tfrac{b^2}2 \quad\Rightarrow\quad \frac{dp^\star}{db}=b=\mu^\star.$$</p>
+      <p>Why in general: $b$ enters $L$ only through the term $\mu b$, and at the optimum $\partial_\mu d=0$, so moving $b$ changes $d^\star$ at rate $\mu^\star$ (envelope argument).</p>
+      <p><strong>SVMs</strong> (<em>proof idea</em>): stationarity of the SVM Lagrangian in $w$ gives $w=\sum_i\alpha_iy_ix_i$, so every $w^Tw$ and $w^Tx$ in the dual becomes a sum of $x_i^Tx_j$ terms. <strong>Linear programs</strong>: a theorem of LP duality (proof via Farkas' lemma), stated here without proof.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>$A$ is $m\times n$ with independent rows. Derive the dual of $\min\tfrac12\|x\|^2$ s.t. $Ax=b$, solve it, and check $d^\star=p^\star$.</p>
         <details>
           <summary>Solution</summary>
-          <p>$L=\tfrac12\|x\|^2+\lambda^T(Ax-b)$. $\nabla_xL=x+A^T\lambda=0$, so $x=-A^T\lambda$ and $d(\lambda)=-\tfrac12\lambda^TAA^T\lambda-b^T\lambda$ (concave, since $AA^T\succ0$). Setting $\nabla d=0$: $\lambda^\star=-(AA^T)^{-1}b$, so $x^\star=A^T(AA^T)^{-1}b$ and $d^\star=\tfrac12b^T(AA^T)^{-1}b=\tfrac12\|x^\star\|^2=p^\star$. &#10003; This $x^\star$ is the pseudoinverse solution $A^+b$ from the SVD.</p>
+          <p><strong>Inner minimum.</strong> $L=\tfrac12\|x\|^2+\lambda^T(Ax-b)$ is a convex bowl in $x$, and $\nabla_xL=x+A^T\lambda$ (matrix calculus). Zero gives $x=-A^T\lambda$.</p>
+          <p><strong>Dual function.</strong> Plug in, using $\|A^T\lambda\|^2=\lambda^TAA^T\lambda$:</p>
+          <p>$$d(\lambda)=\tfrac12\lambda^TAA^T\lambda+\lambda^T(-AA^T\lambda-b)$$</p>
+          <p>$$=-\tfrac12\lambda^TAA^T\lambda-b^T\lambda.$$</p>
+          <p>Concave, since $\lambda^TAA^T\lambda=\|A^T\lambda\|^2\gt0$ for $\lambda\ne0$ (independent rows means $A^T\lambda\ne0$), so $AA^T\succ0$ and is invertible. Write $M=(AA^T)^{-1}$.</p>
+          <p><strong>Maximize.</strong> $\nabla d=-AA^T\lambda-b=0$:</p>
+          <p>$$\lambda^\star=-Mb, \qquad x^\star=-A^T\lambda^\star=A^TMb.$$</p>
+          <p>$$d^\star=-\tfrac12b^TM\,(AA^T)\,Mb+b^TMb=\tfrac12b^TMb.$$</p>
+          <p><strong>Primal side.</strong> $x^\star$ is feasible: $Ax^\star=AA^TMb=b$. Its value:</p>
+          <p>$$\tfrac12\|x^\star\|^2=\tfrac12b^TMAA^TMb=\tfrac12b^TMb=d^\star.$$</p>
+          <p>Weak duality gives $d^\star\le p^\star\le\tfrac12\|x^\star\|^2=d^\star$, so $p^\star=d^\star$ and $x^\star$ is optimal. &#10003;</p>
+          <p><strong>It is the pseudoinverse.</strong> With $A=U\Sigma V^T$ (<a href="singular-value-decomposition.html">SVD</a>), $AA^T=U\,\Sigma\Sigma^T\,U^T$ with $\Sigma\Sigma^T=\operatorname{diag}(\sigma_i^2)$, so</p>
+          <p>$$A^TM=V\Sigma^TU^T\,U(\Sigma\Sigma^T)^{-1}U^T=V\,\Sigma^T(\Sigma\Sigma^T)^{-1}\,U^T.$$</p>
+          <p>$\Sigma^T(\Sigma\Sigma^T)^{-1}$ has $\sigma_i/\sigma_i^2=1/\sigma_i$ on its diagonal, which is $\Sigma^+$. So $x^\star=V\Sigma^+U^Tb=A^+b$.</p>
+          <p>Check with the running example as an equality, $A=(1\ \ 1)$, $b=1$: $AA^T=2$, $x^\star=\tfrac12(1,1)$, $d^\star=\tfrac12\cdot\tfrac12\cdot1=\tfrac14$, which is $\tfrac12$ of $p^\star=\tfrac12$ because the objective here is halved. &#10003;</p>
         </details>
       </section>
     </article>
@@ -132,7 +170,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

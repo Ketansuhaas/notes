@@ -139,17 +139,26 @@ s.record(); y = x @ w; e.record()
 torch.cuda.synchronize()
 print(s.elapsed_time(e), "ms")  # right: GPU time between the events</code></pre>
       <p class="example-label">Example</p>
-      <p>The $4096^3$ matmul is $2\cdot4096^3\approx1.4\times10^{11}$ FLOP. On an A100 (roughly 312 TFLOP/s BF16 dense) that is at least ~0.45 ms. The wrong timer reports tens of microseconds. Warm up first: the first call pays one-time setup.</p>
+      <p>The $4096\times4096$ by $4096\times4096$ matmul: $4096^2$ outputs, each $4096$ multiply-adds, and its intensity in bf16 is $n/3$ (<a href="roofline-and-arithmetic-intensity.html">roofline</a>):</p>
+      <p>$$F=2\cdot4096^3\approx1.37\times10^{11}\ \text{FLOP},\qquad I=\frac{4096}{3}\approx1365\gt156\ \Rightarrow\ \text{compute-bound}.$$</p>
+      <p>So the roofline time is the math term, with A100 bf16 peak ~312 TFLOP/s (approximate spec):</p>
+      <p>$$t\ \ge\ \frac{1.37\times10^{11}}{3.12\times10^{14}}\approx0.44\ \text{ms}.$$</p>
+      <p>The wrong timer reports only the CPU's launch work, tens of microseconds. Warm up first: the first call pays one-time setup.</p>
 
       <h2>Small ops are launch-bound</h2>
       <p class="idea">Each op costs a few microseconds of CPU work (Python, dispatcher, driver) no matter how small the tensor. If the kernel is shorter than that, the GPU waits for the CPU.</p>
-      <p>$$t_{\text{op}}\approx\max\big(t_{\text{launch}},\ \tfrac{\text{bytes}}{\text{bandwidth}}\big),\qquad t_{\text{launch}}\sim 5\ \mu\text{s}.$$</p>
+      <p>CPU and GPU form a two-stage pipeline: the CPU issues op $k+1$ while the GPU runs op $k$. In a pipeline, the steady-state time per item is the slower stage. For an elementwise op the GPU stage is memory-bound (<a href="roofline-and-arithmetic-intensity.html">roofline</a>), so it is bytes over bandwidth:</p>
+      <p>$$t_{\text{op}}\approx\max\big(t_{\text{launch}},\ \tfrac{\text{bytes}}{\text{bandwidth}}\big),\qquad t_{\text{launch}}\sim 5\ \mu\text{s}\ \text{(measured, approximate)}.$$</p>
       <p class="example-label">Example: fp32 add, A100 (~2 TB/s)</p>
+      <p><code>out = x + y</code> on $N$ elements reads two floats and writes one: $12N$ bytes.</p>
       <table>
         <tr><td>Elements</td><td>Bytes moved</td><td>GPU time</td><td>Bound by</td></tr>
-        <tr><td>$10^3$</td><td>12 KB</td><td>~6 ns</td><td>launch (~1000&times;)</td></tr>
-        <tr><td>$10^8$</td><td>1.2 GB</td><td>~0.6 ms</td><td>bandwidth</td></tr>
+        <tr><td>$10^3$</td><td>$12\cdot10^3$ B $=12$ KB</td><td>$\frac{1.2\times10^4}{2\times10^{12}}=6$ ns</td><td>launch: $\frac{5\ \mu\text{s}}{6\ \text{ns}}\approx830\times$ longer</td></tr>
+        <tr><td>$10^8$</td><td>$12\cdot10^8$ B $=1.2$ GB</td><td>$\frac{1.2\times10^9}{2\times10^{12}}=0.6$ ms</td><td>bandwidth: $120\times$ the launch</td></tr>
       </table>
+      <p>The crossover is where the two terms of the max are equal:</p>
+      <p>$$\frac{12N}{2\times10^{12}}=5\times10^{-6}\ \Rightarrow\ 12N=10^{7}\ \text{B}\ \Rightarrow\ N\approx8\times10^{5}\ \text{elements}.$$</p>
+      <p>Below about a million elements, an elementwise op is paying for the launch, not the data.</p>
       <p><strong>Memory:</strong> the caching allocator keeps freed GPU blocks and reuses them instead of calling <code>cudaMalloc</code> each time, so <code>nvidia-smi</code> shows <code>memory_reserved()</code>, not <code>memory_allocated()</code>.</p>
 
       <section class="exercise">
@@ -157,10 +166,14 @@ print(s.elapsed_time(e), "ms")  # right: GPU time between the events</code></pre
         <p><code>for i in range(10_000): x = x * 1.0001 + 0.001</code> on a CUDA tensor of 1000 floats takes ~0.1 s. Why, and what helps?</p>
         <details>
           <summary>Solution</summary>
-          <p>Two ops per step: $2\times10^4$ launches $\times\sim5\ \mu$s $\approx0.1$ s. The GPU work is nanoseconds per kernel, so it is pure launch overhead.</p>
+          <p>Each step is two ops (<code>*</code>, then <code>+</code>), each a kernel. Each kernel reads and writes 1000 floats:</p>
+          <p>$$t_{\text{gpu}}=\frac{2\cdot1000\cdot4\ \text{B}}{2\times10^{12}\ \text{B/s}}=4\ \text{ns}\ \ll\ t_{\text{launch}}\approx5\ \mu\text{s}.$$</p>
+          <p>So by the max formula every op costs $t_{\text{launch}}$:</p>
+          <p>$$\underbrace{2\times10^{4}}_{\text{launches}}\times5\times10^{-6}\ \text{s}=0.1\ \text{s}.$$</p>
+          <p>Pure launch overhead: the GPU is busy for only $2\times10^4\cdot4$ ns $=80\ \mu$s of it.</p>
           <table>
             <tr><td><strong>Batching</strong></td><td>If the items are independent, stack them into one big tensor: one launch does all the work.</td></tr>
-            <tr><td><strong>Fusion</strong></td><td>One kernel for <code>x * a + b</code> halves the launches (<a href="kernel-fusion-and-torch-compile.html">torch.compile</a>).</td></tr>
+            <tr><td><strong>Fusion</strong></td><td>One kernel for <code>x * a + b</code> halves the launches: $10^4\times5\ \mu$s $=0.05$ s (<a href="kernel-fusion-and-torch-compile.html">torch.compile</a>).</td></tr>
             <tr><td><strong>CUDA graphs</strong></td><td>Record the launch sequence once, replay it with one call: the per-kernel CPU cost disappears (<code>torch.cuda.CUDAGraph</code>, or <code>torch.compile(mode="reduce-overhead")</code>).</td></tr>
           </table>
         </details>
@@ -175,7 +188,7 @@ print(s.elapsed_time(e), "ms")  # right: GPU time between the events</code></pre
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

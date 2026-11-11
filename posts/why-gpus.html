@@ -316,14 +316,20 @@
         </svg>
         <figcaption>Same silicon, different priorities. Orange = control and cache (make one thread fast); blue = arithmetic.</figcaption>
       </figure>
-      <p class="example-label">Rough numbers</p>
+      <p class="example-label">Rough numbers (approximate vendor specs)</p>
       <table>
         <tr><td></td><td><strong>server CPU</strong></td><td><strong>GPU (A100)</strong></td></tr>
-        <tr><td>cores</td><td>~8 to 64 big cores</td><td>108 SMs, ~7000 FP32 lanes</td></tr>
-        <tr><td>clock</td><td>~3 to 5 GHz</td><td>~1.4 GHz</td></tr>
+        <tr><td>cores</td><td>~8 to 64 big cores</td><td>108 SMs $\times$ 64 $=6912$ FP32 lanes</td></tr>
+        <tr><td>clock</td><td>~3 to 5 GHz</td><td>~1.41 GHz</td></tr>
         <tr><td>peak math</td><td>~1 TFLOP/s</td><td>~312 TFLOP/s (bf16)</td></tr>
         <tr><td>memory bandwidth</td><td>~0.1 to 0.5 TB/s</td><td>~2 TB/s</td></tr>
       </table>
+      <p><strong>Where "peak math" comes from.</strong> Peak is just units $\times$ clock $\times$ FLOPs per unit per cycle. A fused multiply-add $a\cdot b+c$ counts as 2 FLOPs.</p>
+      <p>$$\text{peak}=\#\text{units}\times f_{\text{clock}}\times\frac{\text{FLOP}}{\text{unit}\cdot\text{cycle}}.$$</p>
+      <p>$$\text{A100 FP32 lanes: } 6912\times1.41\times10^{9}\times2\approx19.5\ \text{TFLOP/s}.$$</p>
+      <p>$$\text{A100 tensor cores: } \underbrace{108\cdot4}_{432\text{ cores}}\times1.41\times10^{9}\times\underbrace{256\cdot2}_{256\text{ FMA/cycle}}\approx312\ \text{TFLOP/s}.$$</p>
+      <p>$$\text{CPU, 16 cores: } 16\times3\times10^{9}\times\underbrace{2\cdot8\cdot2}_{\text{2 FMA units, 8 lanes}}\approx1.5\ \text{TFLOP/s}.$$</p>
+      <p>The GPU wins by having far more units, not faster ones: its clock is lower.</p>
 
       <h2>Hiding memory latency</h2>
       <p class="idea">A read from GPU memory takes hundreds of cycles. A CPU avoids the wait with big caches and branch prediction; a GPU simply switches to another group of threads that is ready.</p>
@@ -361,8 +367,13 @@
         </svg>
         <figcaption>Each warp mostly waits on memory. With enough warps in flight, someone is always ready and the lanes never idle.</figcaption>
       </figure>
+      <p><strong>How many warps hide the wait?</strong> Say a warp computes for $c$ cycles, then waits $L$ cycles for memory. It is busy a fraction $c/(c+L)$ of the time. With $W$ warps taking turns, the lanes stay full when</p>
+      <p>$$W\cdot\frac{c}{c+L}\ \ge\ 1 \quad\Longleftrightarrow\quad W\ \ge\ 1+\frac{L}{c}.$$</p>
+      <p>In the figure $c=40$, $L=120$ (in drawing units), so $W\ge1+3=4$: exactly the four warps shown.</p>
+      <p><strong>How much work is that on the whole chip?</strong> Bytes must be in flight for the whole latency to keep the bandwidth busy (Little's law: amount in flight = rate $\times$ time). With ~2 TB/s and ~500 ns latency (approximate):</p>
+      <p>$$2\times10^{12}\ \tfrac{\text{B}}{\text{s}}\times5\times10^{-7}\ \text{s}=10^{6}\ \text{B}\ =\ \frac{10^6}{4}=250{,}000\ \text{fp32 loads in flight}.$$</p>
       <p class="example-label">Example</p>
-      <p>An A100 SM keeps up to 2048 threads resident, so the chip juggles $108\times2048\approx221{,}000$ threads. A GPU needs that much parallel work to stay busy.</p>
+      <p>An A100 SM keeps up to 2048 threads resident (spec), so the chip juggles $108\times2048=221{,}184$ threads: the same order as the $250{,}000$ loads above. A GPU needs that much parallel work to stay busy.</p>
 
       <h2>Deep learning is a throughput job</h2>
       <p class="idea">Every layer applies the same arithmetic to millions of numbers, with no data-dependent branching. That is the GPU's ideal workload.</p>
@@ -370,14 +381,22 @@
         <tr><td>linear layer, 4096 tokens, $4096\to4096$</td><td>$2\cdot4096^3\approx1.4\times10^{11}$ FLOPs of identical multiply-adds</td></tr>
         <tr><td>ReLU on a $4096\times4096$ activation</td><td>$1.7\times10^{7}$ independent max ops</td></tr>
       </table>
+      <p>Where the counts come from. The layer is $Y=XW$ with $X$ of size $4096\times4096$ (tokens $\times$ features) and $W$ of size $4096\times4096$:</p>
+      <p>$$\underbrace{4096\cdot4096}_{\text{outputs }Y_{ij}}\times\underbrace{4096}_{\text{terms in }\sum_kX_{ik}W_{kj}}\times\underbrace{2}_{\text{mul + add}}=2\cdot4096^3\approx1.37\times10^{11}.$$</p>
+      <p>$$\text{ReLU: one } \max(0,x) \text{ per entry}=4096^2\approx1.68\times10^{7}.$$</p>
 
       <section class="exercise">
         <h2>Work it out yourself</h2>
         <p>(a) $10^{12}$ FLOPs of matmul on a ~1 TFLOP/s CPU vs a ~300 TFLOP/s GPU. (b) Add 1 to $10^9$ fp32 numbers (read and write each once) with ~0.2 TB/s vs ~2 TB/s of memory bandwidth. Why is (b)'s speedup so much smaller?</p>
         <details>
           <summary>Solution</summary>
-          <p>(a) CPU: $1$ s. GPU: $10^{12}/(3\times10^{14})\approx3.3$ ms. About $300\times$.</p>
-          <p>(b) Bytes: $10^9\cdot(4+4)=8$ GB. CPU: $40$ ms. GPU: $4$ ms. Only $10\times$. The math is ~1 ms even on the CPU; the time goes to moving bytes, and the bandwidth gap is ~$10\times$, not $300\times$.</p>
+          <p>(a) Time = FLOPs / (FLOP/s):</p>
+          <p>$$\text{CPU: }\frac{10^{12}}{10^{12}}=1\ \text{s},\qquad \text{GPU: }\frac{10^{12}}{3\times10^{14}}\approx3.3\ \text{ms},\qquad \frac{1}{3.3\times10^{-3}}\approx300\times.$$</p>
+          <p>(b) Each number is read (4 B) and written (4 B). The math is $10^9$ adds.</p>
+          <p>$$\text{bytes}=10^9\cdot(4+4)=8\times10^{9}\ \text{B}.$$</p>
+          <p>$$\text{CPU: }\frac{8\times10^9}{2\times10^{11}}=40\ \text{ms},\qquad \text{GPU: }\frac{8\times10^9}{2\times10^{12}}=4\ \text{ms}.$$</p>
+          <p>$$\text{math, even on the CPU: }\frac{10^9}{10^{12}}=1\ \text{ms}\ \lt\ 40\ \text{ms}.$$</p>
+          <p>So bytes, not math, set both times, and the speedup is the bandwidth ratio $2/0.2=10\times$, not the FLOP ratio $300\times$.</p>
           <p>Real programs mix both kinds of work (plus kernel launches and CPU-to-GPU copies), so speedups land in between. Where those bytes live is the next note.</p>
         </details>
       </section>
@@ -391,7 +410,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

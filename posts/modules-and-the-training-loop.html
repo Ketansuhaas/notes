@@ -73,7 +73,10 @@ sum(p.numel() for p in model.parameters())  # 203530</code></pre>
         <tr><td><code>model.state_dict()</code></td><td>name &rarr; tensor, for saving</td></tr>
       </table>
       <p class="example-label">Example</p>
-      <p>$784\cdot256+256=200{,}960$ and $256\cdot10+10=2{,}570$: total $203{,}530$.</p>
+      <p><code>nn.Linear(d_in, d_out)</code> computes $y=Wx+b$. Each of the $d_{\text{out}}$ outputs is $\sum_jW_{ij}x_j+b_i$: $d_{\text{in}}$ weights plus $1$ bias, so</p>
+      <p>$$\#\text{params}=d_{\text{out}}\,(d_{\text{in}}+1).$$</p>
+      <p>$$\text{fc1: }256\cdot(784+1)=200{,}960,\qquad \text{fc2: }10\cdot(256+1)=2{,}570.$$</p>
+      <p>Total $200{,}960+2{,}570=203{,}530$, about $0.8$ MB in fp32 ($\times4$ bytes).</p>
 
       <h2>The training loop</h2>
       <p class="idea">Predict, score, clear old gradients, compute new ones, nudge the weights. Then the next batch.</p>
@@ -85,6 +88,13 @@ for x, y in loader:               # x: (B, 784), y: (B,) int64
     opt.zero_grad()               # 3. clear .grad
     loss.backward()               # 4. fill .grad, free the graph
     opt.step()                    # 5. p -= lr * p.grad</code></pre>
+      <p>Where each line's math comes from:</p>
+      <p><strong>2. Loss.</strong> <code>CrossEntropyLoss</code> averages the negative log softmax probability of the true class over the batch, so it returns one number:</p>
+      <p>$$\ell_b=-\log\frac{e^{z_{b,y_b}}}{\sum_ce^{z_{b,c}}}=-z_{b,y_b}+\log\sum_ce^{z_{b,c}},\qquad L=\frac1B\sum_{b=1}^B\ell_b.$$</p>
+      <p><strong>4. Backward</strong> starts from $\partial L/\partial z$. Differentiate $\ell_b$ term by term:</p>
+      <p>$$\frac{\partial\ell_b}{\partial z_{b,c}}=-\mathbb 1[c=y_b]+\frac{e^{z_{b,c}}}{\sum_{c'}e^{z_{b,c'}}}=\operatorname{softmax}(z_b)_c-\mathbb 1[c=y_b],$$</p>
+      <p>times $\tfrac1B$ from the mean; then it flows back through <code>fc2</code>, ReLU, <code>fc1</code> as in <a href="pytorch-autograd.html">Autograd</a>.</p>
+      <p><strong>3 before 4.</strong> <code>backward()</code> adds into <code>.grad</code> (<a href="pytorch-autograd.html">Autograd</a>), so last batch's gradient must be cleared first. <strong>5.</strong> Plain SGD, $\theta\leftarrow\theta-\eta\,g$ (derived in <a href="optimizers-and-their-state.html">Optimizers</a>).</p>
 
       <figure class="figure">
         <svg width="476" viewBox="0 0 560 180" role="img" aria-label="Cycle of five boxes: forward, loss, zero_grad, backward, step, and back to forward for the next batch.">
@@ -123,6 +133,12 @@ for x, y in loader:               # x: (B, 784), y: (B,) int64
         <tr><td>Dropout($p$)</td><td>zero each unit with prob. $p$, scale the rest by $\tfrac1{1-p}$</td><td>identity</td></tr>
         <tr><td>BatchNorm</td><td>normalize with this batch's mean/var; update running stats</td><td>use the running stats</td></tr>
       </table>
+      <p><strong>Why Dropout scales by $\tfrac1{1-p}$.</strong> In training a unit becomes $h\,m/(1-p)$ with mask $m\sim\text{Bernoulli}(1-p)$. Its expected value matches what <code>eval()</code> passes through unchanged:</p>
+      <p>$$\mathbb E\Big[\frac{h\,m}{1-p}\Big]=\frac{h\,\mathbb E[m]}{1-p}=\frac{h\,(1-p)}{1-p}=h.$$</p>
+      <p>So the next layer sees the same mean input in both modes. Example $p=0.5$: survivors are doubled, half of them vanish, average unchanged.</p>
+      <p><strong>BatchNorm.</strong> In training, with this batch's mean $\mu_B$ and variance $\sigma_B^2$ per channel:</p>
+      <p>$$\hat x=\frac{x-\mu_B}{\sqrt{\sigma_B^2+\epsilon}},\qquad \mu_{\text{run}}\leftarrow(1-\alpha)\,\mu_{\text{run}}+\alpha\,\mu_B,$$</p>
+      <p>with $\alpha=0.1$ by default (same update for $\sigma^2_{\text{run}}$): an exponential moving average, the same tool Adam uses (<a href="optimizers-and-their-state.html">Optimizers</a>). <code>eval()</code> uses $\mu_{\text{run}},\sigma^2_{\text{run}}$ instead, so an example's output no longer depends on what else is in its batch.</p>
 <pre><code>model.eval()                 # mode flag only: autograd still records
 with torch.no_grad():        # so also turn recording off
     val_logits = model(x_val)
@@ -133,7 +149,11 @@ model.train()</code></pre>
         <p>Delete <code>opt.zero_grad()</code> from the loop. What does <code>p.grad</code> hold at step $t$, and what happens to training? When is this behavior useful on purpose?</p>
         <details>
           <summary>Solution</summary>
-          <p><code>p.grad</code> $=g_1+g_2+\dots+g_t$: every past gradient, never forgotten. Each step moves along this growing sum, like momentum with no decay, so steps grow and training goes erratic or diverges.</p>
+          <p>Let $G_t$ be <code>p.grad</code> after the $t$-th backward and $g_t$ that batch's gradient. <code>backward()</code> adds, nobody clears:</p>
+          <p>$$G_t=G_{t-1}+g_t,\quad G_0=0\qquad\Rightarrow\qquad G_t=\sum_{s=1}^tg_s.$$</p>
+          <p>That is momentum's $v_t=\mu v_{t-1}+g_t$ with $\mu=1$: no decay, nothing forgotten. If the gradients point roughly the same way, $g_s\approx g$, the step grows linearly:</p>
+          <p>$$\theta_t-\theta_{t-1}=-\eta\,G_t\approx-\eta\,t\,g.$$</p>
+          <p>By step $100$ the effective learning rate is $100\eta$, so training goes erratic or diverges.</p>
           <p>On purpose: <strong>gradient accumulation</strong>. Want batch $kB$ but only $B$ fits in memory? Run $k$ backward passes, then one step.</p>
 <pre><code>for i, (x, y) in enumerate(loader):
     loss = loss_fn(model(x), y) / k   # / k: average over k*B examples
@@ -141,7 +161,10 @@ model.train()</code></pre>
     if (i + 1) % k == 0:
         opt.step()
         opt.zero_grad()</code></pre>
-          <p>Same gradient as one batch of $kB$ (BatchNorm still sees batches of $B$).</p>
+          <p>Why the $/k$ gives the same gradient as one batch of $kB$. Each micro-batch loss is a mean over its $B$ examples, and the $k$ backward calls add (linearity of the gradient):</p>
+          <p>$$G=\sum_{j=1}^k\nabla\Big(\frac1k\cdot\frac1B\sum_{i\in\text{batch }j}\ell_i\Big)$$</p>
+          <p>$$=\frac1{kB}\sum_{j=1}^k\sum_{i\in\text{batch }j}\nabla\ell_i,$$</p>
+          <p>which is the gradient of the mean loss over all $kB$ examples. Without $/k$ it would be $k$ times too big. (Exact only for layers that treat examples independently: BatchNorm still sees batches of $B$.)</p>
         </details>
       </section>
     </article>
@@ -154,7 +177,7 @@ model.train()</code></pre>
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

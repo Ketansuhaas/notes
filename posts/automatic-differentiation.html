@@ -90,26 +90,38 @@
 
       <h2>Forward mode: tangents ride along</h2>
       <p class="idea">Pick an input direction and carry each value's rate of change next to the value, in the order the program runs.</p>
-      <p>$$\dot v_i=\sum_{j\in\operatorname{pa}(i)}\frac{\partial v_i}{\partial v_j}\,\dot v_j, \qquad \text{seed } \dot x=v\ \Rightarrow\ \text{one sweep gives } Jv \text{ (one column of } J).$$</p>
+      <p>Move the input along a line, $x(t)=x_0+t\,v$, and write $\dot v_i:=\frac{d v_i}{dt}\big|_{t=0}$. Each $v_i=f_i(\text{parents})$, and its parents all move with $t$, so the multivariable chain rule gives</p>
+      <p>$$\dot v_i=\frac{d}{dt}f_i\big(v_j(t):j\in\operatorname{pa}(i)\big)=\sum_{j\in\operatorname{pa}(i)}\frac{\partial v_i}{\partial v_j}\,\dot v_j.$$</p>
+      <p>Parents are computed before children, so every $\dot v_j$ on the right is already known. At the output, by the chain rule on $y(x_0+tv)$:</p>
+      <p>$$\dot y=\frac{d}{dt}y(x_0+tv)\Big|_{t=0}=J\,v \quad(\text{seed }\dot x=v).$$</p>
+      <p>With $v=e_k$ that is column $k$ of $J$: one sweep, one column.</p>
       <p class="example-label">Example at $x=3$, $\dot x=1$</p>
+      <p>$v_2=v_1\cdot v_1$ has the parent $v_1$ in both slots, so the sum has two terms, $v_1\dot v_1+v_1\dot v_1=2v_1\dot v_1$ (the product rule). $v_3=v_2+v_1$ has local derivatives $1$ and $1$.</p>
       <table>
-        <tr><td>$v_1=3$</td><td>$\dot v_1=1$</td></tr>
-        <tr><td>$v_2=9$</td><td>$\dot v_2=2v_1\dot v_1=6$</td></tr>
-        <tr><td>$v_3=12$</td><td>$\dot v_3=\dot v_2+\dot v_1=7$</td></tr>
+        <tr><td>$v_1=3$</td><td>$\dot v_1=1$ (seed)</td></tr>
+        <tr><td>$v_2=3\cdot3=9$</td><td>$\dot v_2=2v_1\dot v_1=2\cdot3\cdot1=6$</td></tr>
+        <tr><td>$v_3=9+3=12$</td><td>$\dot v_3=1\cdot\dot v_2+1\cdot\dot v_1=6+1=7$</td></tr>
       </table>
       <p>$dy/dx=2x+1=7$. &#10003;</p>
 
       <h2>Reverse mode: adjoints flow back</h2>
       <p class="idea">Run the program and store every value. Then ask each node how much the output cares about it, in reverse order. A value used twice collects from both uses.</p>
-      <p>$$\bar v_j=\frac{\partial y}{\partial v_j}=\sum_{i:\ j\in\operatorname{pa}(i)}\bar v_i\,\frac{\partial v_i}{\partial v_j},$$ $$\text{seed } \bar y=1\ \Rightarrow\ \text{one sweep gives the whole gradient (one row of } J).$$</p>
+      <p>Define the adjoint $\bar v_i:=\partial y/\partial v_i$: the effect on $y$ of nudging $v_i$ directly, everything downstream recomputed. Now nudge $v_j$ by $\epsilon$. To first order, $\epsilon$ enters the rest of the program only through the children of $v_j$ (the nodes that read it), each moving by its local slope:</p>
+      <p>$$\delta v_i=\frac{\partial v_i}{\partial v_j}\,\epsilon \quad\text{for each child } i\text{ of } j.$$</p>
+      <p>Each of those nudges reaches $y$ as $\bar v_i\,\delta v_i$, and first-order effects add (multivariable chain rule):</p>
+      <p>$$\delta y=\sum_{i\in\operatorname{ch}(j)}\bar v_i\,\frac{\partial v_i}{\partial v_j}\,\epsilon \quad\Rightarrow\quad \bar v_j=\sum_{i\in\operatorname{ch}(j)}\bar v_i\,\frac{\partial v_i}{\partial v_j}.$$</p>
+      <p>Children are computed after parents, so in reverse order every $\bar v_i$ on the right is already known. Seed $\bar y=\partial y/\partial y=1$; when the sweep reaches the inputs, $\bar x_k=\partial y/\partial x_k$ for every $k$ at once: the whole gradient, one row of $J$. (For a vector output, seeding $\bar y=u$ gives $u^TJ$ by linearity.)</p>
       <p class="example-label">Example at $x=3$</p>
+      <p>Local derivatives: $\partial v_3/\partial v_2=1$, $\partial v_3/\partial v_1=1$, $\partial v_2/\partial v_1=2v_1=6$. $v_1$ has two children ($v_2$ and $v_3$), $v_2$ has one ($v_3$).</p>
       <table>
-        <tr><td>$\bar v_3=1$</td><td></td></tr>
-        <tr><td>$\bar v_2=\bar v_3\cdot1=1$</td><td></td></tr>
-        <tr><td>$\bar v_1=\bar v_3\cdot1+\bar v_2\cdot2v_1=1+6=7$</td><td>two children, two terms</td></tr>
+        <tr><td>$\bar v_3=1$</td><td>seed</td></tr>
+        <tr><td>$\bar v_2=\bar v_3\cdot1=1$</td><td>one child</td></tr>
+        <tr><td>$\bar v_1=\bar v_3\cdot1+\bar v_2\cdot2v_1=1+1\cdot6=7$</td><td>two children, two terms</td></tr>
       </table>
       <p>The local derivative $2v_1$ needs the stored forward value: reverse mode is two passes and must keep activations (training's memory cost).</p>
-      <p>Backprop is this on a chain: one child per node, so the sum has one term, and $\bar v$ is the row $g$ in $g_{\ell-1}=g_{z_\ell}W_\ell$.</p>
+      <p><strong>Backprop is this rule.</strong> In a layer, unit $h_{\ell-1,j}$ has children $z_{\ell,i}$ for every $i$, with local slope $\partial z_{\ell,i}/\partial h_{\ell-1,j}=W_{\ell,ij}$. The sum over children is a row times a matrix:</p>
+      <p>$$\bar h_{\ell-1,j}=\sum_i\bar z_{\ell,i}\,W_{\ell,ij}=\big(\bar z_\ell^T\,W_\ell\big)_j,$$</p>
+      <p>which is $g_{\ell-1}=g_{z_\ell}W_\ell$ from <a href="backpropagation-via-jvps.html">Backpropagation via JVPs</a>, with $\bar v$ playing the row $g$.</p>
 
       <h2>Cost: pick the smaller side</h2>
       <p class="idea">A full Jacobian takes one sweep per input (forward) or one per output (reverse). Run the mode whose side is smaller.</p>
@@ -118,16 +130,24 @@
         <tr><td>Forward</td><td>$Jv$, a column</td><td>$n_{\text{in}}$</td><td>small</td></tr>
         <tr><td>Reverse</td><td>$u^TJ$, a row</td><td>$n_{\text{out}}$</td><td>stores all values</td></tr>
       </table>
+      <p>Why those counts: forward seeded with $\dot x=e_k$ returns $Je_k$, column $k$, so all $n_{\text{in}}$ columns need $n_{\text{in}}$ seeds. Reverse seeded with $\bar y=e_m$ returns $e_m^TJ$, row $m$, so all rows need $n_{\text{out}}$ seeds.</p>
+      <p>Cost of one sweep: each elementary op gets one extra local-derivative rule, itself a few operations (e.g. $v_2=v_1v_1$ adds $\dot v_2=2v_1\dot v_1$). So one sweep costs a small constant times one evaluation of the program. <em>Proof idea:</em> sum that per-op constant over the ops in the graph. The worst op's constant bounds the total; a full proof (the "cheap gradient principle", Griewank and Walther) fixes a cost model for each elementary op. For matmul layers the reverse sweep costs about $2\times$ the forward pass, counted in <a href="backpropagation-via-jvps.html">Backpropagation via JVPs</a>.</p>
       <p class="example-label">Example</p>
-      <p>Loss of a $10^9$-parameter model: $n_{\text{out}}=1$. Reverse: $1$ sweep. Forward: $10^9$.</p>
+      <p>Loss of a $10^9$-parameter model: $n_{\text{in}}=10^9$, $n_{\text{out}}=1$. Reverse: $n_{\text{out}}=1$ sweep. Forward: $n_{\text{in}}=10^9$ sweeps, each a full pass over the model.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>$y=x_1x_2+\sin x_1$. Write the graph, run one reverse sweep, and read off both $\partial y/\partial x_1$ and $\partial y/\partial x_2$.</p>
         <details>
           <summary>Solution</summary>
-          <p>$v_3=x_1x_2$, $v_4=\sin x_1$, $y=v_3+v_4$. Seed: $\bar v_3=\bar v_4=1$.</p>
-          <p>$\bar x_2=\bar v_3\,x_1=x_1$. $\ \bar x_1=\bar v_3\,x_2+\bar v_4\cos x_1=x_2+\cos x_1$ ($x_1$ has two children, so two terms). One sweep, both partials.</p>
+          <p>Graph: $v_3=x_1x_2$, $v_4=\sin x_1$, $y=v_3+v_4$. Children: $x_1\to\{v_3,v_4\}$, $x_2\to\{v_3\}$. Local derivatives:</p>
+          <p>$$\frac{\partial y}{\partial v_3}=\frac{\partial y}{\partial v_4}=1,\quad \frac{\partial v_3}{\partial x_1}=x_2,\quad \frac{\partial v_3}{\partial x_2}=x_1,\quad \frac{\partial v_4}{\partial x_1}=\cos x_1.$$</p>
+          <p>Reverse sweep, seed $\bar y=1$, applying $\bar v_j=\sum_{\text{children}}\bar v_i\,\partial v_i/\partial v_j$:</p>
+          <p>
+            $$\bar v_3=\bar y\cdot1=1,\qquad \bar v_4=\bar y\cdot1=1,$$
+            $$\bar x_2=\bar v_3\,x_1=x_1,\qquad \bar x_1=\bar v_3\,x_2+\bar v_4\cos x_1=x_2+\cos x_1.$$
+          </p>
+          <p>$x_1$ has two children, so two terms. One sweep, both partials; forward mode would need two (seeds $e_1$ and $e_2$). Check by hand: $\partial_{x_1}(x_1x_2+\sin x_1)=x_2+\cos x_1$. &#10003;</p>
         </details>
       </section>
     </article>
@@ -140,7 +160,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

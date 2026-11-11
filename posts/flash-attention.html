@@ -62,21 +62,39 @@
         <tr><td>$S$ or $P$</td><td>$134$ MB each</td></tr>
         <tr><td>HBM traffic for $S,P$ (write, read, write, read)</td><td>$\approx540$ MB</td></tr>
       </table>
-      <p>Memory grows as $O(n^2)$, and the softmax is a memory-bound pass over it.</p>
+      <p>Each entry is 2 B:</p>
+      <p>$$Q:\ n\cdot d\cdot2=8192\cdot128\cdot2=2^{21}\ \text{B}\approx2.1\ \text{MB}\ \ (\text{same for }K,V,O).$$</p>
+      <p>$$S:\ n\cdot n\cdot2=8192^2\cdot2=2^{27}\ \text{B}\approx134\ \text{MB},\qquad \frac{|S|}{|Q|}=\frac nd=64.$$</p>
+      <p>$$\text{traffic: }\underbrace{4}_{\text{W }S,\ \text{R }S,\ \text{W }P,\ \text{R }P}\times134\ \text{MB}\approx537\ \text{MB}.$$</p>
+      <p><strong>Bytes beat math.</strong> Count the two matmuls as in the <a href="roofline-and-arithmetic-intensity.html">roofline</a> note (outputs $\times$ 2 $\times$ inner length):</p>
+      <p>$$QK^T:\ n^2\cdot2d,\qquad PV:\ nd\cdot2n\qquad\Rightarrow\qquad 2n^2d\ \text{FLOPs each}.$$</p>
+      <p>With A100 specs (~312 TFLOP/s, ~2 TB/s, approximate):</p>
+      <p>$$\text{math: }\frac{2\cdot2n^2d}{3.12\times10^{14}}=\frac{3.4\times10^{10}}{3.12\times10^{14}}\approx0.11\ \text{ms}.$$</p>
+      <p>$$\text{moving }S,P:\ \frac{5.37\times10^{8}}{2\times10^{12}}\approx0.27\ \text{ms}.$$</p>
+      <p>Shuffling $S$ and $P$ costs more than all the matmul math. Both $S$ and $P$ hold $n^2$ numbers, so this extra memory grows as $O(n^2)$, and the softmax is a memory-bound pass over it (a few FLOPs per 4 B, far below the ridge).</p>
 
       <h2>Online softmax</h2>
       <p class="idea">Softmax needs the row's max and sum over <em>all</em> keys. You can get both in one streaming pass: keep a running max $m$ and sum $\ell$, and rescale the old totals whenever the max grows.</p>
-      <p>For one query row, a new block of scores $s_j$ with values $v_j$:</p>
-      <p>$$m'=\max\!\big(m,\ \max_j s_j\big),\qquad \ell'=e^{m-m'}\,\ell+\sum_j e^{s_j-m'},$$ $$o'=e^{m-m'}\,o+\sum_j e^{s_j-m'}\,v_j.$$</p>
-      <p>Start at $m=-\infty$, $\ell=0$, $o=0$. Output $O=o/\ell$.</p>
+      <p><strong>Step 1: what one output row is.</strong> Fix a query. Its scores are $s_1,\dots,s_n$, its value rows $v_1,\dots,v_n$. By definition of softmax and $O=PV$:</p>
+      <p>$$O=\sum_j p_j\,v_j,\qquad p_j=\frac{e^{s_j}}{\sum_k e^{s_k}}.$$</p>
+      <p><strong>Step 2: shift by any $m$.</strong> Multiplying top and bottom by $e^{-m}$ changes nothing (as in <a href="triton-block-programming.html">Triton softmax</a>):</p>
+      <p>$$O=\frac{\sum_j e^{s_j-m}\,v_j}{\sum_j e^{s_j-m}}=\frac{o}{\ell},\qquad \ell:=\sum_j e^{s_j-m},\quad o:=\sum_j e^{s_j-m}\,v_j.$$</p>
+      <p>So keep three running quantities for the keys seen so far: $m$ (their max, for safety), $\ell$ and $o$ (defined with that $m$).</p>
+      <p><strong>Step 3: a new block arrives.</strong> Let $\mathcal S$ be the keys seen so far and $\mathcal N$ the new block. The max of a union is the max of the maxes:</p>
+      <p>$$m'=\max\!\big(m,\ \max_{j\in\mathcal N} s_j\big).$$</p>
+      <p>Split the new sum into old and new keys, and rewrite each old term with $e^{s_j-m'}=e^{s_j-m}\,e^{m-m'}$:</p>
+      <p>$$\ell'=\sum_{j\in\mathcal S\cup\mathcal N}e^{s_j-m'}=e^{m-m'}\underbrace{\sum_{j\in\mathcal S}e^{s_j-m}}_{\ell}+\sum_{j\in\mathcal N}e^{s_j-m'}.$$</p>
+      <p>The same split with an extra $v_j$ in every term gives $o'$:</p>
+      <p>$$o'=e^{m-m'}\,o+\sum_{j\in\mathcal N}e^{s_j-m'}\,v_j.$$</p>
+      <p><strong>Step 4: start and finish.</strong> Before any keys, $\mathcal S$ is empty: $\ell=0$, $o=0$, and $m=-\infty$ (then $e^{m-m'}=0$, so the first update is just the new block's sums). After the last block, Step 2 gives the exact answer $O=o/\ell$. The old totals are only ever multiplied by $e^{m-m'}\le1$, so nothing overflows.</p>
       <p class="example-label">Check: scores $(1,2\mid3,0)$, values $(1,0\mid2,4)$</p>
       <table>
         <tr><td></td><td>$m$</td><td>$\ell$</td><td>$o$</td></tr>
-        <tr><td>Block 1</td><td>$2$</td><td>$e^{-1}+1=1.368$</td><td>$e^{-1}\cdot1=0.368$</td></tr>
-        <tr><td>Block 2 (rescale $e^{2-3}=0.368$)</td><td>$3$</td><td>$0.503+1+e^{-3}=1.553$</td><td>$0.135+2+4e^{-3}=2.334$</td></tr>
-        <tr><td>Direct softmax</td><td>$3$</td><td>$e^{-2}+e^{-1}+1+e^{-3}=1.553$</td><td>$2.334$</td></tr>
+        <tr><td>Block 1</td><td>$\max(1,2)=2$</td><td>$e^{1-2}+e^{2-2}=1.368$</td><td>$e^{-1}\cdot1+e^{0}\cdot0=0.368$</td></tr>
+        <tr><td>Block 2 (rescale $e^{2-3}=0.368$)</td><td>$\max(2,3,0)=3$</td><td>$0.368\cdot1.368+e^{0}+e^{-3}$<br>$=0.503+1+0.050=1.553$</td><td>$0.368\cdot0.368+e^0\cdot2+e^{-3}\cdot4$<br>$=0.135+2+0.199=2.334$</td></tr>
+        <tr><td>Direct softmax</td><td>$3$</td><td>$e^{-2}+e^{-1}+1+e^{-3}=1.553$</td><td>$e^{-2}\cdot1+e^{-1}\cdot0+2+4e^{-3}=2.334$</td></tr>
       </table>
-      <p>Both give $O=2.334/1.553=1.503$. Exact, not approximate.</p>
+      <p>Both give $O=2.334/1.553=1.503$. Exact, not approximate: Step 3 is an identity, not an estimate.</p>
 
       <h2>Tiling: $S$ only exists one tile at a time</h2>
       <p class="idea">Each program owns a block of query rows and keeps $Q_i$, $m$, $\ell$, $o$ in SRAM. It streams $K_j,V_j$ blocks past, computing one score tile, folding it in, discarding it.</p>
@@ -147,6 +165,9 @@
         <tr><td>Result</td><td>exact</td><td>exact (same math, reordered)</td></tr>
         <tr><td>Backward</td><td>reads stored $P$</td><td>recomputes $S$ tiles from $Q,K$</td></tr>
       </table>
+      <p><strong>Where $O(n^2)$ vs $O(n)$ comes from.</strong> Count what must sit in HBM besides $Q,K,V,O$ (which are $4nd$ either way):</p>
+      <p>$$\text{standard: }\underbrace{n^2}_{S}+\underbrace{n^2}_{P}=2n^2,\qquad \text{Flash: }\underbrace{n}_{m}+\underbrace{n}_{\ell}=2n.$$</p>
+      <p>Flash keeps $m,\ell$ per row for the backward pass. Everything else lives in one program's SRAM: a $B_r\times d$ query block, $B_c\times d$ key and value blocks, a $B_r\times B_c$ score tile, and $B_r$ copies of $m,\ell,o$. None of that depends on $n$. In the example, Flash's extra is $2\cdot8192\cdot4$ B $=64$ KB (fp32) instead of $2\times134$ MB.</p>
       <p>In PyTorch, <code>F.scaled_dot_product_attention(q, k, v, is_causal=True)</code> picks a FlashAttention kernel when the GPU, dtype and shapes allow it.</p>
 
       <section class="exercise">
@@ -156,7 +177,9 @@
           <summary>Solution</summary>
           <p>$$e^{m_A-m}\,\ell_A=\sum_{A}e^{m_A-m}\,e^{s_j-m_A}=\sum_{A}e^{s_j-m}.$$</p>
           <p>Same for $B$, so $\ell=\sum_{A\cup B}e^{s_j-m}=e^{-m}\sum_{\text{all}}e^{s_j}$.</p>
-          <p>Then $e^{s_j-m}/\ell=e^{s_j}/\sum_k e^{s_k}$: exactly softmax. Since $m$ is the true max, every exponent is $\le0$, so nothing overflows. The same factor $e^{m_A-m}$ rescales $o$, so $o/\ell$ is exact too.</p>
+          <p>Then $e^{s_j-m}/\ell=e^{s_j-m}/\big(e^{-m}\sum_k e^{s_k}\big)=e^{s_j}/\sum_k e^{s_k}$: exactly softmax. Since $m$ is the true max, every exponent is $\le0$, so nothing overflows. The same factor rescales $o$, term by term:</p>
+          <p>$$e^{m_A-m}o_A+e^{m_B-m}o_B=\sum_{A\cup B}e^{s_j-m}v_j=o\quad\Rightarrow\quad \frac o\ell=\sum_j p_jv_j.$$</p>
+          <p>This merge is Step 3 with $\mathcal S=A$, $\mathcal N=B$; it also lets two programs split one row's keys and combine at the end.</p>
         </details>
       </section>
     </article>
@@ -169,7 +192,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

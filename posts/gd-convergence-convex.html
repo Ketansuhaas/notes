@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Gradient descent on smooth convex functions - Deep Learning Notes</title>
+  <meta name="description" content="A full proof that gradient descent with step 1/L gives f(x_k) - f* at most L times the squared starting distance over 2k on any L-smooth convex function, with the proof structure made explicit.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Gradient descent on smooth convex functions</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Gradient descent on smooth convex functions</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">gradient-descent</span><span class="tag">convergence</span><span class="tag">proofs</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="smoothness-and-strong-convexity.html">Smoothness and strong convexity</a>, <a href="convexity-and-jensen.html">Convexity and Jensen</a> &middot; <strong>Leads to:</strong> <a href="gd-convergence-strongly-convex.html">Gradient descent on strongly convex functions</a></p>
+
+      <p class="idea">Knowing only "convex" and "$L$-smooth", gradient descent still always gets there, at the sublinear rate $1/k$. The proof is a template worth owning: find a per-step inequality whose right side is a difference, then sum and let it telescope.</p>
+
+      <h2>The claim</h2>
+      <p class="idea">Step size $1/L$, any convex $L$-smooth $f$ with a minimizer $x^*$. No strong convexity needed.</p>
+      <p>$$x_{k+1}=x_k-\tfrac1L\nabla f(x_k) \quad\Longrightarrow\quad f(x_k)-f^*\le\frac{L\,\|x_0-x^*\|^2}{2k}.$$</p>
+      <p>Shorthand: $g_k=\nabla f(x_k)$, $\ \text{gap}_k=f(x_k)-f^*$, $\ D_k=\|x_k-x^*\|^2$.</p>
+
+      <h2>The plan</h2>
+      <p class="idea">Neither tool alone works: the descent lemma knows nothing about $x^*$, and convexity knows nothing about the step. Combine them, and aim for a right side of the form $D_k-D_{k+1}$, because a sum of differences collapses.</p>
+
+      <figure class="figure">
+        <svg width="442" viewBox="0 0 520 262" role="img" aria-label="Proof map. The descent lemma and the convexity inequality at x star combine into a per-step inequality: the gap at step k plus 1 is at most L over 2 times the drop in squared distance D. Summing over k telescopes to L over 2 times D zero, and since f never rises the last gap is at most L D zero over 2K.">
+          <defs><marker id="gdc1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker></defs>
+          <rect class="outline" x="6" y="6" width="244" height="46" rx="4"/>
+          <text class="lbl muted" x="128" y="24" text-anchor="middle">descent lemma</text>
+          <text class="lbl" x="128" y="43" text-anchor="middle">f(xₖ₊₁) ≤ f(xₖ) − ‖gₖ‖²/2L</text>
+          <rect class="outline" x="270" y="6" width="244" height="46" rx="4"/>
+          <text class="lbl muted" x="392" y="24" text-anchor="middle">convexity at x*</text>
+          <text class="lbl" x="392" y="43" text-anchor="middle">f(xₖ) ≤ f* + gₖᵀ(xₖ − x*)</text>
+          <rect class="area" x="95" y="74" width="330" height="46" rx="4"/>
+          <rect class="outline" x="95" y="74" width="330" height="46" rx="4"/>
+          <text class="lbl muted" x="260" y="92" text-anchor="middle">combine, then expand the square</text>
+          <text class="lbl" x="260" y="111" text-anchor="middle">gapₖ₊₁ ≤ (L/2)(Dₖ − Dₖ₊₁)</text>
+          <rect class="outline" x="95" y="142" width="330" height="46" rx="4"/>
+          <text class="lbl muted" x="260" y="160" text-anchor="middle">sum k = 0 … K−1: it telescopes</text>
+          <text class="lbl" x="260" y="179" text-anchor="middle">gap₁ + … + gap<tspan baseline-shift="sub" font-size="11">K</tspan> ≤ (L/2)D₀</text>
+          <rect class="outline" x="95" y="210" width="330" height="46" rx="4"/>
+          <text class="lbl muted" x="260" y="228" text-anchor="middle">f never rises: last ≤ average</text>
+          <text class="lbl" x="260" y="247" text-anchor="middle">gap<tspan baseline-shift="sub" font-size="11">K</tspan> ≤ L D₀ / 2K</text>
+          <line class="axis" x1="128" y1="52" x2="190" y2="72" marker-end="url(#gdc1-arr)"/>
+          <line class="axis" x1="392" y1="52" x2="330" y2="72" marker-end="url(#gdc1-arr)"/>
+          <line class="axis" x1="260" y1="120" x2="260" y2="140" marker-end="url(#gdc1-arr)"/>
+          <line class="axis" x1="260" y1="188" x2="260" y2="208" marker-end="url(#gdc1-arr)"/>
+        </svg>
+        <figcaption>The whole proof on one card. The shaded box is the key inequality; everything after it is bookkeeping.</figcaption>
+      </figure>
+
+      <h2>Step 1: the two ingredients</h2>
+      <p class="idea">One inequality says how much $f$ drops; the other says how far $f$ is above $f^*$. Both are in terms of $g_k$.</p>
+      <p>Descent lemma (<a href="smoothness-and-strong-convexity.html">previous note</a>) at $x_k$:</p>
+      <p>$$f(x_{k+1})\le f(x_k)-\frac{\|g_k\|^2}{2L}.$$</p>
+      <p>Convexity: the tangent at $x_k$ lies below $f$, in particular at $x^*$ (<a href="convexity-and-jensen.html">tangent test</a>):</p>
+      <p>$$f^*\ge f(x_k)+g_k^T(x^*-x_k) \iff f(x_k)\le f^*+g_k^T(x_k-x^*).$$</p>
+      <p>Substitute the second into the first and subtract $f^*$:</p>
+      <p>$$\text{gap}_{k+1}\le g_k^T(x_k-x^*)-\frac{\|g_k\|^2}{2L}. \qquad (1)$$</p>
+
+      <h2>Step 2: the key inequality</h2>
+      <p class="idea">The right side of (1) has a cross term and a square term, the fingerprint of an expanded $\|a-b\|^2$. The square it came from is the distance to $x^*$ after one step.</p>
+      <p>$x_{k+1}-x^*=(x_k-x^*)-\tfrac1Lg_k$. Expand with $\|a-b\|^2=\|a\|^2-2a^Tb+\|b\|^2$:</p>
+      <p>$$D_{k+1}=D_k-\tfrac2L\,g_k^T(x_k-x^*)+\tfrac1{L^2}\|g_k\|^2.$$</p>
+      <p>Multiply by $\tfrac L2$ and move $D_{k+1}$ to the other side:</p>
+      <p>$$\tfrac L2\big(D_k-D_{k+1}\big)=g_k^T(x_k-x^*)-\frac{\|g_k\|^2}{2L},$$</p>
+      <p>which is exactly the right side of (1). So</p>
+      <p>$$\boxed{\ \text{gap}_{k+1}\le\tfrac L2\big(D_k-D_{k+1}\big)\ }$$</p>
+      <p>Bonus: $\text{gap}_{k+1}\ge0$, so $D_{k+1}\le D_k$. Every step ends at least as close to $x^*$.</p>
+
+      <h2>Step 3: sum and telescope</h2>
+      <p class="idea">Add the boxed line for $k=0,\dots,K-1$. Each $D$ in the middle appears once with $+$ and once with $-$.</p>
+      <p>$$\sum_{k=1}^{K}\text{gap}_k\le\tfrac L2\big[(D_0-D_1)+(D_1-D_2)+\cdots+(D_{K-1}-D_K)\big]$$</p>
+      <p>$$=\tfrac L2\big(D_0-D_K\big)\le\tfrac L2D_0 \qquad (D_K\ge0).$$</p>
+
+      <h2>Step 4: last $\le$ average</h2>
+      <p class="idea">The sum bounds the average gap. Since $f$ never goes up, the last gap is the smallest, so it is below the average.</p>
+      <p>$f$ never rises: $f(x_{k+1})\le f(x_k)-\tfrac{\|g_k\|^2}{2L}\le f(x_k)$. So $\text{gap}_K\le\text{gap}_k$ for every $k\le K$, and</p>
+      <p>$$K\cdot\text{gap}_K\le\sum_{k=1}^{K}\text{gap}_k\le\tfrac L2D_0 \quad\Rightarrow\quad \text{gap}_K\le\frac{L\,D_0}{2K}. \qquad\blacksquare$$</p>
+
+      <h2>What the rate means</h2>
+      <p class="idea">This is sublinear, $O(1/k)$: by <a href="convergence-rates.html">convergence rates</a>, accuracy $\varepsilon$ needs $k\ge LD_0/(2\varepsilon)$, and each extra digit costs 10 times the steps. It never used $\mu$, so it covers flat-bottomed problems ($\mu=0$), like least squares with more features than samples.</p>
+      <p class="example-label">Running example</p>
+      <p>$f=x_1^2+x_1x_2+x_2^2$, $L=3$, $x^*=0$, $x_0=(1,0)$, so $D_0=1$ and the bound is $\tfrac3{2k}$. One step: $x_1=x_0-\tfrac13(2,1)=(\tfrac13,-\tfrac13)$, so $D_1=\tfrac29$ and $\text{gap}_1=\tfrac19-\tfrac19+\tfrac19=\tfrac19$. Key inequality:</p>
+      <p>$$\tfrac19\le\tfrac32\big(1-\tfrac29\big)=\tfrac32\cdot\tfrac79=\tfrac76. \ \checkmark$$</p>
+      <table>
+        <tr><td>$k$</td><td>$1$</td><td>$2$</td><td>$5$</td><td>$10$</td></tr>
+        <tr><td>bound $\tfrac3{2k}$</td><td>$1.5$</td><td>$0.75$</td><td>$0.3$</td><td>$0.15$</td></tr>
+        <tr><td>measured $\text{gap}_k$</td><td>$0.111$</td><td>$0.049$</td><td>$0.0043$</td><td>$0.000075$</td></tr>
+      </table>
+      <p>The bound holds but is loose: this $f$ also has $\mu=1$, which the proof ignored. Using it gives a linear rate, next.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Show that $f(x_k)$ is non-increasing along gradient descent with step $1/L$, and that it strictly decreases unless $x_k$ is already a minimizer.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Descent lemma, then $\|g_k\|^2\ge0$ and $L\gt0$:</p>
+          <p>$$f(x_{k+1})\le f(x_k)-\frac{\|g_k\|^2}{2L}\le f(x_k).$$</p>
+          <p>Chaining over $k$ gives $f(x_0)\ge f(x_1)\ge f(x_2)\ge\cdots$. If $g_k\ne0$, the subtracted term is $\gt0$, so the drop is strict. If $g_k=0$, the tangent test gives $f(y)\ge f(x_k)+0^T(y-x_k)=f(x_k)$ for all $y$: $x_k$ is already a global minimizer. (Measured above: $1\gt0.111\gt0.049\gt\cdots$.)</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

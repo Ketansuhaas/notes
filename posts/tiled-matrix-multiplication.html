@@ -55,8 +55,11 @@
 
       <h2>Naive: one thread per output</h2>
       <p class="idea">Thread $(i,j)$ walks row $i$ of $A$ and column $j$ of $B$ on its own. Its neighbours fetch the same rows and columns again.</p>
-      <p>$$C_{ij}=\sum_{k=1}^{n}A_{ik}B_{kj}:\qquad 2n \text{ reads per output},\quad n^2\cdot2n=2n^3 \text{ reads in total}.$$</p>
-      <p>One value read per FLOP: $I=1/s$ FLOP/B for $s$-byte values, $0.5$ in fp16. Far down the roofline's slope.</p>
+      <p>$$C_{ij}=\sum_{k=1}^{n}A_{ik}B_{kj}:\qquad \underbrace{n}_{\text{row of }A}+\underbrace{n}_{\text{column of }B}=2n \text{ reads per output}.$$</p>
+      <p>$$\text{reads}=\underbrace{n^2}_{\text{outputs}}\cdot2n=2n^3,\qquad \text{FLOPs}=n^2\cdot\underbrace{2n}_{n\text{ mul}+n\text{ add}}=2n^3.$$</p>
+      <p>One value read per FLOP, so with $s$-byte values</p>
+      <p>$$I=\frac{2n^3}{2n^3\cdot s}=\frac1s\ \text{FLOP/B}=0.5\ \text{in fp16}.$$</p>
+      <p>Far down the roofline's slope.</p>
 
       <h2>Tiled: load once, reuse $T$ times</h2>
       <p class="idea">A block owns a $T\times T$ tile of $C$. It marches along $k$; each step copies one tile of $A$ and one of $B$ into shared memory, and every thread does $T$ multiply-adds from that fast copy.</p>
@@ -120,26 +123,40 @@ for (int k0 = 0; k0 &lt; n; k0 += T) {
     __syncthreads();                          // done before overwriting
 }
 C[i * n + j] = acc;</code></pre>
+      <p><strong>Count the loads.</strong> $C$ is cut into $(n/T)^2$ tiles, one block each. A block walks $k$ in steps of $T$, so it takes $n/T$ steps. Each step, each of the $T^2$ threads loads one value of $A$ and one of $B$ (the two load lines in the loop):</p>
       <p>$$\underbrace{(n/T)^2}_{\text{blocks}}\cdot\underbrace{n/T}_{\text{steps}}\cdot\underbrace{2T^2}_{\text{values per step}}=\frac{2n^3}{T}\ \text{reads}.$$</p>
+      <p><strong>Intensity.</strong> The FLOPs are unchanged ($2n^3$), only the reads shrink:</p>
+      <p>$$I=\frac{2n^3}{(2n^3/T)\cdot s}=\frac Ts\ \text{FLOP/B}=\frac T2\ \text{in fp16}.$$</p>
+      <p>Same answer per step, as a check: the block does $T^2$ outputs $\times\,T$ multiply-adds $=2T^3$ FLOPs on $2T^2$ loaded values, so $I=2T^3/(2T^2s)=T/s$. Each loaded value <code>As[r][k]</code> is used by all $T$ threads of row $r$: that factor $T$ is the reuse.</p>
       <table>
         <tr><td></td><td><strong>values read from HBM</strong></td><td><strong>$I$ in fp16</strong></td></tr>
         <tr><td>naive</td><td>$2n^3$</td><td>$0.5$ FLOP/B</td></tr>
         <tr><td>tiled</td><td>$2n^3/T$</td><td>$T/2$ FLOP/B</td></tr>
       </table>
       <p class="example-label">Example: $T=128$ (real kernels, each thread computing several outputs)</p>
-      <p>$I=64$ FLOP/B, a $128\times$ climb up the roofline. Neighbouring blocks also share tiles through L2, which carries big matmuls past the A100 ridge (~156).</p>
+      <p>$$I=\frac{128}{2}=64\ \text{FLOP/B},\qquad \frac{64}{0.5}=128\times\ \text{the naive kernel}.$$</p>
+      <p>Why not just pick $T$ large enough for the A100 ridge (~156) from HBM alone? That needs $T/2\ge156$, i.e. $T\ge312$. The block's $T^2$ fp32 accumulators must live in registers (256 KB per SM, see <a href="gpu-architecture-and-memory.html">memory hierarchy</a>):</p>
+      <p>$$T=128:\ 128^2\cdot4\ \text{B}=64\ \text{KB}\ \checkmark,\qquad T=312:\ 312^2\cdot4\ \text{B}\approx380\ \text{KB}\gt256\ \text{KB}.$$</p>
+      <p>So tile size stops short of the ridge. The rest comes from neighbouring blocks sharing tiles through L2, which carries big matmuls past the ridge.</p>
 
       <h2>Tensor cores</h2>
       <p class="idea">Tensor cores multiply small matrix tiles in one instruction (bf16/fp16 in, fp32 accumulate): ~312 TFLOP/s on an A100 vs ~19.5 on its plain FP32 lanes. Tiling is what keeps them fed.</p>
+      <p>Both peaks are computed in <a href="why-gpus.html">Why GPUs</a> (units $\times$ clock $\times$ FLOPs per cycle). Their ratio is what raises the bar:</p>
+      <p>$$\frac{312}{19.5}=16\times\text{ more math}\ \Rightarrow\ \text{ridge }\frac{312}{2}=156\text{ instead of }\frac{19.5}{2}\approx10\ \text{FLOP/B}.$$</p>
+      <p>Without tiling ($I=0.5$) even the plain lanes would starve.</p>
 
       <section class="exercise">
         <h2>Work it out yourself</h2>
         <p>$n=4096$, fp16. HBM bytes read by the naive kernel vs tiled with $T=128$? At ~2 TB/s, how long does each take, next to the math at ~312 TFLOP/s?</p>
         <details>
           <summary>Solution</summary>
-          <p>Naive: $2n^3\approx1.37\times10^{11}$ values $\approx275$ GB, about $140$ ms.</p>
-          <p>Tiled: $\div128$: $1.07\times10^{9}$ values $\approx2.1$ GB, about $1.1$ ms.</p>
-          <p>Math: $1.37\times10^{11}$ FLOPs $/\,3.12\times10^{14}\approx0.44$ ms. Tiling turns a 140 ms stall into ~1 ms; L2 reuse and larger tiles close the rest, so a tuned kernel runs near the 0.44 ms compute bound. (The floor: read $A$ and $B$ once, $2n^2\cdot2$ B $\approx67$ MB.)</p>
+          <p>$n^3=4096^3=2^{36}\approx6.87\times10^{10}$. Bytes are values $\times\,2$ B, time is bytes $/\ 2\times10^{12}$ B/s.</p>
+          <p>$$\text{naive: }2n^3\approx1.37\times10^{11}\ \text{values}\ \to\ 275\ \text{GB},$$</p>
+          <p>$$\frac{2.75\times10^{11}\ \text{B}}{2\times10^{12}\ \text{B/s}}\approx137\ \text{ms}.$$</p>
+          <p>$$\text{tiled: }\frac{2n^3}{128}\approx1.07\times10^{9}\ \text{values}\ \to\ 2.15\ \text{GB}\ \to\ \approx1.1\ \text{ms}.$$</p>
+          <p>$$\text{math: }\frac{2n^3}{3.12\times10^{14}}=\frac{1.37\times10^{11}}{3.12\times10^{14}}\approx0.44\ \text{ms}.$$</p>
+          <p>By the roofline, $t=\max(\text{math},\text{memory})$: naive $\approx137$ ms, tiled $\approx1.1$ ms. L2 reuse and larger tiles close the rest, so a tuned kernel runs near the 0.44 ms compute bound. The floor is reading $A$ and $B$ once:</p>
+          <p>$$2n^2\cdot2\ \text{B}=4\cdot4096^2\ \text{B}\approx67\ \text{MB}\ \to\ 0.034\ \text{ms}.$$</p>
         </details>
       </section>
     </article>
@@ -152,7 +169,7 @@ C[i * n + j] = acc;</code></pre>
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

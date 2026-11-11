@@ -60,12 +60,23 @@
         C_{jj}=\text{spread of feature } j, \qquad C_{jk}\ \begin{cases}\gt0 & \text{move together}\\\lt0 & \text{move oppositely}\\=0 & \text{unrelated}\end{cases}
         $$
       </p>
+      <p><strong>Why these readings.</strong> Entry $(j,k)$ of the outer product $x_ix_i^T$ is $x_{ij}x_{ik}$, so</p>
+      <p>$$C_{jk}=\frac1n\sum_ix_{ij}\,x_{ik}, \qquad C_{jj}=\frac1n\sum_ix_{ij}^2.$$</p>
+      <p>The data is centered (feature means $0$), so $C_{jj}$ is the variance of feature $j$ and $C_{jk}$ its covariance with feature $k$ (<a href="expectation-and-variance-algebra.html">previous note</a>). The sign of $C_{jk}$ follows the sign of the typical product: same signs (move together) give positive products, opposite signs give negative.</p>
       <p class="example-label">Running example</p>
-      <p>$$x_1=(\sqrt3,\sqrt3),\ x_2=(-\sqrt3,-\sqrt3),\ x_3=(1,-1),\ x_4=(-1,1) \ \Rightarrow\ C=\begin{pmatrix}2&1\\1&2\end{pmatrix}.$$</p>
+      <p>$$x_1=(\sqrt3,\sqrt3),\ x_2=(-\sqrt3,-\sqrt3),\ x_3=(1,-1),\ x_4=(-1,1).$$</p>
+      <p>Centered: the coordinates sum to $\sqrt3-\sqrt3+1-1=0$. The outer products ($x$ and $-x$ give the same one):</p>
+      <p>$$x_1x_1^T=x_2x_2^T=\begin{pmatrix}3&3\\3&3\end{pmatrix}, \qquad x_3x_3^T=x_4x_4^T=\begin{pmatrix}1&-1\\-1&1\end{pmatrix}.$$</p>
+      <p>$$C=\frac14\left[2\begin{pmatrix}3&3\\3&3\end{pmatrix}+2\begin{pmatrix}1&-1\\-1&1\end{pmatrix}\right]=\frac14\begin{pmatrix}8&4\\4&8\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}.$$</p>
 
       <h2>$v^TCv$ = spread along $v$</h2>
       <p class="idea">Lay a ruler along $v$. Each point casts a shadow on it. $v^TCv$ is the spread of the shadows.</p>
-      <p>$$\text{shadow } s_i=v^Tx_i, \qquad \frac1n\sum_is_i^2=\frac1n\sum_iv^Tx_ix_i^Tv=v^TCv.$$</p>
+      <p>For a unit $v$, the shadow of $x_i$ is $s_i=v^Tx_i$. Its square is $s_i^2=(v^Tx_i)(x_i^Tv)$, so averaging and pulling $v$ out of the sum:</p>
+      <p>$$\frac1n\sum_is_i^2=\frac1n\sum_iv^Tx_ix_i^Tv=v^T\Big(\frac1n\sum_ix_ix_i^T\Big)v=v^TCv.$$</p>
+      <p>The shadows have mean $v^T(\tfrac1n\sum_ix_i)=0$, so this average square is their variance.</p>
+      <p class="example-label">Example (the figure's rulers)</p>
+      <p>Shadows on $q_1=\tfrac1{\sqrt2}(1,1)$: $\tfrac{\sqrt3+\sqrt3}{\sqrt2}=\sqrt6$, then $-\sqrt6,\ 0,\ 0$. On $(1,0)$: $\sqrt3,-\sqrt3,1,-1$. On $q_2=\tfrac1{\sqrt2}(1,-1)$: $0,\ 0,\ \tfrac{1+1}{\sqrt2}=\sqrt2,\ -\sqrt2$.</p>
+      <p>$$\tfrac14(6+6+0+0)=3, \qquad \tfrac14(3+3+1+1)=2, \qquad \tfrac14(0+0+2+2)=1.$$</p>
 
       <figure class="figure">
         <svg width="476" viewBox="0 0 560 222" role="img" aria-label="Left: four points on a tilted ellipse with its two axes q1 and q2. Right: the points' shadows on three rulers, widest along q1 (variance 3), medium along (1,0) (variance 2), narrowest along q2 (variance 1).">
@@ -108,52 +119,70 @@
       <h2>What each entry contributes</h2>
       <p class="idea">Diagonal: each feature's own spread. Off-diagonal: boost or cancel when features move together. It is what tilts the cloud.</p>
       <p>$$v^TCv=\underbrace{\textstyle\sum_jv_j^2C_{jj}}_{\text{alone}}+\underbrace{2\textstyle\sum_{j\lt k}v_jv_kC_{jk}}_{\text{together}}.$$</p>
+      <p>Write out $v^TCv=\sum_j\sum_kv_jC_{jk}v_k$ and sort the terms: $j=k$ gives the diagonal; each pair $j\ne k$ appears twice, as $(j,k)$ and $(k,j)$, with equal values since $C_{jk}=C_{kj}$. With $C_{11}=C_{22}=2$, $C_{12}=1$:</p>
       <table>
-        <tr><td>$v=\tfrac1{\sqrt2}(1,1)$</td><td>$2+1=3$</td><td>covariance reinforces</td></tr>
-        <tr><td>$v=(1,0)$</td><td>$2+0=2$</td><td>one feature alone</td></tr>
-        <tr><td>$v=\tfrac1{\sqrt2}(1,-1)$</td><td>$2-1=1$</td><td>covariance cancels</td></tr>
+        <tr><td>$v=\tfrac1{\sqrt2}(1,1)$</td><td>$\tfrac12\cdot2+\tfrac12\cdot2+2\cdot\tfrac12\cdot1=2+1=3$</td><td>covariance reinforces</td></tr>
+        <tr><td>$v=(1,0)$</td><td>$1\cdot2+0\cdot2+2\cdot0\cdot1=2+0=2$</td><td>one feature alone</td></tr>
+        <tr><td>$v=\tfrac1{\sqrt2}(1,-1)$</td><td>$\tfrac12\cdot2+\tfrac12\cdot2-2\cdot\tfrac12\cdot1=2-1=1$</td><td>covariance cancels</td></tr>
       </table>
+      <p>Same three numbers as the shadows. &#10003;</p>
 
       <h2>Eigenvectors = the cloud's axes</h2>
       <p class="idea">The directions of most and least spread. They are perpendicular, and in those coordinates the tilt disappears.</p>
+      <p>$C$ is symmetric, so by <a href="spectral-theorem.html">the spectral theorem</a> $C=Q\Lambda Q^T$ with orthonormal eigenvectors $q_i$ (columns of $Q$). Along one of them, using $q_i^Tq_i=1$:</p>
       <p>
         $$
-        Cq_i=\lambda_iq_i \ \Rightarrow\ q_i^TCq_i=\lambda_i \ (\text{eigenvalue}=\text{spread along axis } i),
+        Cq_i=\lambda_iq_i \ \Rightarrow\ q_i^TCq_i=\lambda_i\,q_i^Tq_i=\lambda_i \ (\text{eigenvalue}=\text{spread along axis } i).
         $$
       </p>
+      <p>In the axes' coordinates $z=Q^Tx$, the rule $\operatorname{Cov}(Ax)=ACA^T$ with $A=Q^T$, then $Q^TQ=I$:</p>
       <p>
         $$
-        \operatorname{Cov}(Q^Tx)=Q^TCQ=\Lambda \quad(\text{no tilt left}).
+        \operatorname{Cov}(Q^Tx)=Q^TCQ=Q^TQ\,\Lambda\,Q^TQ=\Lambda \quad(\text{no tilt left}).
         $$
       </p>
       <p class="idea">Any other direction mixes the axes, so its spread is a weighted average of theirs.</p>
-      <p>$$v=\textstyle\sum_ic_iq_i,\ \sum_ic_i^2=1: \qquad v^TCv=\sum_i\lambda_ic_i^2 \in[\lambda_{\min},\lambda_{\max}].$$</p>
+      <p>Write $v=Qc$, i.e. $c_i=q_i^Tv$. Lengths are kept, so $\sum_ic_i^2=\|c\|^2=\|v\|^2=1$. Then</p>
+      <p>$$v^TCv=c^T\underbrace{Q^TCQ}_{\Lambda}c=\sum_i\lambda_ic_i^2 \in[\lambda_{\min},\lambda_{\max}],$$</p>
+      <p>since weights $c_i^2\ge0$ summing to $1$ give an average, which can't leave the range of what is averaged.</p>
       <p class="example-label">Example</p>
-      <p>$\lambda_1=3$ along $q_1=\tfrac1{\sqrt2}(1,1)$, $\lambda_2=1$ along $q_2=\tfrac1{\sqrt2}(1,-1)$. Ruler $(1,0)$ is half of each: $\tfrac12\cdot3+\tfrac12\cdot1=2$. &#10003;</p>
+      <p>Eigenvalues: $\det(C-\lambda I)=(2-\lambda)^2-1=0 \Rightarrow 2-\lambda=\pm1 \Rightarrow \lambda_1=3,\ \lambda_2=1$. Eigenvectors:</p>
+      <p>$$C-3I=\begin{pmatrix}-1&1\\1&-1\end{pmatrix}\Rightarrow q_1=\tfrac1{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix}, \qquad C-I=\begin{pmatrix}1&1\\1&1\end{pmatrix}\Rightarrow q_2=\tfrac1{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix}.$$</p>
+      <p>Ruler $(1,0)$: $c_1=q_1^T(1,0)=\tfrac1{\sqrt2}$, $c_2=\tfrac1{\sqrt2}$, so $c_1^2=c_2^2=\tfrac12$ and $\tfrac12\cdot3+\tfrac12\cdot1=2$. &#10003;</p>
 
       <h2>Zero eigenvalue = a direction with no data</h2>
       <p class="idea">$\lambda=0$: every point casts the same shadow. The cloud is flat; that direction tells points apart not at all. Some combination of features is constant, so a feature is redundant.</p>
+      <p>A sum of squares is $0$ only if every square is $0$:</p>
       <p>$$q^TCq=\frac1n\sum_i(q^Tx_i)^2=0 \iff q^Tx_i=0\ \ \forall i.$$</p>
       <p>$$\operatorname{rank}C=\text{dimensions the data really uses}.$$</p>
+      <p>Why: stack the points as rows of $X$ ($n\times d$), so $C=\tfrac1nX^TX$. The two have the same null space,</p>
+      <p>$$Cq=0\ \Rightarrow\ q^TCq=\tfrac1n\|Xq\|^2=0\ \Rightarrow\ Xq=0\ \Rightarrow\ Cq=\tfrac1nX^T(Xq)=0,$$</p>
+      <p>so $\operatorname{rank}C=d-\dim N(C)=d-\dim N(X)=\operatorname{rank}X=\dim\operatorname{span}\{x_i\}$ (<a href="linear-algebra-fundamentals.html">rank-nullity</a>).</p>
       <p class="example-label">Example: $x_3=x_1+x_2$</p>
       <p>
         $$
-        \text{points } (1,0,1),\,(0,1,1),\,(-1,0,-1),\,(0,-1,-1)
+        \text{points } a=(1,0,1),\ b=(0,1,1),\ -a,\ -b
         $$
       </p>
+      <p>$$aa^T=\begin{pmatrix}1&0&1\\0&0&0\\1&0&1\end{pmatrix}, \qquad bb^T=\begin{pmatrix}0&0&0\\0&1&1\\0&1&1\end{pmatrix}, \qquad C=\tfrac14(2aa^T+2bb^T):$$</p>
       <p>
         $$
-        C=\begin{pmatrix}0.5&0&0.5\\0&0.5&0.5\\0.5&0.5&1\end{pmatrix},\quad C\begin{pmatrix}1\\1\\-1\end{pmatrix}=0.
+        C=\begin{pmatrix}0.5&0&0.5\\0&0.5&0.5\\0.5&0.5&1\end{pmatrix},\quad C\begin{pmatrix}1\\1\\-1\end{pmatrix}=\begin{pmatrix}0.5-0.5\\0.5-0.5\\0.5+0.5-1\end{pmatrix}=0.
         $$
       </p>
-      <p>3 features, but the cloud lies in a plane. Near-zero $\lambda$: <em>almost</em> flat, which is what PCA drops. And $C^{-1}$ doesn't exist, hence the $+\epsilon I$ you see in papers.</p>
+      <p>The direction $q=(1,1,-1)$ is the redundancy itself: $q^Tx=x_1+x_2-x_3=0$ for every point. 3 features, but the cloud lies in a plane ($\operatorname{rank}C=2$). Near-zero $\lambda$: <em>almost</em> flat, which is what PCA drops.</p>
+      <p>And $C^{-1}$ doesn't exist ($Cq=0$ with $q\ne0$). Adding $\epsilon I$ lifts every eigenvalue, $(C+\epsilon I)q_i=(\lambda_i+\epsilon)q_i$, so all are $\ge\epsilon\gt0$ and the inverse exists: hence the $+\epsilon I$ you see in papers.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Show the total spread doesn't depend on the axes: $\sum_jC_{jj}=\sum_i\lambda_i$.</p>
         <details>
           <summary>Solution</summary>
-          <p>Both equal the average squared length $\frac1n\sum_i\|x_i\|^2$. Rotating to $z_i=Q^Tx_i$ keeps lengths ($Q$ orthogonal) and makes the covariance $\Lambda$. Example: $2+2=3+1$. &#10003;</p>
+          <p>Both equal the average squared length. Left side, using $\operatorname{tr}(xx^T)=\sum_jx_j^2=\|x\|^2$:</p>
+          <p>$$\sum_jC_{jj}=\operatorname{tr}C=\frac1n\sum_i\operatorname{tr}(x_ix_i^T)=\frac1n\sum_i\|x_i\|^2.$$</p>
+          <p>Right side, using $\operatorname{tr}(AB)=\operatorname{tr}(BA)$ and $Q^TQ=I$:</p>
+          <p>$$\operatorname{tr}C=\operatorname{tr}(Q\Lambda Q^T)=\operatorname{tr}(\Lambda Q^TQ)=\operatorname{tr}\Lambda=\sum_i\lambda_i.$$</p>
+          <p>Example: $\|x_i\|^2=6,6,2,2$, average $4$; and $2+2=4=3+1$. &#10003;</p>
         </details>
       </section>
     </article>
@@ -166,7 +195,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

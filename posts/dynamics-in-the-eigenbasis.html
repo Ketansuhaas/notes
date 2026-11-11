@@ -58,20 +58,39 @@
       <p class="idea">The eigenvectors form a new coordinate system; $c$ holds $x_0$'s coordinates in it.</p>
       <p>$$\underbrace{x_0}_{n\times1}=c_1v_1+\cdots+c_nv_n=\underbrace{V}_{n\times n}\underbrace{c}_{n\times1} \iff c=V^{-1}x_0.$$</p>
       <p class="example-label">Example</p>
-      <p>$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $v_1=(1,1)$, $v_2=(1,-1)$: $\ x_0=\begin{pmatrix}4\\0\end{pmatrix}=2v_1+2v_2$.</p>
+      <p>$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $v_1=(1,1)$ with $\lambda_1=3$, $v_2=(1,-1)$ with $\lambda_2=1$ (from <a href="eigenvalues-and-defectiveness.html">the eigenvalue note</a>). Solve $Vc=x_0$ for $x_0=(4,0)$:</p>
+      <p>$$c_1\begin{pmatrix}1\\1\end{pmatrix}+c_2\begin{pmatrix}1\\-1\end{pmatrix}=\begin{pmatrix}4\\0\end{pmatrix}: \quad c_1+c_2=4,\ \ c_1-c_2=0 \ \Rightarrow\ c_1=c_2=2.$$</p>
+      <p>So $x_0=2v_1+2v_2$.</p>
 
       <h2>Repeated multiplication</h2>
       <p class="idea">Each eigen-direction grows or shrinks on its own, by a factor $\lambda_i$ per step.</p>
+      <p>Each application of $A$ multiplies an eigenvector by $\lambda_i$ once more:</p>
+      <p>$$A^kv_i=A^{k-1}(Av_i)=\lambda_iA^{k-1}v_i=\cdots=\lambda_i^kv_i.$$</p>
+      <p>$A^k$ is linear, so apply it term by term to $x_0=\sum_ic_iv_i$:</p>
       <p>$$A^kx_0=\sum_ic_i\lambda_i^kv_i=\underbrace{V}_{n\times n}\underbrace{\begin{pmatrix}\lambda_1^k&&\\&\ddots&\\&&\lambda_n^k\end{pmatrix}}_{\Lambda^k}\underbrace{V^{-1}x_0}_{c}.$$</p>
+      <p>The matrix form also follows from $A=V\Lambda V^{-1}$: neighbouring $V^{-1}V$ pairs cancel,</p>
+      <p>$$A^k=V\Lambda\underbrace{V^{-1}V}_{I}\Lambda V^{-1}\cdots=V\Lambda^kV^{-1},$$</p>
+      <p>and a power of a diagonal matrix just raises each diagonal entry to that power.</p>
       <p class="example-label">Example</p>
-      <p>$A^kx_0=2\cdot3^k(1,1)+2(1,-1)=(2\cdot3^k+2,\ 2\cdot3^k-2)$. For $k=1,2,3$: $(8,4),\ (20,16),\ (56,52)$, matching direct multiplication. &#10003;</p>
+      <p>$$A^kx_0=2\cdot3^k\begin{pmatrix}1\\1\end{pmatrix}+2\cdot1^k\begin{pmatrix}1\\-1\end{pmatrix}=\begin{pmatrix}2\cdot3^k+2\\2\cdot3^k-2\end{pmatrix}.$$</p>
+      <p>$k=1,2,3$: $(6+2,\,6-2)=(8,4)$, $(18+2,\,18-2)=(20,16)$, $(54+2,\,54-2)=(56,52)$. Direct multiplication agrees:</p>
+      <p>$$A\begin{pmatrix}4\\0\end{pmatrix}=\begin{pmatrix}8\\4\end{pmatrix},\quad A\begin{pmatrix}8\\4\end{pmatrix}=\begin{pmatrix}16+4\\8+8\end{pmatrix},\quad A\begin{pmatrix}20\\16\end{pmatrix}=\begin{pmatrix}40+16\\20+32\end{pmatrix}. \ \checkmark$$</p>
 
       <h2>The dominant eigenvalue wins</h2>
       <p class="idea">The largest $|\lambda|$ outgrows the rest, so repeated multiplication turns almost any vector toward the top eigenvector. That is power iteration.</p>
-      <p>$$A^kx_0=\lambda_1^k\Big(c_1v_1+\sum_{i\ge2}c_i\big(\tfrac{\lambda_i}{\lambda_1}\big)^kv_i\Big)\ \approx\ c_1\lambda_1^kv_1 \qquad(|\lambda_1|\gt|\lambda_i|,\ c_1\neq0).$$</p>
-      <p>The ratio $|\lambda_2/\lambda_1|$ sets how fast the other terms die.</p>
+      <p>Factor $\lambda_1^k$ out of the sum (order $|\lambda_1|\gt|\lambda_2|\ge\cdots$, and assume $c_1\neq0$):</p>
+      <p>$$A^kx_0=\lambda_1^k\Big(c_1v_1+\sum_{i\ge2}c_i\big(\tfrac{\lambda_i}{\lambda_1}\big)^kv_i\Big).$$</p>
+      <p>Every $|\lambda_i/\lambda_1|\lt1$, so $(\lambda_i/\lambda_1)^k\to0$ and</p>
+      <p>$$A^kx_0\ \approx\ c_1\lambda_1^kv_1.$$</p>
+      <p><strong>The rate.</strong> Measure how much of $v_i$ is left relative to $v_1$:</p>
+      <p>$$\frac{\text{coefficient of } v_i}{\text{coefficient of } v_1}=\frac{c_i\lambda_i^k}{c_1\lambda_1^k}=\frac{c_i}{c_1}\Big(\frac{\lambda_i}{\lambda_1}\Big)^k.$$</p>
+      <p>Each step multiplies it by $\lambda_i/\lambda_1$. The slowest to die is $i=2$, so the error shrinks like $|\lambda_2/\lambda_1|^k$.</p>
       <p class="example-label">Example</p>
-      <p>Second/first component: $0.5,\ 0.8,\ 0.929,\dots\to1$, so the direction approaches $v_1=(1,1)$, with the gap shrinking by about $|\lambda_2/\lambda_1|=\tfrac13$ per step.</p>
+      <p>Second/first component of $A^kx_0$, from the formula above:</p>
+      <p>$$\frac{2\cdot3^k-2}{2\cdot3^k+2}=\frac{3^k-1}{3^k+1}: \quad k=1:\tfrac24=0.5,\ \ k=2:\tfrac8{10}=0.8,\ \ k=3:\tfrac{26}{28}\approx0.929,$$</p>
+      <p>$\to1$, the slope of $v_1=(1,1)$. The gap to $1$ is</p>
+      <p>$$1-\frac{3^k-1}{3^k+1}=\frac{2}{3^k+1}\approx2\cdot\big(\tfrac13\big)^k: \quad 0.5,\ 0.2,\ 0.071,$$</p>
+      <p>shrinking by about $|\lambda_2/\lambda_1|=\tfrac13$ per step (ratios $0.4$, $0.36$, heading to $0.33$).</p>
 
       <figure class="figure">
         <svg width="255" viewBox="0 0 300 226" role="img" aria-label="Directions of x0, A x0, A squared x0 and A cubed x0, drawn as rays from the origin. Where they cross a vertical line their heights are 0, 0.5, 0.8 and 0.93, closing in on the v1 ray at height 1.">
@@ -98,7 +117,17 @@
 
       <h2>Continuous time</h2>
       <p class="idea">Same story for $\dot x=Ax$. Each coordinate solves $\dot y=\lambda y$, so powers $\lambda^k$ become exponentials $e^{\lambda t}$.</p>
+      <p><strong>Step 1: switch to eigen-coordinates.</strong> Write $x(t)=Vy(t)$. $V$ is constant, so $\dot x=V\dot y$, and</p>
+      <p>$$V\dot y=AVy=V\Lambda y \qquad (AV=V\Lambda)$$</p>
+      <p>$$\Rightarrow\ \dot y=\Lambda y \iff \dot y_i=\lambda_iy_i \ \text{ for each } i \qquad (\text{multiply by } V^{-1}).$$</p>
+      <p><strong>Step 2: solve one coordinate.</strong> $\tfrac{d}{dt}e^{\lambda t}=\lambda e^{\lambda t}$, so $y_i=c_ie^{\lambda_it}$ works. It is the only solution: for any solution,</p>
+      <p>$$\tfrac{d}{dt}\big(e^{-\lambda_it}y_i\big)=e^{-\lambda_it}(\dot y_i-\lambda_iy_i)=0,$$</p>
+      <p>so $e^{-\lambda_it}y_i$ stays at its $t=0$ value $y_i(0)=c_i$, where $c=y(0)=V^{-1}x_0$.</p>
+      <p><strong>Step 3: switch back.</strong> $x=Vy$:</p>
       <p>$$x(t)=\sum_ic_ie^{\lambda_it}v_i=V\underbrace{\begin{pmatrix}e^{\lambda_1t}&&\\&\ddots&\\&&e^{\lambda_nt}\end{pmatrix}}_{e^{\Lambda t}}V^{-1}x_0.$$</p>
+      <p><strong>Growth, decay, spin.</strong> Size depends only on $|\lambda|$ for steps and on $\operatorname{Re}\lambda$ for flow. Write $\lambda=re^{i\theta}=a+ib$:</p>
+      <p>$$\lambda^k=r^ke^{ik\theta} \ \Rightarrow\ |\lambda^k|=r^k=|\lambda|^k, \ \text{turning by } \theta \text{ each step};$$</p>
+      <p>$$e^{\lambda t}=e^{at}\,(\cos bt+i\sin bt) \ \Rightarrow\ |e^{\lambda t}|=e^{at}=e^{(\operatorname{Re}\lambda)t}, \ \text{turning at rate } b.$$</p>
       <table>
         <tr><td></td><td>steps $\lambda^k$</td><td>flow $e^{\lambda t}$</td></tr>
         <tr><td>decays</td><td>$|\lambda|\lt1$</td><td>$\operatorname{Re}\lambda\lt0$</td></tr>
@@ -106,7 +135,9 @@
         <tr><td>also spins</td><td>$\lambda$ complex (spirals; $|\lambda|$ decides in or out)</td><td>$\operatorname{Im}\lambda\neq0$ (spirals; $\operatorname{Re}\lambda$ decides)</td></tr>
       </table>
       <p class="example-label">Example</p>
-      <p>$x(t)=2e^{3t}(1,1)+2e^{t}(1,-1)$: the $e^{3t}$ term swamps the other, so $x(t)$ bends toward $v_1$.</p>
+      <p>Same $c=(2,2)$ and $\lambda=3,1$ as before:</p>
+      <p>$$x(t)=2e^{3t}\begin{pmatrix}1\\1\end{pmatrix}+2e^{t}\begin{pmatrix}1\\-1\end{pmatrix}, \qquad x(0)=\begin{pmatrix}2+2\\2-2\end{pmatrix}=\begin{pmatrix}4\\0\end{pmatrix}. \ \checkmark$$</p>
+      <p>The ratio of the two parts is $\tfrac{2e^{t}}{2e^{3t}}=e^{-2t}\to0$, so the $e^{3t}$ term swamps the other and $x(t)$ bends toward $v_1$.</p>
 
       <figure class="figure">
         <svg width="280" viewBox="0 0 330 224" role="img" aria-label="Trajectories of x dot equals A x. Near the origin they run along v2, then the e to the 3t part takes over and each one turns to run along v1. The note's trajectory through x(0) = (4, 0) is highlighted.">
@@ -136,13 +167,26 @@
         <tr><td>Deep networks</td><td>layers act like $A^k$: $|\lambda|$ (or singular values) far from $1$ means exploding or vanishing signals</td></tr>
         <tr><td>Gradient descent</td><td>$x_{k+1}=(I-\eta A)x_k$: factor $1-\eta\lambda_i$ per direction</td></tr>
       </table>
+      <p><strong>The gradient descent row.</strong> On $f(x)=\tfrac12x^TAx$ with $A$ symmetric, $\nabla f=Ax$, so one step is</p>
+      <p>$$x_{k+1}=x_k-\eta Ax_k=(I-\eta A)x_k, \qquad (I-\eta A)v_i=v_i-\eta\lambda_iv_i=(1-\eta\lambda_i)v_i.$$</p>
+      <p>Same eigenvectors, eigenvalues $1-\eta\lambda_i$: everything above applies with $\lambda_i$ replaced by $1-\eta\lambda_i$. See <a href="gradient-descent-on-a-quadratic.html">gradient descent on a quadratic</a>.</p>
+      <p><strong>The Markov row.</strong> Columns of $P$ are probability vectors, so they sum to $1$: $\mathbf 1^TP=\mathbf 1^T$. So $1$ is an eigenvalue of $P^T$, hence of $P$ (same $\det(P-\lambda I)$, since $\det M^T=\det M$). No eigenvalue exceeds $1$ in size: entries are $\ge0$, so</p>
+      <p>$$\textstyle\sum_i|(Px)_i|\le\sum_{i,j}P_{ij}|x_j|=\sum_j|x_j|,$$</p>
+      <p>and $Pv=\lambda v$ then gives $|\lambda|\sum|v_j|\le\sum|v_j|$. Proof idea for convergence: if every other $|\lambda|\lt1$ (true when some power of $P$ has all entries positive, by the Perron-Frobenius theorem), the dominant-eigenvalue argument leaves only the $\lambda=1$ eigenvector.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>For diagonalizable $A$, prove: $A^kx_0\to0$ for every $x_0$ $\iff$ every $|\lambda_i|\lt1$.</p>
         <details>
           <summary>Solution</summary>
-          <p>($\Leftarrow$) $A^kx_0=\sum_ic_i\lambda_i^kv_i$ and each $\lambda_i^k\to0$. ($\Rightarrow$) If some $|\lambda_j|\ge1$, start at $x_0=v_j$: $\|A^kv_j\|=|\lambda_j|^k\|v_j\|\ge\|v_j\|\gt0$, which never reaches $0$. Applied to $I-\eta A$, this is the step-size rule for gradient descent.</p>
+          <p>($\Leftarrow$) Write $x_0=\sum_ic_iv_i$. The triangle inequality bounds the size:</p>
+          <p>$$\|A^kx_0\|=\Big\|\sum_ic_i\lambda_i^kv_i\Big\|\le\sum_i|c_i|\,|\lambda_i|^k\,\|v_i\|\to0,$$</p>
+          <p>since each $|\lambda_i|^k\to0$ when $|\lambda_i|\lt1$, and there are finitely many terms.</p>
+          <p>($\Rightarrow$) If some $|\lambda_j|\ge1$, start at $x_0=v_j$:</p>
+          <p>$$\|A^kv_j\|=\|\lambda_j^kv_j\|=|\lambda_j|^k\|v_j\|\ge\|v_j\|\gt0,$$</p>
+          <p>which never reaches $0$.</p>
+          <p><strong>Step-size rule.</strong> For $I-\eta A$ with $A$ symmetric and all $\lambda_i\gt0$, the condition is $|1-\eta\lambda_i|\lt1$ for every $i$:</p>
+          <p>$$-1\lt1-\eta\lambda_i\lt1 \iff 0\lt\eta\lambda_i\lt2 \iff 0\lt\eta\lt\frac{2}{\lambda_{\max}}.$$</p>
         </details>
       </section>
     </article>
@@ -155,7 +199,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

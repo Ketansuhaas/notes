@@ -61,25 +61,41 @@
         h_0=x,\quad \underbrace{z_\ell}_{n_\ell\times1}=\underbrace{W_\ell}_{n_\ell\times n_{\ell-1}}\underbrace{h_{\ell-1}}_{n_{\ell-1}\times1}+b_\ell,\quad h_\ell=\sigma(z_\ell),\quad \text{loss } \mathcal L(h_L).
         $$
       </p>
-      <p>$$\frac{\partial z_\ell}{\partial h_{\ell-1}}=W_\ell, \qquad \frac{\partial h_\ell}{\partial z_\ell}=\operatorname{diag}\big(\sigma'(z_\ell)\big).$$</p>
+      <p>Read both Jacobians off entry by entry (entry $(i,j)$ is $\partial(\text{output}_i)/\partial(\text{input}_j)$):</p>
+      <p>
+        $$z_{\ell,i}=\sum_jW_{\ell,ij}\,h_{\ell-1,j}+b_{\ell,i} \ \Rightarrow\ \frac{\partial z_{\ell,i}}{\partial h_{\ell-1,j}}=W_{\ell,ij},$$
+        $$h_{\ell,i}=\sigma(z_{\ell,i}) \ \Rightarrow\ \frac{\partial h_{\ell,i}}{\partial z_{\ell,j}}=\begin{cases}\sigma'(z_{\ell,i})&i=j\\0&i\ne j\ (\text{unit } i \text{ ignores } z_{\ell,j})\end{cases}$$
+      </p>
+      <p>
+        $$\Rightarrow\quad \frac{\partial z_\ell}{\partial h_{\ell-1}}=W_\ell, \qquad \frac{\partial h_\ell}{\partial z_\ell}=\operatorname{diag}\big(\sigma'(z_\ell)\big).$$
+      </p>
 
       <h2>The backward recursion</h2>
       <p class="idea">$g_\ell=\partial\mathcal L/\partial h_\ell$ is a row: how much the loss cares about each unit. One step back means multiplying by that layer's two Jacobians, on the right.</p>
+      <p>$\mathcal L$ depends on $h_{\ell-1}$ only through $z_\ell$, then $h_\ell$. The chain rule multiplies the Jacobians along that path, and the shapes chain up:</p>
       <p>
-        $$
-        \underbrace{g_{\ell-1}}_{1\times n_{\ell-1}}=g_\ell\,\operatorname{diag}\big(\sigma'(z_\ell)\big)\,W_\ell=\underbrace{g_{z_\ell}}_{1\times n_\ell}\underbrace{W_\ell}_{n_\ell\times n_{\ell-1}}, \qquad g_{z_\ell}:=g_\ell\odot\sigma'(z_\ell)^T.
-        $$
+        $$\underbrace{g_{\ell-1}}_{1\times n_{\ell-1}}=\underbrace{\frac{\partial\mathcal L}{\partial h_\ell}}_{1\times n_\ell}\underbrace{\frac{\partial h_\ell}{\partial z_\ell}}_{n_\ell\times n_\ell}\underbrace{\frac{\partial z_\ell}{\partial h_{\ell-1}}}_{n_\ell\times n_{\ell-1}}$$
+        $$=g_\ell\,\operatorname{diag}\big(\sigma'(z_\ell)\big)\,W_\ell \quad\text{(previous section)}.$$
       </p>
-      <p>Start: $g_L=(h_L-y)^T$ for $\mathcal L=\tfrac12\|h_L-y\|^2$. Each step is a row times a matrix: a vector-Jacobian product.</p>
+      <p>A row times a diagonal matrix scales each entry, $\big(g\operatorname{diag}(s)\big)_i=\sum_kg_k\,s_k\,[k=i]=g_i\,s_i$, so the first product is elementwise:</p>
+      <p>
+        $$g_{z_\ell}:=\frac{\partial\mathcal L}{\partial z_\ell}=g_\ell\odot\sigma'(z_\ell)^T, \qquad \underbrace{g_{\ell-1}}_{1\times n_{\ell-1}}=\underbrace{g_{z_\ell}}_{1\times n_\ell}\underbrace{W_\ell}_{n_\ell\times n_{\ell-1}}.$$
+      </p>
+      <p>Start: for $\mathcal L=\tfrac12\|h_L-y\|^2=\tfrac12\sum_i(h_{L,i}-y_i)^2$, each partial is $\partial\mathcal L/\partial h_{L,i}=h_{L,i}-y_i$, so $g_L=(h_L-y)^T$. Each step is a row times a matrix: a vector-Jacobian product.</p>
 
       <h2>Weight gradient: error times input</h2>
       <p class="idea">Exactly the linear layer from Matrix calculus: an outer product of the error arriving at $z_\ell$ and the input that fed it. An input that was $0$ gets no gradient on its weights.</p>
+      <p>Nudge only $W_\ell$ (its input $h_{\ell-1}$ is fixed). The <a href="matrix-calculus.html">differential</a> of $z_\ell=W_\ell h_{\ell-1}+b_\ell$ is $dz_\ell=dW_\ell\,h_{\ell-1}$, and the loss changes by its row gradient times that:</p>
       <p>
-        $$
-        d\mathcal L=g_{z_\ell}\,dW_\ell\,h_{\ell-1}=\operatorname{tr}\big(h_{\ell-1}\,g_{z_\ell}\,dW_\ell\big) \ \Rightarrow\ \underbrace{\nabla_{W_\ell}\mathcal L}_{n_\ell\times n_{\ell-1}}=\underbrace{\delta_\ell}_{n_\ell\times1}\underbrace{h_{\ell-1}^T}_{1\times n_{\ell-1}}, \quad \nabla_{b_\ell}\mathcal L=\delta_\ell,
-        $$
+        $$d\mathcal L=\underbrace{g_{z_\ell}}_{1\times n_\ell}\,dz_\ell=g_{z_\ell}\,dW_\ell\,h_{\ell-1}$$
+        $$=\operatorname{tr}\big(g_{z_\ell}\,dW_\ell\,h_{\ell-1}\big)\quad\text{(a scalar is its own trace)}$$
+        $$=\operatorname{tr}\big(h_{\ell-1}\,g_{z_\ell}\,dW_\ell\big)\quad\text{(trace is cyclic)}.$$
       </p>
-      <p>with $\delta_\ell:=g_{z_\ell}^T$, the same error written as a column.</p>
+      <p>The rule $d\mathcal L=\operatorname{tr}(G^TdW)\Rightarrow\nabla_W\mathcal L=G$ reads off $G^T=h_{\ell-1}g_{z_\ell}$. Write $\delta_\ell:=g_{z_\ell}^T$, the same error as a column:</p>
+      <p>
+        $$\underbrace{\nabla_{W_\ell}\mathcal L}_{n_\ell\times n_{\ell-1}}=\big(h_{\ell-1}g_{z_\ell}\big)^T=\underbrace{\delta_\ell}_{n_\ell\times1}\underbrace{h_{\ell-1}^T}_{1\times n_{\ell-1}}.$$
+      </p>
+      <p>Bias: $dz_\ell=db_\ell$, so $d\mathcal L=g_{z_\ell}\,db_\ell$ and $\nabla_{b_\ell}\mathcal L=\delta_\ell$. Entrywise check: $W_{\ell,ij}$ touches only $z_{\ell,i}$, with slope $h_{\ell-1,j}$, so $\partial\mathcal L/\partial W_{\ell,ij}=\delta_{\ell,i}\,h_{\ell-1,j}$, the $(i,j)$ entry of $\delta_\ell h_{\ell-1}^T$. &#10003;</p>
 
       <figure class="figure">
         <svg width="421" viewBox="0 0 495 172" role="img" aria-label="A two-layer chain. Top row, forward: x, z1, h1, z2, h2, loss. Bottom row, backward: row-vector gradients g2, g z2, g1, g z1, g0, each one step left, multiplied by sigma prime or by a weight matrix. Between the rows, the weight gradient for W2 combines the error at z2 from below with the input h1 from above.">
@@ -133,36 +149,54 @@
       <p class="example-label">Example: one ReLU layer</p>
       <p>$x=\begin{pmatrix}1\\2\end{pmatrix}$, $W=\begin{pmatrix}1&-1\\1&1\end{pmatrix}$, $b=0$, $y=\begin{pmatrix}0\\1\end{pmatrix}$.</p>
       <table>
-        <tr><td>Forward</td><td>$z=(-1,\,3)$, $h=(0,\,3)$, $\mathcal L=\tfrac12(0^2+2^2)=2$</td></tr>
-        <tr><td>Error</td><td>$g_1=(0,\,2)$, $\sigma'(z)=(0,\,1)$, $g_z=(0,\,2)$</td></tr>
-        <tr><td>Weights</td><td>$\nabla_W\mathcal L=\begin{pmatrix}0\\2\end{pmatrix}\begin{pmatrix}1&2\end{pmatrix}=\begin{pmatrix}0&0\\2&4\end{pmatrix}$ (dead unit: zero row)</td></tr>
-        <tr><td>Input</td><td>$g_0=g_zW=(2,\,2)$</td></tr>
+        <tr><td>Forward</td><td>$z=Wx=(1\cdot1-1\cdot2,\ 1\cdot1+1\cdot2)=(-1,\,3)$, $\ h=\max(z,0)=(0,\,3)$</td></tr>
+        <tr><td>Loss</td><td>$h-y=(0,\,2)$, $\ \mathcal L=\tfrac12(0^2+2^2)=2$</td></tr>
+        <tr><td>Error</td><td>$g_1=(h-y)^T=(0,\,2)$; ReLU$'$ is $0$ for $z\lt0$, $1$ for $z\gt0$: $\sigma'(z)=(0,\,1)$; $g_z=(0\cdot0,\ 2\cdot1)=(0,\,2)$</td></tr>
+        <tr><td>Weights</td><td>$\nabla_W\mathcal L=\delta x^T=\begin{pmatrix}0\\2\end{pmatrix}\begin{pmatrix}1&2\end{pmatrix}=\begin{pmatrix}0\cdot1&0\cdot2\\2\cdot1&2\cdot2\end{pmatrix}=\begin{pmatrix}0&0\\2&4\end{pmatrix}$ (dead unit: zero row)</td></tr>
+        <tr><td>Input</td><td>$g_0=g_zW=(0\cdot1+2\cdot1,\ 0\cdot(-1)+2\cdot1)=(2,\,2)$</td></tr>
       </table>
-      <p>Check: only unit 2 is active, so locally $\mathcal L=\tfrac12(x_1+x_2-1)^2$ and $\partial\mathcal L/\partial x_i=2$. &#10003;</p>
+      <p>Check: only unit 2 is active, so locally $\mathcal L=\tfrac12(W_{21}x_1+W_{22}x_2-1)^2$ with inner value $3-1=2$. Then $\partial\mathcal L/\partial x_i=2\cdot W_{2i}=(2,2)$ and $\partial\mathcal L/\partial W_{2i}=2\cdot x_i=(2,4)$. &#10003;</p>
 
       <h2>Rank 1 per example</h2>
       <p class="idea">A column times a row has rank 1. A batch sums $B$ outer products (Four views of matrix multiplication), so the update has rank at most $B$.</p>
+      <p><strong>Rank 1.</strong> Every column of $\delta h^T$ is $\delta$ times a number: column $j$ is $h_j\,\delta$. So all columns lie on the line through $\delta$, and the rank is at most $1$.</p>
+      <p><strong>The batch.</strong> The batch loss is the average $\mathcal L_{\text{batch}}=\frac1B\sum_b\mathcal L^{(b)}$, and the gradient is linear, so it averages the per-example outer products. Stack $\delta_\ell^{(b)}$ as the columns of $\Delta_\ell$ and $h_{\ell-1}^{(b)}$ as the columns of $H_{\ell-1}$; view 4 of <a href="four-views-of-matrix-multiplication.html">matrix multiplication</a> (column $b$ of $\Delta_\ell$ times row $b$ of $H_{\ell-1}^T$, summed over $b$) packs the sum into one matmul:</p>
       <p>
-        $$
-        \nabla_{W_\ell}\mathcal L_{\text{batch}}=\frac1B\sum_{b=1}^B\delta_\ell^{(b)}h_{\ell-1}^{(b)T}=\frac1B\underbrace{\Delta_\ell}_{n_\ell\times B}\underbrace{H_{\ell-1}^T}_{B\times n_{\ell-1}}, \qquad \operatorname{rank}\le\min(B,\,n_\ell,\,n_{\ell-1}).
-        $$
+        $$\nabla_{W_\ell}\mathcal L_{\text{batch}}=\frac1B\sum_{b=1}^B\nabla_{W_\ell}\mathcal L^{(b)}=\frac1B\sum_{b=1}^B\delta_\ell^{(b)}h_{\ell-1}^{(b)T}$$
+        $$=\frac1B\underbrace{\Delta_\ell}_{n_\ell\times B}\underbrace{H_{\ell-1}^T}_{B\times n_{\ell-1}}.$$
       </p>
-      <p>Columns of $\Delta_\ell$ are the $\delta_\ell^{(b)}$; columns of $H_{\ell-1}$ are the $h_{\ell-1}^{(b)}$.</p>
+      <p>Rank is subadditive, $\operatorname{rank}(A+B)\le\operatorname{rank}A+\operatorname{rank}B$ (the column space of a sum sits inside the span of both column spaces), and a matrix's rank never exceeds either dimension, so</p>
+      <p>$$\operatorname{rank}\nabla_{W_\ell}\mathcal L_{\text{batch}}\le\min(B,\,n_\ell,\,n_{\ell-1}).$$</p>
 
       <h2>Why backward, not forward</h2>
       <p class="idea">One loss, millions of weights. Starting from the single scalar at the end gives every gradient in one pass; starting from the inputs needs one pass per parameter.</p>
+      <p>The full gradient is a product of Jacobians. Matrix products are associative, so we may choose where to start:</p>
+      <p>$$\underbrace{\nabla\mathcal L}_{1\times n_0}=\underbrace{g_L}_{1\times n_L}J_L\,J_{L-1}\cdots J_1, \qquad J_\ell=\operatorname{diag}(\sigma'(z_\ell))\,W_\ell.$$</p>
       <table>
-        <tr><td>Forward mode (JVP)</td><td>$J\,v$</td><td>one input direction per pass</td></tr>
-        <tr><td>Reverse mode (VJP): backprop</td><td>$g\,J$</td><td>one output per pass, so all of $\nabla\mathcal L$ at once</td></tr>
+        <tr><td><strong>Order</strong></td><td><strong>Each step</strong></td><td><strong>Passes for all of $\nabla\mathcal L$</strong></td></tr>
+        <tr><td>Reverse (VJP): $\big((g_LJ_L)J_{L-1}\big)\cdots$</td><td>row times matrix, $\approx n^2$ ops</td><td>$1$: the row already holds every partial</td></tr>
+        <tr><td>Forward (JVP): $J_L\big(\cdots(J_1v)\big)$</td><td>matrix times column, $\approx n^2$ ops</td><td>one per input direction $v=e_k$: $n_0$ passes, each giving one partial $\nabla\mathcal L\,e_k$</td></tr>
       </table>
-      <p>Cost: about $2\times$ the forward pass (per layer, one matmul for $g_{\ell-1}$, one for $\nabla_{W_\ell}$).</p>
+      <p>(For weights, "input" means every parameter: $10^9$ forward passes versus $1$ reverse pass.) <a href="automatic-differentiation.html">Automatic differentiation</a> generalizes this to any graph.</p>
+      <p><strong>Cost of one reverse pass.</strong> Count multiply-adds per layer, for a batch of $B$:</p>
+      <table>
+        <tr><td>Forward</td><td>$Z_\ell=W_\ell H_{\ell-1}$</td><td>$n_\ell\,n_{\ell-1}\,B$</td></tr>
+        <tr><td>Backward, to the input</td><td>$G_{\ell-1}=G_{z_\ell}W_\ell$</td><td>$n_\ell\,n_{\ell-1}\,B$</td></tr>
+        <tr><td>Backward, to the weights</td><td>$\Delta_\ell H_{\ell-1}^T$</td><td>$n_\ell\,n_{\ell-1}\,B$</td></tr>
+      </table>
+      <p>So the backward pass costs about $2\times$ the forward pass (the elementwise $\odot\sigma'$ is only $n_\ell B$), and a full training step about $3\times$.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Two linear layers, no nonlinearity: $\mathcal L=\tfrac12\|W_2W_1x-y\|^2$. Use the recursion to show $\nabla_{W_1}\mathcal L=W_2^T\,r\,x^T$ with $r=W_2W_1x-y$. Check the shape.</p>
         <details>
           <summary>Solution</summary>
-          <p>$\sigma'=1$, so $g_{z_2}=g_2=r^T$. Then $g_1=r^TW_2$, $g_{z_1}=r^TW_2$, $\delta_1=W_2^Tr$, and $\nabla_{W_1}\mathcal L=\delta_1h_0^T=W_2^Trx^T$.</p>
+          <p>Here $\sigma(z)=z$, so $\sigma'=1$ and every $\odot\sigma'$ step does nothing. Run the recursion from the top:</p>
+          <p>
+            $$h_2=W_2W_1x \ \Rightarrow\ g_2=(h_2-y)^T=r^T, \qquad g_{z_2}=g_2\odot1=r^T,$$
+            $$g_1=g_{z_2}W_2=r^TW_2, \qquad g_{z_1}=g_1\odot1=r^TW_2,$$
+            $$\delta_1=g_{z_1}^T=(r^TW_2)^T=W_2^Tr \ \Rightarrow\ \nabla_{W_1}\mathcal L=\delta_1h_0^T=W_2^Tr\,x^T.$$
+          </p>
           <p>Shapes: $(n_1\times n_2)(n_2\times1)(1\times n_0)=n_1\times n_0$, the shape of $W_1$. &#10003;</p>
         </details>
       </section>
@@ -176,7 +210,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

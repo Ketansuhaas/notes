@@ -57,20 +57,44 @@
       <h2>Bernoulli($p$)</h2>
       <p class="idea">One yes/no outcome: a binary label. A sigmoid output is its $p$.</p>
       <p>$$p(x)=p^x(1-p)^{1-x},\ x\in\{0,1\}, \qquad \mathbb{E}X=p, \qquad \operatorname{Var}X=p(1-p).$$</p>
+      <p>The exponents just select: $x=1$ gives $p^1(1-p)^0=p$, $x=0$ gives $1-p$. Moments, using $X^2=X$ for $X\in\{0,1\}$ and $\operatorname{Var}X=\mathbb{E}X^2-(\mathbb{E}X)^2$ (<a href="expectation-and-variance-algebra.html">variance algebra</a>):</p>
+      <p>$$\mathbb{E}X=0\cdot(1-p)+1\cdot p=p, \qquad \operatorname{Var}X=\mathbb{E}X-(\mathbb{E}X)^2=p-p^2=p(1-p).$$</p>
+      <p>Take $-\log$ of the pmf at the label $y$: the exponents come down as weights,</p>
+      <p>$$-\log p(y)=-\big[y\log p+(1-y)\log(1-p)\big] \quad(\text{binary cross-entropy}).$$</p>
       <p class="example-label">Example</p>
-      <p>Model says $p=0.9$. Label $y=1$: $-\log0.9\approx0.11$. Label $y=0$: $-\log0.1\approx2.30$. That is binary cross-entropy.</p>
+      <p>Model says $p=0.9$. Label $y=1$: $-\log0.9\approx0.11$. Label $y=0$: $-\log(1-0.9)=-\log0.1\approx2.30$.</p>
 
       <h2>Categorical($p_1,\dots,p_K$)</h2>
       <p class="idea">Bernoulli with $K$ outcomes. Softmax turns any real logits into valid probabilities.</p>
       <p>$$p(x=k)=p_k,\ \ \textstyle\sum_kp_k=1, \qquad \underbrace{p}_{K\times1}=\operatorname{softmax}(\underbrace{z}_{K\times1}),\ \ p_k=\dfrac{e^{z_k}}{\sum_je^{z_j}}.$$</p>
       <p class="example-label">Example</p>
-      <p>$z=(2,1,0)$: $e^z\approx(7.39,\,2.72,\,1)$, sum $11.11$, so $p\approx(0.67,\,0.24,\,0.09)$.</p>
+      <p>Why softmax is valid: $e^{z_k}\gt0$ makes every $p_k\gt0$, and dividing by the total makes them sum to $1$:</p>
+      <p>$$\sum_kp_k=\frac{\sum_ke^{z_k}}{\sum_je^{z_j}}=1.$$</p>
+      <p>With label $y$, $-\log p(x=y)=-\log p_y$: cross-entropy.</p>
+      <p class="example-label">Example</p>
+      <p>$z=(2,1,0)$: $e^z\approx(7.389,\,2.718,\,1)$, sum $11.107$, so</p>
+      <p>$$p\approx\Big(\tfrac{7.389}{11.107},\ \tfrac{2.718}{11.107},\ \tfrac{1}{11.107}\Big)\approx(0.67,\,0.24,\,0.09).$$</p>
 
       <h2>Gaussian $\mathcal{N}(\mu,\sigma^2)$</h2>
       <p class="idea">The least-committal choice given only a mean and a spread (maximum entropy). Regression noise, initialization, VAE priors, diffusion noise.</p>
       <p>$$p(x)=\frac1{\sqrt{2\pi\sigma^2}}\exp\!\Big(-\frac{(x-\mu)^2}{2\sigma^2}\Big), \qquad \mathbb{E}X=\mu, \qquad \operatorname{Var}X=\sigma^2.$$</p>
+      <p><strong>Step 1: the constant, $\int e^{-x^2/2}dx=\sqrt{2\pi}$.</strong> Call the integral $I$. Square it, read the product as a 2D integral, and switch to polar coordinates ($x^2+y^2=r^2$, $dx\,dy=r\,dr\,d\theta$):</p>
+      <p>$$I^2=\int\!\!\int e^{-(x^2+y^2)/2}\,dx\,dy=\int_0^{2\pi}\!\!\int_0^\infty e^{-r^2/2}\,r\,dr\,d\theta.$$</p>
+      <p>The extra $r$ is what makes it solvable: $\tfrac{d}{dr}\big(-e^{-r^2/2}\big)=r\,e^{-r^2/2}$. So</p>
+      <p>$$I^2=2\pi\Big[-e^{-r^2/2}\Big]_0^\infty=2\pi(0+1)=2\pi \ \Rightarrow\ I=\sqrt{2\pi}.$$</p>
+      <p><strong>Step 2: shift and scale.</strong> Substitute $x=\mu+\sigma t$, $dx=\sigma\,dt$:</p>
+      <p>$$\int e^{-(x-\mu)^2/(2\sigma^2)}\,dx=\sigma\int e^{-t^2/2}\,dt=\sigma\sqrt{2\pi}=\sqrt{2\pi\sigma^2}.$$</p>
+      <p>Dividing by this makes the area $1$. It also says $X=\mu+\sigma T$ with $T\sim\mathcal N(0,1)$.</p>
+      <p><strong>Step 3: moments of $T$.</strong> $t\,e^{-t^2/2}$ is odd, so $\mathbb{E}T=0$. For $\mathbb{E}T^2$, integrate by parts with $u=t$, $dv=t\,e^{-t^2/2}dt$, $v=-e^{-t^2/2}$:</p>
+      <p>$$\int t^2e^{-t^2/2}\,dt=\Big[-t\,e^{-t^2/2}\Big]_{-\infty}^{\infty}+\int e^{-t^2/2}\,dt=0+\sqrt{2\pi},$$</p>
+      <p>so $\mathbb{E}T^2=\sqrt{2\pi}/\sqrt{2\pi}=1$. Then shift and scale (variance algebra): $\mathbb{E}X=\mu+\sigma\cdot0=\mu$, $\operatorname{Var}X=\sigma^2\operatorname{Var}T=\sigma^2$.</p>
+      <p><strong>Proof idea: why maximum entropy.</strong> Maximize $-\int p\log p$ subject to $\int p=1$, $\int xp=\mu$, $\int(x-\mu)^2p=\sigma^2$. Setting the Lagrangian's derivative in each value $p(x)$ to zero:</p>
+      <p>$$-\log p(x)-1+a+b\,x+c\,(x-\mu)^2=0 \ \Rightarrow\ p(x)=e^{\text{quadratic in }x},$$</p>
+      <p>a Gaussian once the constraints fix $a,b,c$. A full proof shows this stationary point is the maximum (entropy is concave, or use $\mathrm{KL}\ge0$).</p>
       <p class="example-label">Example</p>
-      <p>Predict $\mu=f(x)$ with fixed $\sigma$: $-\log p(y)=\dfrac{(y-f(x))^2}{2\sigma^2}+\text{const}$. That is MSE.</p>
+      <p>Predict $\mu=f(x)$ with fixed $\sigma$. Take $-\log$ of the density at the target $y$:</p>
+      <p>$$-\log p(y)=\frac{(y-f(x))^2}{2\sigma^2}+\underbrace{\tfrac12\log(2\pi\sigma^2)}_{\text{const}}.$$</p>
+      <p>Minimizing it over $f$ is minimizing squared error. That is MSE.</p>
 
       <figure class="figure">
         <svg width="408" viewBox="0 0 480 170" role="img" aria-label="Left, the Gaussian density p(y), a bell peaked at mu; right, minus log p(y), a parabola with its minimum at mu. A point two standard deviations out has low density and high loss.">
@@ -96,14 +120,24 @@
       <p class="idea">Contours are ellipses with the covariance cloud's axes. Diagonal $\Sigma$ means independent coordinates.</p>
       <p>
         $$
-        p(x)=\frac1{\sqrt{(2\pi)^d\det\Sigma}}\exp\!\Big(-\tfrac12(x-\mu)^T\Sigma^{-1}(x-\mu)\Big), \qquad \underbrace{\mu}_{d\times1},\ \underbrace{\Sigma}_{d\times d}\succeq0.
+        p(x)=\frac1{\sqrt{(2\pi)^d\det\Sigma}}\exp\!\Big(-\tfrac12(x-\mu)^T\Sigma^{-1}(x-\mu)\Big), \qquad \underbrace{\mu}_{d\times1},\ \underbrace{\Sigma}_{d\times d}\succ0.
         $$
       </p>
+      <p>($\Sigma\succ0$, positive definite, so that $\Sigma^{-1}$ exists and $\det\Sigma\gt0$; a singular $\Sigma$ puts all mass on a flat subspace and has no density.)</p>
+      <p><strong>The constant: rotate to the axes.</strong> Spectral theorem: $\Sigma=Q\Lambda Q^T$, so $\Sigma^{-1}=Q\Lambda^{-1}Q^T$. Set $z=Q^T(x-\mu)$:</p>
+      <p>$$(x-\mu)^T\Sigma^{-1}(x-\mu)=z^T\Lambda^{-1}z=\sum_i\frac{z_i^2}{\lambda_i}.$$</p>
+      <p>A rotation keeps volume ($|\det Q|=1$, so $dx=dz$), and the exponential of a sum is a product of 1D Gaussian integrals (Step 2 above, with $\sigma^2=\lambda_i$):</p>
+      <p>$$\int e^{-\frac12\sum_iz_i^2/\lambda_i}\,dz=\prod_i\sqrt{2\pi\lambda_i}=\sqrt{(2\pi)^d\textstyle\prod_i\lambda_i}=\sqrt{(2\pi)^d\det\Sigma}.$$</p>
+      <p>So in the axes the coordinates $z_i$ are independent $\mathcal N(0,\lambda_i)$, and $\operatorname{Cov}(x)=Q\Lambda Q^T=\Sigma$ by the $A\Sigma A^T$ rule.</p>
       <p>$$\Sigma=\operatorname{diag}(\sigma_1^2,\dots,\sigma_d^2) \iff p(x)=\textstyle\prod_ip(x_i) \qquad (d \text{ parameters instead of } \tfrac{d(d+1)}2).$$</p>
+      <p>$\Rightarrow$: with diagonal $\Sigma$ the quadratic form is $\sum_i(x_i-\mu_i)^2/\sigma_i^2$ and $\det\Sigma=\prod_i\sigma_i^2$, so the density splits into a product of 1D Gaussians. $\Leftarrow$: independent coordinates have $\operatorname{Cov}(x_i,x_j)=0$ (<a href="expectation-and-variance-algebra.html">variance algebra</a>). Count: a symmetric $\Sigma$ has $d$ diagonal entries plus $\tfrac{d(d-1)}2$ above it, $\tfrac{d(d+1)}2$ in all.</p>
       <p class="example-label">Example</p>
-      <p>$\Sigma=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $\mu=0$. In eigen-coordinates the contour $x^T\Sigma^{-1}x=1$ reads $\tfrac{z_1^2}3+\tfrac{z_2^2}1=1$: semi-axes $\sqrt3$ along $(1,1)$ and $1$ along $(1,-1)$.</p>
+      <p>$\Sigma=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $\mu=0$: eigenvalues $3,1$ along $\tfrac1{\sqrt2}(1,1)$, $\tfrac1{\sqrt2}(1,-1)$ (<a href="covariance-matrix-intuition.html">covariance note</a>). In eigen-coordinates the contour $x^T\Sigma^{-1}x=1$ reads $\tfrac{z_1^2}3+\tfrac{z_2^2}1=1$: semi-axes $\sqrt3$ along $(1,1)$ and $1$ along $(1,-1)$.</p>
+      <p>Check one end: $x=\sqrt3\cdot\tfrac1{\sqrt2}(1,1)$, with $\Sigma^{-1}=\tfrac13\begin{pmatrix}2&-1\\-1&2\end{pmatrix}$:</p>
+      <p>$$x^T\Sigma^{-1}x=\tfrac32\cdot\tfrac13\,(2-1-1+2)=\tfrac32\cdot\tfrac23=1. \ \checkmark$$</p>
 
       <h2>Distribution = loss</h2>
+      <p class="idea">Each row is the same move: take $-\log$ of the density at the target.</p>
       <table>
         <tr><td>Bernoulli</td><td>binary label</td><td>binary cross-entropy</td></tr>
         <tr><td>Categorical</td><td>class label</td><td>cross-entropy</td></tr>
@@ -111,6 +145,9 @@
         <tr><td>Laplace $\tfrac1{2b}e^{-|x-\mu|/b}$</td><td>real value, heavy tails</td><td>L1</td></tr>
         <tr><td>Uniform $\tfrac1{b-a}$ on $[a,b]$</td><td>no preference</td><td>init ranges, augmentation</td></tr>
       </table>
+      <p>Laplace: each side of $\mu$ has area $\int_0^\infty e^{-t/b}dt=b$, total $2b$, hence the $\tfrac1{2b}$. Then</p>
+      <p>$$-\log p(y)=\frac{|y-\mu|}b+\log2b \quad(\text{absolute error, L1}).$$</p>
+      <p>Uniform: height $\tfrac1{b-a}$ times width $b-a$ is area $1$.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
@@ -130,7 +167,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

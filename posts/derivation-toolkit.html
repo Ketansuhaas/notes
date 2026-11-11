@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>The derivation toolkit - Deep Learning Notes</title>
+  <meta name="description" content="The dozen moves behind almost every derivation in ML papers and convergence proofs: add and subtract, expand or complete a square, telescoping, Cauchy-Schwarz, Young, Jensen, the trace trick, the fundamental theorem of calculus along a line, the union bound, and 1 + x at most e^x. Each with when to use it, a short proof, and one worked use.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / The derivation toolkit</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>The derivation toolkit</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">proofs</span><span class="tag">inequalities</span><span class="tag">foundations</span><span class="tag">optimization</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="how-to-read-and-write-proofs.html">Reading and writing proofs</a>, <a href="convexity-and-jensen.html">Convexity and Jensen</a>, <a href="matrix-calculus.html">Matrix calculus</a> &middot; <strong>Leads to:</strong> <a href="convergence-rates.html">Convergence rates</a>, <a href="smoothness-and-strong-convexity.html">Smoothness and strong convexity</a></p>
+      <p class="idea">Convergence proofs look magical until you notice they reuse the same dozen moves. Learn the moves and every line of such a proof becomes "oh, that one".</p>
+      <table>
+        <tr><td>kind</td><td>moves</td></tr>
+        <tr><td>rewrite (an equality)</td><td>add and subtract, expand a square, complete the square, telescope, trace trick, FTC along a line</td></tr>
+        <tr><td>bound (an inequality)</td><td>Cauchy-Schwarz, Young, Jensen, union bound, $1+x\le e^x$</td></tr>
+      </table>
+
+      <h2>Add and subtract</h2>
+      <p class="idea"><strong>When:</strong> you must compare $x$ with $x^*$ but only know facts about how each relates to some $y$. <strong>Move:</strong> add $0=-y+y$.</p>
+      <p>$$x-x^*=(x-y)+(y-x^*).$$</p>
+      <p class="example-label">Worked use: reverse triangle inequality</p>
+      <p>$$\|a\|=\|(a-b)+b\|\le\|a-b\|+\|b\| \quad(\text{add and subtract } b,\text{ then triangle inequality})$$ $$\Rightarrow\ \|a\|-\|b\|\le\|a-b\|.$$</p>
+      <p>Swapping $a,b$ gives the other sign, so $\big|\|a\|-\|b\|\big|\le\|a-b\|$.</p>
+
+      <h2>Expand a square</h2>
+      <p class="idea"><strong>When:</strong> a squared length of a sum or difference, e.g. distance to the optimum after one step. <strong>Move:</strong> multiply it out.</p>
+      <p>$$\|a-b\|^2=(a-b)^T(a-b)=a^Ta-a^Tb-b^Ta+b^Tb=\|a\|^2-2a^Tb+\|b\|^2,$$</p>
+      <p>using $b^Ta=a^Tb$ (a scalar equals its transpose).</p>
+      <p class="example-label">Worked use: one gradient step</p>
+      <p>With $x_{k+1}=x_k-\eta g$, take $a=x_k-x^*$, $b=\eta g$:</p>
+      <p>$$\|x_{k+1}-x^*\|^2=\|x_k-x^*\|^2-2\eta\,g^T(x_k-x^*)+\eta^2\|g\|^2.$$</p>
+      <p>This is the first line of the convex gradient descent proof. Check on $f=\tfrac12x^TAx$, $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $x^*=0$, $x_k=(1,0)$, $\eta=\tfrac13$: $g=Ax_k=(2,1)$, $x_{k+1}=(\tfrac13,-\tfrac13)$, so the left side is $\tfrac29$. Right side: $1-2\cdot\tfrac13\cdot2+\tfrac19\cdot5=\tfrac{9-12+5}{9}=\tfrac29$. &#10003;</p>
+
+      <h2>Complete the square</h2>
+      <p class="idea"><strong>When:</strong> a quadratic plus a linear term that you want to minimize (or integrate, as for Gaussians). <strong>Move:</strong> fold the linear term into a shifted square; the minimum is read off.</p>
+      <p>$$ax^2+bx=a\Big(x+\frac{b}{2a}\Big)^2-\frac{b^2}{4a} \quad(\text{expand: } a(x+\tfrac b{2a})^2=ax^2+bx+\tfrac{b^2}{4a}).$$</p>
+      <p>Example: $x^2-4x+1=(x-2)^2-3$, so the minimum is $-3$ at $x=2$.</p>
+      <p class="example-label">Worked use: the best step on a quadratic upper model</p>
+      <p>Minimize $m(d)=g^Td+\tfrac L2\|d\|^2$ over $d$. Expanding $\tfrac L2\|d+\tfrac gL\|^2=\tfrac L2\|d\|^2+g^Td+\tfrac{\|g\|^2}{2L}$ gives</p>
+      <p>$$m(d)=\frac L2\Big\|d+\frac gL\Big\|^2-\frac{\|g\|^2}{2L}\ \ge\ -\frac{\|g\|^2}{2L},$$</p>
+      <p>with equality at $d=-g/L$: a gradient step of size $1/L$ that lowers the model by $\|g\|^2/2L$.</p>
+
+      <h2>Telescoping sums</h2>
+      <p class="idea"><strong>When:</strong> you have a bound for one step and want one for $K$ steps. <strong>Move:</strong> sum the per-step differences; everything in the middle cancels.</p>
+      <p>$$\sum_{k=0}^{K-1}(a_k-a_{k+1})=(a_0-a_1)+(a_1-a_2)+\cdots+(a_{K-1}-a_K)=a_0-a_K,$$</p>
+      <p>since each middle $a_j$ appears once with $+$ and once with $-$.</p>
+      <figure class="figure">
+        <svg width="400" viewBox="0 0 470 192" role="img" aria-label="A decreasing sequence a0 to a4 drawn as a staircase. Each vertical drop between neighbours is blue; a single orange bar on the right, from a0 down to a4, has the same total height as the drops stacked together.">
+          <line class="axis" x1="40" y1="160" x2="360" y2="160"/>
+          <line class="faint" x1="60" y1="20" x2="400" y2="20"/>
+          <line class="faint" x1="340" y1="126.4" x2="400" y2="126.4"/>
+          <line class="faint" x1="130" y1="70.4" x2="200" y2="70.4"/>
+          <line class="faint" x1="200" y1="98.4" x2="270" y2="98.4"/>
+          <line class="faint" x1="270" y1="115.2" x2="340" y2="115.2"/>
+          <line class="accent" x1="130" y1="20" x2="130" y2="70.4"/>
+          <line class="accent" x1="200" y1="70.4" x2="200" y2="98.4"/>
+          <line class="accent" x1="270" y1="98.4" x2="270" y2="115.2"/>
+          <line class="accent" x1="340" y1="115.2" x2="340" y2="126.4"/>
+          <circle class="pt" cx="60" cy="20" r="3.5"/>
+          <circle class="pt" cx="130" cy="70.4" r="3.5"/>
+          <circle class="pt" cx="200" cy="98.4" r="3.5"/>
+          <circle class="pt" cx="270" cy="115.2" r="3.5"/>
+          <circle class="pt" cx="340" cy="126.4" r="3.5"/>
+          <text class="lbl" x="60" y="40" text-anchor="middle">a₀</text>
+          <text class="lbl" x="340" y="147" text-anchor="middle">a₄</text>
+          <text class="lbl accent" x="137" y="50">a₀ − a₁</text>
+          <line class="accent-2" x1="400" y1="20" x2="400" y2="126.4"/>
+          <text class="lbl accent-2" x="408" y="78">a₀ − a₄</text>
+          <text class="lbl muted" x="60" y="178" text-anchor="middle">0</text>
+          <text class="lbl muted" x="130" y="178" text-anchor="middle">1</text>
+          <text class="lbl muted" x="200" y="178" text-anchor="middle">2</text>
+          <text class="lbl muted" x="270" y="178" text-anchor="middle">3</text>
+          <text class="lbl muted" x="340" y="178" text-anchor="middle">4</text>
+          <text class="lbl muted" x="376" y="178" text-anchor="middle">k</text>
+        </svg>
+        <figcaption>The blue drops, stacked, are exactly the orange total drop $a_0-a_4$ (here $K=4$).</figcaption>
+      </figure>
+      <p class="example-label">Worked use: average gradient size</p>
+      <p>Suppose each step decreases $f$ by at least $c\|g_k\|^2$, i.e. $f(x_k)-f(x_{k+1})\ge c\|g_k\|^2$. Sum over $k=0,\dots,K-1$:</p>
+      <p>$$c\sum_{k=0}^{K-1}\|g_k\|^2\le f(x_0)-f(x_K)\le f(x_0)-f^* \quad(\text{telescope, then } f(x_K)\ge f^*).$$</p>
+      <p>The smallest term is at most the average, so $\min_k\|g_k\|^2\le\dfrac{f(x_0)-f^*}{cK}$. The same works for products: $\prod_{k=0}^{K-1}\frac{a_{k+1}}{a_k}=\frac{a_K}{a_0}$.</p>
+
+      <h2>Cauchy-Schwarz</h2>
+      <p class="idea"><strong>When:</strong> an inner product (gradient $\cdot$ displacement) must be bounded by lengths you control. <strong>Move:</strong> $|a^Tb|\le\|a\|\,\|b\|$.</p>
+      <p><strong>Proof.</strong> If $b=0$ both sides are $0$. Otherwise, for every $t$, expand a square, then pick the best $t=a^Tb/\|b\|^2$ (complete the square):</p>
+      <p>$$0\le\|a-tb\|^2=\|a\|^2-2t\,a^Tb+t^2\|b\|^2 \ \overset{t=a^Tb/\|b\|^2}{=}\ \|a\|^2-\frac{(a^Tb)^2}{\|b\|^2}.$$</p>
+      <p>Multiply by $\|b\|^2$ and take square roots: $|a^Tb|\le\|a\|\|b\|$. $\square$</p>
+      <p class="example-label">Worked use</p>
+      <p>$a=(1,2)$, $b=(3,1)$: $a^Tb=5\le\sqrt5\sqrt{10}=\sqrt{50}\approx7.07$. In proofs: $g^T(x-x^*)\le\|g\|\,\|x-x^*\|$.</p>
+
+      <h2>Young's inequality</h2>
+      <p class="idea"><strong>When:</strong> a cross term $a^Tb$ is in the way, and you would rather have two squares you already control. <strong>Move:</strong> split it.</p>
+      <p>$$a^Tb\le\frac{\|a\|^2}{2}+\frac{\|b\|^2}{2} \quad\Leftarrow\quad 0\le\|a-b\|^2=\|a\|^2-2a^Tb+\|b\|^2.$$</p>
+      <p>Weighted version: apply it to $\sqrt\varepsilon\,a$ and $b/\sqrt\varepsilon$ to get $a^Tb\le\frac\varepsilon2\|a\|^2+\frac1{2\varepsilon}\|b\|^2$ for any $\varepsilon\gt0$.</p>
+      <p class="example-label">Worked use: a squared sum</p>
+      <p>$$\|a+b\|^2=\|a\|^2+2a^Tb+\|b\|^2\le\|a\|^2+(\|a\|^2+\|b\|^2)+\|b\|^2=2\|a\|^2+2\|b\|^2.$$</p>
+      <p>In SGD, with gradient $g=\nabla f+\text{noise}$, this gives $\|g\|^2\le2\|\nabla f\|^2+2\|\text{noise}\|^2$.</p>
+
+      <h2>Jensen's inequality</h2>
+      <p class="idea"><strong>When:</strong> an average sits inside a convex function (or outside). <strong>Move:</strong> for convex $f$, $f(\mathbb{E}X)\le\mathbb{E}f(X)$.</p>
+      <p><strong>Proof</strong> (from <a href="convexity-and-jensen.html">Convexity and Jensen</a>). A convex $f$ lies above its tangent at $\mu=\mathbb{E}X$; take $\mathbb{E}$ and use $\mathbb{E}[X-\mu]=0$:</p>
+      <p>$$f(X)\ge f(\mu)+\nabla f(\mu)^T(X-\mu) \ \Rightarrow\ \mathbb{E}f(X)\ge f(\mu).\qquad\square$$</p>
+      <p class="example-label">Worked use: the averaged iterate</p>
+      <p>Let $X$ be one of $x_0,\dots,x_{K-1}$ picked uniformly, so $\mathbb{E}X=\bar x=\frac1K\sum_kx_k$. Jensen gives</p>
+      <p>$$f(\bar x)\le\frac1K\sum_{k=0}^{K-1}f(x_k).$$</p>
+      <p>So a bound on the average of $f(x_k)$ (which telescoping produces) becomes a bound for one point, $\bar x$.</p>
+
+      <h2>The trace trick</h2>
+      <p class="idea"><strong>When:</strong> the expectation of a quadratic form, or a gradient with respect to a matrix. <strong>Move:</strong> a scalar is its own trace, and the trace is cyclic.</p>
+      <p>$$s=\operatorname{tr}(s), \qquad \operatorname{tr}(AB)=\sum_{i,j}A_{ij}B_{ji}=\operatorname{tr}(BA).$$</p>
+      <p class="example-label">Worked use: $\mathbb{E}[x^TAx]$ for $x$ with mean $\mu$, covariance $\Sigma$</p>
+      <p>$$\mathbb{E}[x^TAx]=\mathbb{E}\operatorname{tr}(x^TAx)=\mathbb{E}\operatorname{tr}(Axx^T) \quad(\text{scalar} = \text{trace, cyclic})$$ $$=\operatorname{tr}(A\,\mathbb{E}[xx^T]) \quad(\text{trace and }\mathbb{E}\text{ are both linear})$$ $$=\operatorname{tr}(A\Sigma)+\mu^TA\mu \quad(\mathbb{E}[xx^T]=\Sigma+\mu\mu^T).$$</p>
+      <p>The last fact: expand $\Sigma=\mathbb{E}[(x-\mu)(x-\mu)^T]=\mathbb{E}[xx^T]-\mu\mu^T$. With $A=I$, $\mu=0$: the expected squared noise in SGD is $\mathbb{E}\|\xi\|^2=\operatorname{tr}\Sigma$. More in <a href="matrix-calculus.html">Matrix calculus</a>.</p>
+
+      <h2>Taylor with remainder: FTC along a line</h2>
+      <p class="idea"><strong>When:</strong> you know something about $\nabla f$ everywhere (e.g. it is Lipschitz) and need a statement about $f$ itself. <strong>Move:</strong> walk from $x$ to $y$ in a straight line and add up the slopes.</p>
+      <p>Let $d=y-x$ and $\varphi(t)=f(x+td)$, so $\varphi(0)=f(x)$, $\varphi(1)=f(y)$. The chain rule gives $\varphi'(t)=\nabla f(x+td)^Td$, and the fundamental theorem of calculus gives</p>
+      <p>$$f(y)=f(x)+\int_0^1\nabla f(x+td)^T d\,dt.$$</p>
+      <p class="example-label">Worked use: the quadratic upper bound</p>
+      <p>Assume $\|\nabla f(u)-\nabla f(v)\|\le L\|u-v\|$. Subtract $\nabla f(x)^Td=\int_0^1\nabla f(x)^Td\,dt$ from both sides:</p>
+      <p>$$f(y)-f(x)-\nabla f(x)^Td=\int_0^1\big(\nabla f(x+td)-\nabla f(x)\big)^Td\,dt$$ $$\le\int_0^1 \|\nabla f(x+td)-\nabla f(x)\|\,\|d\|\,dt \quad(\text{Cauchy-Schwarz})$$ $$\le\int_0^1 Lt\|d\|^2\,dt=\frac L2\|d\|^2 \quad(\text{Lipschitz, then }\textstyle\int_0^1t\,dt=\tfrac12).$$</p>
+      <p>So $f(y)\le f(x)+\nabla f(x)^T(y-x)+\frac L2\|y-x\|^2$, the model minimized in "complete the square" above. For the running quadratic, $\nabla f=Ax$ has $L=\lambda_{\max}=3$.</p>
+
+      <h2>Union bound</h2>
+      <p class="idea"><strong>When:</strong> you need many bad events to <em>all</em> be avoided at once (every step, every coordinate). <strong>Move:</strong> the chance that any happens is at most the sum of their chances.</p>
+      <p>$$P\Big(\bigcup_iE_i\Big)\le\sum_iP(E_i).$$</p>
+      <p><strong>Proof.</strong> Pointwise, $\mathbf 1[\text{some } E_i]\le\sum_i\mathbf 1[E_i]$: the left side is $0$ or $1$, and when it is $1$ at least one term on the right is $1$. Take $\mathbb{E}$ of both sides. $\square$</p>
+      <p class="example-label">Worked use</p>
+      <p>Each of $K=100$ steps fails with probability at most $10^{-4}$. Then $P(\text{any step fails})\le100\cdot10^{-4}=10^{-2}$, no independence needed. Pairs with tail bounds in <a href="concentration-inequalities.html">Concentration inequalities</a>.</p>
+
+      <h2>$1+x\le e^x$</h2>
+      <p class="idea"><strong>When:</strong> converting a per-step contraction $(1-a)^k$ into an iteration count. <strong>Move:</strong> the line $1+x$ is the tangent of the convex $e^x$ at $0$, so it lies below.</p>
+      <p><strong>Proof.</strong> $h(x)=e^x-1-x$ has $h'(x)=e^x-1$ (zero at $x=0$) and $h''(x)=e^x\gt0$, so $h$ is convex with minimum $h(0)=0$. Hence $h\ge0$. $\square$</p>
+      <figure class="figure">
+        <svg width="340" viewBox="0 0 400 226" role="img" aria-label="The curve e to the x lies above its tangent line 1 plus x for all x; they touch only at the point (0, 1).">
+          <line class="axis" x1="14" y1="170" x2="370" y2="170"/>
+          <line class="axis" x1="220" y1="222" x2="220" y2="10"/>
+          <polyline class="accent" points="20.0,167.4 36.0,166.8 52.0,166.1 68.0,165.2 84.0,164.2 100.0,162.9 116.0,161.3 132.0,159.3 148.0,157.0 164.0,154.1 180.0,150.6 196.0,146.3 212.0,141.0 220.0,138.0 228.0,134.6 236.0,130.9 244.0,126.8 252.0,122.3 260.0,117.2 268.0,111.7 276.0,105.6 284.0,98.8 292.0,91.3 300.0,83.0 308.0,73.9 316.0,63.8 324.0,52.6 332.0,40.2 340.0,26.6"/>
+          <line class="accent-2" x1="20" y1="218" x2="340" y2="90"/>
+          <circle class="pt" cx="220" cy="138" r="3.5"/>
+          <text class="lbl accent" x="346" y="32">eˣ</text>
+          <text class="lbl accent-2" x="346" y="94">1 + x</text>
+          <text class="lbl" x="210" y="126" text-anchor="end">(0, 1)</text>
+          <text class="lbl muted" x="378" y="175">x</text>
+          <text class="lbl muted" x="232" y="187">0</text>
+        </svg>
+        <figcaption>The tangent at $0$ stays below the convex curve: $1+x\le e^x$ for every $x$.</figcaption>
+      </figure>
+      <p>For $0\le a\le1$ both $1-a$ and $e^{-a}$ are $\ge0$, so raising $1-a\le e^{-a}$ to the $k$-th power keeps the order:</p>
+      <p>$$(1-a)^k\le e^{-ak}.$$</p>
+      <p class="example-label">Worked use: how tight is it?</p>
+      <table>
+        <tr><td>$a$, $k$</td><td>$(1-a)^k$</td><td>$e^{-ak}$</td></tr>
+        <tr><td>$0.01$, $100$</td><td>$0.366$</td><td>$e^{-1}=0.368$ (nearly exact)</td></tr>
+        <tr><td>$0.5$, $10$</td><td>$0.00098$</td><td>$e^{-5}=0.0067$ (loose but safe)</td></tr>
+      </table>
+      <p>Small $a$ (slow, ill-conditioned problems) is exactly where the bound is tight, and where iteration counts matter.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>An error $e_k\gt0$ contracts every step: $e_{k+1}\le(1-\tfrac1\kappa)\,e_k$ with $\kappa\gt1$. Using telescoping and $1+x\le e^x$, show $e_k\le\varepsilon\,e_0$ once $k\ge\kappa\log(1/\varepsilon)$. How many steps for $\kappa=3$, $\varepsilon=10^{-6}$?</p>
+        <details>
+          <summary>Solution</summary>
+          <p><strong>Want:</strong> $\log e_k-\log e_0\le\log\varepsilon$. <strong>Key step:</strong> telescope the logs.</p>
+          <p>$$\log e_k-\log e_0=\sum_{j=0}^{k-1}\big(\log e_{j+1}-\log e_j\big) \quad(\text{telescoping})$$ $$\le\sum_{j=0}^{k-1}\log\Big(1-\frac1\kappa\Big)=k\log\Big(1-\frac1\kappa\Big) \quad(\text{each step contracts}).$$</p>
+          <p>Take $\log$ of $1+x\le e^x$ with $x=-\tfrac1\kappa$ (allowed: $1-\tfrac1\kappa\gt0$ as $\kappa\gt1$):</p>
+          <p>$$\log\Big(1-\frac1\kappa\Big)\le-\frac1\kappa \ \Rightarrow\ \log\frac{e_k}{e_0}\le-\frac k\kappa.$$</p>
+          <p>If $k\ge\kappa\log(1/\varepsilon)$ then $-\tfrac k\kappa\le-\log(1/\varepsilon)=\log\varepsilon$, so $\log\frac{e_k}{e_0}\le\log\varepsilon$, i.e. $e_k\le\varepsilon e_0$. $\square$</p>
+          <p><strong>Numbers.</strong> $\kappa\log(1/\varepsilon)=3\cdot\log10^6=3\cdot13.82=41.4$, so $k=42$ suffices. Check: $(\tfrac23)^{42}=e^{42\log(2/3)}=e^{-17.0}\approx4\times10^{-8}\le10^{-6}$. &#10003; (The exact need is $\log10^6/\log1.5=34.1$, so $35$ steps: the bound is safe, a little generous.)</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Convergence rates: what "fast" means - Deep Learning Notes</title>
+  <meta name="description" content="Sublinear, linear and quadratic convergence, how many iterations each needs to reach a tolerance, and why linear convergence is a straight line on a log plot.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Convergence rates: what "fast" means</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Convergence rates: what "fast" means</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">convergence</span><span class="tag">rates</span><span class="tag">proofs</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="gradient-descent-on-a-quadratic.html">Gradient descent on a quadratic</a> &middot; <strong>Leads to:</strong> <a href="smoothness-and-strong-convexity.html">Smoothness and strong convexity</a></p>
+
+      <p class="idea">A rate says how fast the error shrinks per step. Flip it around and it says how many steps buy a given accuracy, which is the number you actually care about.</p>
+
+      <h2>The one move</h2>
+      <p class="idea">Track one error number $e_k\ge0$ after $k$ steps, such as $f(x_k)-f^*$ or $\|x_k-x^*\|$. A rate is a bound $e_k\le r(k)$. To get iterations, set the bound $\le\varepsilon$ and isolate $k$.</p>
+      <p>$$e_k\le r(k)\le\varepsilon \quad\Longrightarrow\quad k\ge k(\varepsilon).$$</p>
+      <p>Every derivation below is this move. Throughout, $\ln$ is the natural log.</p>
+
+      <h2>Sublinear: $C/k$ and $C/\sqrt k$</h2>
+      <p class="idea">The error falls like a power of $k$. Each extra digit of accuracy multiplies the step count by 10 (or by 100).</p>
+      <p>$$\frac Ck\le\varepsilon \iff k\ge\frac C\varepsilon \qquad \text{(multiply by } k/\varepsilon\gt0).$$</p>
+      <p>$$\frac C{\sqrt k}\le\varepsilon \iff \sqrt k\ge\frac C\varepsilon \iff k\ge\frac{C^2}{\varepsilon^2} \qquad \text{(square; both sides}\gt0).$$</p>
+      <p class="example-label">Example</p>
+      <p>$C=1$, $\varepsilon=10^{-6}$: $k=10^6$ steps for $1/k$, and $k=10^{12}$ for $1/\sqrt k$. Replacing $\varepsilon$ by $\varepsilon/10$ multiplies $k$ by $10$ and by $100$.</p>
+
+      <h2>Linear: $\rho^k$</h2>
+      <p class="idea">Every step multiplies the error by the same $\rho\lt1$, so every digit costs the same number of steps. "Linear" means the number of correct digits grows linearly in $k$.</p>
+      <p>$$\rho^ke_0\le\varepsilon \iff k\ln\rho\le\ln\frac{\varepsilon}{e_0} \qquad \text{(}\ln\text{ is increasing)}$$</p>
+      <p>$$\iff k\ge\frac{\ln(e_0/\varepsilon)}{\ln(1/\rho)} \qquad \text{(divide by }\ln\rho\lt0\text{: the inequality flips)}.$$</p>
+      <p>The later notes get $\rho=1-1/\kappa$. Simplify the denominator with the Taylor series of $-\ln(1-t)$, whose terms are all positive for $0\lt t\lt1$:</p>
+      <p>$$\ln\frac1\rho=-\ln\Big(1-\frac1\kappa\Big)=\frac1\kappa+\frac1{2\kappa^2}+\frac1{3\kappa^3}+\cdots\ \ge\ \frac1\kappa.$$</p>
+      <p>A bigger denominator only lowers the requirement, so</p>
+      <p>$$k\ \ge\ \kappa\,\ln\frac{e_0}{\varepsilon} \quad\text{steps are always enough.}$$</p>
+      <p class="example-label">Example</p>
+      <p>$\rho=0.9$ ($\kappa=10$), $e_0=1$, $\varepsilon=10^{-6}$. Here $\ln10^6=6\ln10=13.82$ and $\ln(1/0.9)=0.1054$:</p>
+      <p>$$k\ge\frac{13.82}{0.1054}=131.1\ \Rightarrow\ 132 \text{ steps}; \qquad \kappa\text{-estimate: } 10\times13.82=138.$$</p>
+
+      <h2>Why linear looks linear on a log plot</h2>
+      <p class="idea">A log axis turns "multiply by $\rho$" into "subtract a constant", so a geometric decay becomes a straight line.</p>
+      <p>$$\ln(\rho^ke_0)=\ln e_0+k\ln\rho \qquad \text{a line in } k\text{, slope } \ln\rho\lt0.$$</p>
+      <p>$$\ln\frac Ck=\ln C-\ln k \qquad \text{slope } \tfrac{d}{dk}(-\ln k)=-\tfrac1k\to0\text{: it flattens.}$$</p>
+      <p>Quadratic convergence (below) doubles its slope every step, so it plunges.</p>
+
+      <figure class="figure">
+        <svg width="382" viewBox="0 0 450 242" role="img" aria-label="Error against step k on a log scale from 1 down to 1e-8. The sublinear curves 1 over root k and 1 over k flatten out and stay above 1e-2; the linear rate 0.5 to the k is a straight line that crosses 1e-6 near k = 20; the quadratic rate plunges through 1e-6 by step 5.">
+          <line class="axis" x1="60" y1="200" x2="339.9" y2="200"/>
+          <line class="axis" x1="60" y1="200" x2="60" y2="18"/>
+          <line class="faint" x1="60" y1="156" x2="339.9" y2="156"/>
+          <text class="lbl muted" x="345.9" y="161">ε = 10⁻⁶</text>
+          <text class="lbl muted" x="54" y="29" text-anchor="end">1</text>
+          <text class="lbl muted" x="54" y="117" text-anchor="end">10⁻⁴</text>
+          <text class="lbl muted" x="54" y="205" text-anchor="end">10⁻⁸</text>
+          <text class="lbl muted" x="60" y="217" text-anchor="middle">0</text>
+          <text class="lbl muted" x="153.3" y="217" text-anchor="middle">10</text>
+          <text class="lbl muted" x="246.6" y="217" text-anchor="middle">20</text>
+          <text class="lbl muted" x="339.9" y="217" text-anchor="middle">30</text>
+          <text class="lbl muted" x="199.9" y="234" text-anchor="middle">step k</text>
+          <text class="lbl muted" x="66" y="16">error eₖ, log scale</text>
+          <polyline class="accent-2" points="60,24 65.6,26.2 71.2,27.8 76.8,28.9 82.4,29.8 88,30.6 93.6,31.3 99.2,31.9 104.8,32.4 110.4,32.9 116,33.3 121.6,33.7 127.2,34.1 132.8,34.4 138.4,34.7 144,35 149.6,35.3 155.2,35.5 160.8,35.8 166.4,36 172,36.3 177.6,36.5 183.2,36.7 188.8,36.9 194.4,37.1 199.9,37.2 205.5,37.4 211.1,37.6 216.7,37.8 222.3,37.9 227.9,38.1 233.5,38.2 239.1,38.4 244.7,38.5 250.3,38.6 255.9,38.8 261.5,38.9 267.1,39 272.7,39.1 278.3,39.3 283.9,39.4 289.5,39.5 295.1,39.6 300.7,39.7 306.3,39.8 311.9,39.9 317.5,40 323.1,40.1 328.7,40.2 334.3,40.3 339.9,40.4"/>
+          <polyline class="accent-2" points="60,24 65.6,28.5 71.2,31.5 76.8,33.8 82.4,35.7 88,37.2 93.6,38.6 99.2,39.8 104.8,40.8 110.4,41.7 116,42.6 121.6,43.4 127.2,44.1 132.8,44.8 138.4,45.4 144,46 149.6,46.6 155.2,47.1 160.8,47.6 166.4,48.1 172,48.5 177.6,48.9 183.2,49.4 188.8,49.7 194.4,50.1 199.9,50.5 205.5,50.8 211.1,51.2 216.7,51.5 222.3,51.8 227.9,52.1 233.5,52.4 239.1,52.7 244.7,53 250.3,53.3 255.9,53.5 261.5,53.8 267.1,54 272.7,54.3 278.3,54.5 283.9,54.8 289.5,55 295.1,55.2 300.7,55.4 306.3,55.6 311.9,55.8 317.5,56 323.1,56.2 328.7,56.4 334.3,56.6 339.9,56.8"/>
+          <text class="lbl accent-2" x="345.9" y="44.4">1/√k</text>
+          <text class="lbl accent-2" x="345.9" y="65.8">1/k  sublinear</text>
+          <line class="accent" x1="60" y1="24" x2="307.9" y2="200"/>
+          <text class="lbl accent" x="313.9" y="196">0.5ᵏ  linear</text>
+          <circle class="accent-fill" cx="246" cy="156" r="3"/>
+          <polyline class="axis" fill="none" points="60,30.6 69.3,37.2 78.7,50.5 88,77 97.3,130 103.5,200"/>
+          <circle class="pt" cx="60" cy="30.6" r="2.5"/>
+          <circle class="pt" cx="69.3" cy="37.2" r="2.5"/>
+          <circle class="pt" cx="78.7" cy="50.5" r="2.5"/>
+          <circle class="pt" cx="88" cy="77" r="2.5"/>
+          <circle class="pt" cx="97.3" cy="130" r="2.5"/>
+          <text class="lbl" x="111.5" y="196">quadratic</text>
+        </svg>
+        <figcaption>Sublinear flattens, linear is a straight line, quadratic plunges. Only the last two reach $\varepsilon=10^{-6}$ in view (quadratic starts at $e_0=\tfrac12$).</figcaption>
+      </figure>
+
+      <h2>Quadratic: $e_{k+1}\le Ce_k^2$</h2>
+      <p class="idea">Each step squares the error, so the number of correct digits doubles. It only kicks in once $e_k$ is already small.</p>
+      <p><strong>Step 1: remove $C$.</strong> Let $a_k=Ce_k$. Then</p>
+      <p>$$a_{k+1}=Ce_{k+1}\le C\cdot Ce_k^2=a_k^2.$$</p>
+      <p><strong>Step 2: induction.</strong> Claim $a_k\le a_0^{2^k}$. True at $k=0$. If true at $k$ (squaring keeps the order since $a_k\ge0$):</p>
+      <p>$$a_{k+1}\le a_k^2\le\big(a_0^{2^k}\big)^2=a_0^{2^{k+1}}.$$</p>
+      <p><strong>Step 3: solve for $k$.</strong> Start close enough that $a_0\le\tfrac12$, so $a_k\le2^{-2^k}$. Then $e_k=a_k/C\le\varepsilon$ holds once</p>
+      <p>$$2^{-2^k}\le C\varepsilon \iff 2^k\ge\log_2\frac1{C\varepsilon} \iff k\ge\log_2\log_2\frac1{C\varepsilon}.$$</p>
+      <p class="example-label">Example</p>
+      <p>$C=1$, $e_0=\tfrac12$, $\varepsilon=10^{-6}$: $\log_2 10^6=19.9$ and $\log_2 19.9=4.3$, so $5$ steps. The errors: $\tfrac12,\ \tfrac14,\ \tfrac1{16},\ \tfrac1{256},\ 1.5\cdot10^{-5},\ 2.3\cdot10^{-10}$.</p>
+
+      <h2>Side by side</h2>
+      <table>
+        <tr><td>rate type</td><td>error after $k$</td><td>steps to $10^{-6}$</td><td>one more digit</td><td>where it shows up</td></tr>
+        <tr><td>sublinear</td><td>$1/\sqrt k$</td><td>$10^{12}$</td><td>$\times100$ steps</td><td><a href="sgd-convergence.html">SGD</a></td></tr>
+        <tr><td>sublinear</td><td>$1/k$</td><td>$10^{6}$</td><td>$\times10$ steps</td><td><a href="gd-convergence-convex.html">GD, convex</a></td></tr>
+        <tr><td>linear</td><td>$0.9^k$</td><td>$132$</td><td>$+22$ steps</td><td><a href="gd-convergence-strongly-convex.html">GD, strongly convex</a></td></tr>
+        <tr><td>quadratic</td><td>$2^{-2^k}$</td><td>$5$</td><td>at most $+1$ step</td><td><a href="newtons-method.html">Newton, near $x^*$</a></td></tr>
+      </table>
+      <p>"One more digit" for $0.9^k$: $\ln10/\ln(1/0.9)=2.303/0.1054=21.9$. For quadratic, one extra step doubles the digits.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>With $e_0=1$, how many steps until $e_k\le10^{-6}$ when $\rho=0.5$? When $\rho=0.98$? How many steps per digit? Compare with <a href="gradient-descent-on-a-quadratic.html">gradient descent on a quadratic</a>, where $\kappa=3$ gave rate $0.5$ and $\kappa=100$ gave rate $\approx0.98$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Use $k\ge\ln(e_0/\varepsilon)/\ln(1/\rho)$ with $\ln10^6=13.82$, and steps per digit $=\ln10/\ln(1/\rho)$, $\ln10=2.303$.</p>
+          <p>$$\rho=0.5:\quad \ln2=0.693, \qquad k\ge\frac{13.82}{0.693}=19.9\ \Rightarrow\ 20, \qquad \frac{2.303}{0.693}=3.3 \text{ per digit}.$$</p>
+          <p>$$\rho=0.98:\quad \ln\tfrac1{0.98}=0.0202, \qquad k\ge\frac{13.82}{0.0202}=684, \qquad \frac{2.303}{0.0202}=114 \text{ per digit}.$$</p>
+          <p>The exact $\kappa=100$ rate is $\rho=\tfrac{99}{101}$, with $\ln\tfrac{101}{99}=0.0200$: $691$ steps, $115$ per digit. Both match "about 3" and "about 115 steps per digit". Shortcut: $\rho=\tfrac{\kappa-1}{\kappa+1}=1-\tfrac2{\kappa+1}$, so the Taylor bound above gives $k\ge\tfrac{\kappa+1}2\ln\tfrac1\varepsilon=50.5\times13.82=698$ for $\kappa=100$.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

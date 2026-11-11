@@ -61,9 +61,21 @@
 
       <h2>The gradient</h2>
       <p class="idea">Stack every partial derivative into a vector shaped like $x$. It points uphill, perpendicular to the level curves.</p>
-      <p>$$\underbrace{\nabla f(x)}_{n\times1}=\begin{pmatrix}\partial f/\partial x_1\\\vdots\\\partial f/\partial x_n\end{pmatrix}, \qquad f(x+\epsilon v)\approx f(x)+\epsilon\,\underbrace{\nabla f^T}_{1\times n}\underbrace{v}_{n\times1}.$$</p>
+      <p>$$\underbrace{\nabla f(x)}_{n\times1}=\begin{pmatrix}\partial f/\partial x_1\\\vdots\\\partial f/\partial x_n\end{pmatrix}, \qquad \frac{\partial f}{\partial x_i}=\lim_{h\to0}\frac{f(x+he_i)-f(x)}{h}.$$</p>
+      <p><strong>Why the gradient predicts every direction.</strong> Move from $x$ to $x+\epsilon v$ one coordinate at a time. Let $x^{(i)}$ be $x$ with the first $i$ coordinates already moved, so $x^{(0)}=x$, $x^{(n)}=x+\epsilon v$. Telescope:</p>
+      <p>$$f(x+\epsilon v)-f(x)=\sum_{i=1}^n\big[f(x^{(i)})-f(x^{(i-1)})\big].$$</p>
+      <p>Term $i$ changes only coordinate $i$, by $\epsilon v_i$, so by the 1-D derivative (with $\partial f/\partial x_i$ continuous, so the base point barely matters):</p>
+      <p>$$f(x^{(i)})-f(x^{(i-1)})\approx\epsilon v_i\,\frac{\partial f}{\partial x_i}(x).$$</p>
+      <p>Add the $n$ terms:</p>
+      <p>$$f(x+\epsilon v)\approx f(x)+\epsilon\sum_iv_i\frac{\partial f}{\partial x_i}=f(x)+\epsilon\,\underbrace{\nabla f^T}_{1\times n}\underbrace{v}_{n\times1}.$$</p>
+      <p>So the slope along $v$ (the directional derivative) is $D_vf:=\frac{d}{d\epsilon}f(x+\epsilon v)\big|_0=\nabla f^Tv$.</p>
+      <p><strong>Perpendicular to level curves.</strong> Let $v$ be tangent to the level set $\{f=c\}$ at $x$. Walking along it keeps $f=c$, so the slope is zero:</p>
+      <p>$$0=D_vf=\nabla f^Tv \quad\Rightarrow\quad \nabla f\perp v.$$</p>
+      <p><strong>Uphill.</strong> Along $v=\nabla f$ itself: $D_{\nabla f}f=\nabla f^T\nabla f=\|\nabla f\|^2\gt0$ (when $\nabla f\ne0$).</p>
       <p class="example-label">Example</p>
-      <p>$f=x_1^2+x_1x_2+x_2^2=\tfrac12x^TAx$ with the running $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: $\ \nabla f=(2x_1+x_2,\ x_1+2x_2)$, so $\nabla f(1,1)=(3,3)$.</p>
+      <p>$f=x_1^2+x_1x_2+x_2^2$. Hold $x_2$ fixed and differentiate in $x_1$, then the reverse:</p>
+      <p>$$\frac{\partial f}{\partial x_1}=2x_1+x_2, \qquad \frac{\partial f}{\partial x_2}=x_1+2x_2, \qquad \nabla f(1,1)=(2+1,\ 1+2)=(3,3).$$</p>
+      <p>It is the quadratic form of the running $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: $\tfrac12x^TAx=\tfrac12(2x_1^2+2x_1x_2+2x_2^2)=f$. The level curve $f=3$ through $(1,1)$ has tangent $\tfrac1{\sqrt2}(1,-1)$ (by symmetry in $x_1\leftrightarrow x_2$), and $(3,3)\cdot(1,-1)=0$. &#10003;</p>
 
       <figure class="figure">
         <svg width="280" viewBox="0 0 330 250" role="img" aria-label="Tilted elliptical level curves of f with the gradient at (1,1) drawn perpendicular to the level curve through that point, pointing outward to larger f.">
@@ -87,19 +99,27 @@
 
       <h2>Steepest ascent</h2>
       <p class="idea">The slope along $v$ is largest when $v$ lines up with $\nabla f$. That is why gradient descent steps along $-\nabla f$.</p>
-      <p>$$\|v\|=1: \qquad D_vf=\nabla f^Tv=\|\nabla f\|\cos\theta\ \in\ \big[-\|\nabla f\|,\ \|\nabla f\|\big] \quad (\text{Cauchy-Schwarz}).$$</p>
-      <p class="example-label">Example: at $(1,1)$, $\nabla f=(3,3)$</p>
+      <p>Write $g=\nabla f\ne0$ and $\hat g=g/\|g\|$. For any unit $v$, a squared length is never negative (Cauchy-Schwarz in one line):</p>
+      <p>$$0\le\|\hat g-v\|^2=\underbrace{\hat g^T\hat g}_{1}-2\hat g^Tv+\underbrace{v^Tv}_{1}=2-\frac{2\,g^Tv}{\|g\|}.$$</p>
+      <p>Rearrange, and do the same with $\|\hat g+v\|^2\ge0$ for the lower end:</p>
+      <p>$$-\|\nabla f\|\ \le\ D_vf=\nabla f^Tv\ \le\ \|\nabla f\|.$$</p>
+      <p>Equality on the right needs $\|\hat g-v\|=0$, i.e. $v=\hat g$: the steepest uphill direction is $\nabla f/\|\nabla f\|$, with slope $\|\nabla f\|$. The steepest downhill is $-\nabla f$.</p>
+      <p class="example-label">Example: at $(1,1)$, $\nabla f=(3,3)$, slope $=\nabla f^Tv$</p>
       <table>
-        <tr><td>$v=\tfrac1{\sqrt2}(1,1)$, along $\nabla f$</td><td>slope $3\sqrt2\approx4.24$, the max</td></tr>
-        <tr><td>$v=(1,0)$</td><td>slope $3$</td></tr>
-        <tr><td>$v=\tfrac1{\sqrt2}(1,-1)$, along the level curve</td><td>slope $0$</td></tr>
+        <tr><td>$v=\tfrac1{\sqrt2}(1,1)$, along $\nabla f$</td><td>$\tfrac{3+3}{\sqrt2}=3\sqrt2\approx4.24=\|(3,3)\|$, the max</td></tr>
+        <tr><td>$v=(1,0)$</td><td>$3\cdot1+3\cdot0=3$</td></tr>
+        <tr><td>$v=\tfrac1{\sqrt2}(1,-1)$, along the level curve</td><td>$\tfrac{3-3}{\sqrt2}=0$</td></tr>
       </table>
 
       <h2>The Jacobian</h2>
       <p class="idea">With several outputs, stack one gradient per output as rows. $J$ is the best linear approximation of $g$ near $x$.</p>
+      <p>Each output $g_i$ is a scalar function, so the gradient rule above applies to it, with $\epsilon v=\Delta$:</p>
+      <p>$$g_i(x+\Delta)\approx g_i(x)+\nabla g_i^T\Delta, \qquad i=1,\dots,m.$$</p>
+      <p>Stack the $m$ lines; the row $\nabla g_i^T$ times $\Delta$ is row $i$ of a matrix-vector product:</p>
       <p>$$\underbrace{J}_{m\times n}=\begin{pmatrix}-\ \nabla g_1^T\ -\\\vdots\\-\ \nabla g_m^T\ -\end{pmatrix}, \quad J_{ij}=\frac{\partial g_i}{\partial x_j}, \qquad g(x+\Delta)\approx g(x)+\underbrace{J}_{m\times n}\underbrace{\Delta}_{n\times1}.$$</p>
-      <p>Rows are outputs, columns are inputs. For a scalar $f$, $J$ is the row $\nabla f^T$.</p>
+      <p>Rows are outputs, columns are inputs. For a scalar $f$ ($m=1$), $J$ is the row $\nabla f^T$.</p>
       <p class="example-label">Example</p>
+      <p>Row $i$ = the partials of output $i$ in $(x_1,x_2)$: $\ \partial(x_1+x_2)=(1,1)$, $\ \partial(x_1x_2)=(x_2,x_1)$, $\ \partial(x_1^2)=(2x_1,0)$.</p>
       <p>$$g(x)=\begin{pmatrix}x_1+x_2\\x_1x_2\\x_1^2\end{pmatrix}: \qquad \underbrace{J}_{3\times2}=\begin{pmatrix}1&1\\x_2&x_1\\2x_1&0\end{pmatrix}, \qquad J(1,1)=\begin{pmatrix}1&1\\1&1\\2&0\end{pmatrix}.$$</p>
 
       <figure class="figure">
@@ -129,21 +149,40 @@
 
       <h2>Chain rule: Jacobians multiply</h2>
       <p class="idea">Compose functions and their Jacobians multiply, in the same order. The shapes chain like any matrix product; this is backpropagation.</p>
-      <p>$$k=h\circ g: \qquad \underbrace{J_k}_{p\times n}=\underbrace{J_h}_{p\times m}\,\underbrace{J_g}_{m\times n}.$$</p>
+      <p>Let $g:\mathbb R^n\to\mathbb R^m$, $h:\mathbb R^m\to\mathbb R^p$, $k=h\circ g$. Nudge $x$ by $\Delta$ and apply the linear approximation twice:</p>
+      <p>$$g(x+\Delta)\approx g(x)+\underbrace{J_g\Delta}_{\text{nudge to }y}\qquad(y=g(x))$$</p>
+      <p>$$h(y+J_g\Delta)\approx h(y)+J_h\,(J_g\Delta)\qquad(\text{linear approx. of }h\text{ at }y)$$</p>
+      <p>So $k(x+\Delta)\approx k(x)+(J_hJ_g)\Delta$, and the matrix multiplying $\Delta$ is by definition $J_k$:</p>
+      <p>$$k=h\circ g: \qquad \underbrace{J_k}_{p\times n}=\underbrace{J_h}_{p\times m}\,\underbrace{J_g}_{m\times n}, \qquad \frac{\partial k_i}{\partial x_j}=\sum_{l=1}^m\frac{\partial h_i}{\partial y_l}\frac{\partial g_l}{\partial x_j}.$$</p>
+      <p>The entry form is just "row $i$ of $J_h$ times column $j$ of $J_g$": $x_j$ affects $k_i$ through every intermediate $y_l$, and the effects add.</p>
+      <p>For a long chain $J=J_L\cdots J_1$ you never build $J$; you multiply it into a vector, and the order you bracket in is the mode:</p>
       <table>
-        <tr><td>JVP $Jv$ ($m\times1$)</td><td>push an input nudge forward</td><td>forward mode</td></tr>
-        <tr><td>VJP $u^TJ$ ($1\times n$)</td><td>pull an output sensitivity back</td><td>reverse mode (backprop)</td></tr>
+        <tr><td>JVP $Jv=J_L(\cdots(J_1v))$</td><td>push an input nudge forward</td><td>forward mode</td></tr>
+        <tr><td>VJP $u^TJ=((u^TJ_L)\cdots)J_1$</td><td>pull an output sensitivity back</td><td>reverse mode (backprop)</td></tr>
       </table>
-      <p>A scalar loss has $p=1$: reverse mode carries one row backward and gets all $n$ derivatives in one pass.</p>
+      <p>Each bracket is a matrix times a vector, never a matrix times a matrix. A scalar loss has $p=1$, so $J$ is $1\times n$: one VJP pass with $u=1$ returns the whole row, all $n$ derivatives. Forward mode would need $n$ JVPs, one per $e_j$, to get the same row.</p>
       <p class="example-label">Example: $g$ as above, $h(y)=y_1+y_2+y_3$</p>
-      <p>$$J_k(1,1)=\underbrace{(1,1,1)}_{1\times3}\underbrace{\begin{pmatrix}1&1\\1&1\\2&0\end{pmatrix}}_{3\times2}=(4,\ 2).$$</p>
-      <p>Direct: $k=x_1+x_2+x_1x_2+x_1^2$ has $\nabla k(1,1)=(1+1+2,\ 1+1)=(4,2)$. &#10003;</p>
+      <p>$J_h=(\partial h/\partial y_1,\partial h/\partial y_2,\partial h/\partial y_3)=(1,1,1)$. Row times each column of $J_g(1,1)$:</p>
+      <p>$$J_k(1,1)=\underbrace{(1,1,1)}_{1\times3}\underbrace{\begin{pmatrix}1&1\\1&1\\2&0\end{pmatrix}}_{3\times2}=(1+1+2,\ 1+1+0)=(4,\ 2).$$</p>
+      <p>Direct: $k=x_1+x_2+x_1x_2+x_1^2$, so $\partial_1k=1+x_2+2x_1$, $\partial_2k=1+x_1$, giving $\nabla k(1,1)=(4,2)$. &#10003;</p>
 
       <h2>The Hessian</h2>
       <p class="idea">The gradient is itself a map $\mathbb{R}^n\to\mathbb{R}^n$; its Jacobian is the Hessian, which measures curvature.</p>
-      <p>$$\underbrace{H}_{n\times n}=J_{\nabla f}, \quad H_{ij}=\frac{\partial^2f}{\partial x_i\partial x_j}=H_{ji}\ \ (\text{smooth } f), \qquad \underbrace{v^T}_{1\times n}\underbrace{H}_{n\times n}\underbrace{v}_{n\times1}=\text{curvature along } v.$$</p>
+      <p>Row $i$ of $\nabla f$ is $\partial f/\partial x_i$; column $j$ of a Jacobian differentiates in $x_j$:</p>
+      <p>$$\underbrace{H}_{n\times n}=J_{\nabla f}, \qquad H_{ij}=\frac{\partial}{\partial x_j}\Big(\frac{\partial f}{\partial x_i}\Big)=\frac{\partial^2f}{\partial x_j\partial x_i}.$$</p>
+      <p><strong>Symmetry $H_{ij}=H_{ji}$</strong> (Schwarz/Clairaut), when the second partials are continuous. <em>Proof idea:</em> look at the mixed second difference</p>
+      <p>$$\Delta(s,t)=f(x+se_i+te_j)-f(x+se_i)-f(x+te_j)+f(x).$$</p>
+      <p>It is symmetric in the roles of $(i,s)$ and $(j,t)$. Read it as "difference in $t$ of a difference in $s$" and $\Delta/(st)\to\partial_j\partial_if$; read it the other way and $\Delta/(st)\to\partial_i\partial_jf$. Same number, so same limit. A full proof applies the mean value theorem twice and uses continuity of the second partials to make both limits exist and agree.</p>
+      <p><strong>Curvature along $v$.</strong> Restrict to the line, $\varphi(\epsilon)=f(x+\epsilon v)$. By the slope formula, then the Jacobian rule applied to the map $\nabla f$:</p>
+      <p>$$\varphi'(\epsilon)=\nabla f(x+\epsilon v)^Tv, \qquad \frac{d}{d\epsilon}\nabla f(x+\epsilon v)=J_{\nabla f}\,v=Hv.$$</p>
+      <p>$$\varphi''(0)=(Hv)^Tv=\underbrace{v^T}_{1\times n}\underbrace{H}_{n\times n}\underbrace{v}_{n\times1}\quad(H\text{ symmetric}).$$</p>
+      <p>So $v^THv$ is the ordinary 1-D second derivative of $f$ along the unit direction $v$: its curvature there.</p>
       <p class="example-label">Example</p>
-      <p>The Jacobian of $\nabla f=(2x_1+x_2,\ x_1+2x_2)$ is $H=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A$: positive definite, so $f$ is a bowl.</p>
+      <p>Differentiate each row of $\nabla f=(2x_1+x_2,\ x_1+2x_2)$ in $x_1$, then $x_2$:</p>
+      <p>$$H=\begin{pmatrix}\partial_1(2x_1+x_2)&\partial_2(2x_1+x_2)\\\partial_1(x_1+2x_2)&\partial_2(x_1+2x_2)\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A.$$</p>
+      <p>Symmetric, as promised. It is positive definite, because every direction curves up:</p>
+      <p>$$v^THv=2v_1^2+2v_1v_2+2v_2^2=v_1^2+v_2^2+(v_1+v_2)^2\gt0\quad(v\ne0).$$</p>
+      <p>So $f$ is a bowl. Plug unit vectors into $2v_1^2+2v_1v_2+2v_2^2$: along $\tfrac1{\sqrt2}(1,1)$ the curvature is $\tfrac12(2+2+2)=3$; along $\tfrac1{\sqrt2}(1,-1)$ it is $\tfrac12(2-2+2)=1$. These are the eigenvalues of $A$.</p>
       <p>Next: $\nabla f$ and $H$ combine into a local bowl (<a href="taylor-expansion.html">Taylor expansion</a>).</p>
 
       <section class="exercise">
@@ -151,7 +190,10 @@
         <p>$W$ is $m\times n$ and $k(x)=\tfrac12\|Wx\|^2$. Write $k=h\circ g$ with $g(x)=Wx$, $h(y)=\tfrac12\|y\|^2$, and use the chain rule to find $\nabla k$ and the Hessian. Check every shape.</p>
         <details>
           <summary>Solution</summary>
-          <p>$J_g=W$ ($m\times n$), $J_h=y^T=(Wx)^T$ ($1\times m$). So $J_k=x^TW^TW$ ($1\times n$) and $\nabla k=W^TWx$ ($n\times1$). Its Jacobian is $H=W^TW$ ($n\times n$), which is positive semidefinite: $k$ is a bowl, possibly with flat valleys along $N(W)$.</p>
+          <p><strong>Pieces.</strong> $g_i=\sum_jW_{ij}x_j$, so $\partial g_i/\partial x_j=W_{ij}$ and $J_g=W$ ($m\times n$). $h=\tfrac12\sum_ly_l^2$, so $\partial h/\partial y_l=y_l$ and $J_h=y^T=(Wx)^T$ ($1\times m$).</p>
+          <p><strong>Chain rule.</strong> $J_k=J_hJ_g=\underbrace{x^TW^T}_{1\times m}\underbrace{W}_{m\times n}$ ($1\times n$). Transpose the row to get the column gradient: $\nabla k=W^TWx$ ($n\times1$).</p>
+          <p><strong>Hessian.</strong> $\nabla k=(W^TW)x$ is linear in $x$, and the Jacobian of $x\mapsto Mx$ is $M$ (as for $g$). So $H=W^TW$ ($n\times n$).</p>
+          <p><strong>Shape of the bowl.</strong> $v^THv=v^TW^TWv=\|Wv\|^2\ge0$, so $H$ is positive semidefinite, and the curvature is $0$ exactly when $Wv=0$: flat valleys along $N(W)$.</p>
         </details>
       </section>
     </article>
@@ -164,7 +206,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

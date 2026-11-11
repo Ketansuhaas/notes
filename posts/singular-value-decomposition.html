@@ -52,13 +52,22 @@
       </div>
       <p class="chain"><strong>Builds on:</strong> <a href="linear-algebra-fundamentals.html">Rank, subspaces, and projections</a>, <a href="spectral-theorem.html">The spectral theorem</a>, <a href="quadratic-forms-and-positive-definiteness.html">Quadratic forms and positive definiteness</a> &middot; <strong>Leads to:</strong> <a href="principal-component-analysis.html">Principal component analysis</a></p>
 
-      <p class="idea">Every matrix, any shape, is a rotation, then a stretch along the axes, then another rotation.</p>
+      <p class="idea">Every matrix, any shape, is a rotation, then a stretch along the axes, then another rotation. Below, every piece is derived, nothing assumed.</p>
 
-      <h2>The statement</h2>
-      <p class="idea">Pick the right orthonormal axes in the input and in the output, and $A$ just scales axis $i$ by $\sigma_i$.</p>
-      <p>$$\underbrace{A}_{m\times n}=\underbrace{U}_{m\times m}\,\underbrace{\Sigma}_{m\times n}\,\underbrace{V^T}_{n\times n}, \qquad Av_i=\sigma_iu_i, \qquad \sigma_1\ge\sigma_2\ge\cdots\ge0.$$</p>
-      <p>$U,V$ orthogonal. $\Sigma$ is diagonal, padded with zero rows (tall $A$) or zero columns (wide $A$). Only $r=\operatorname{rank}A$ terms survive (thin SVD):</p>
-      <p>$$\underbrace{A}_{m\times n}=\underbrace{U_r}_{m\times r}\,\underbrace{\Sigma_r}_{r\times r}\,\underbrace{V_r^T}_{r\times n}.$$</p>
+      <h2>The goal</h2>
+      <p class="idea">Find perpendicular input directions $v_i$ that $A$ sends to perpendicular output directions $u_i$, only stretching them by $\sigma_i\ge0$.</p>
+      <p>$$Av_i=\sigma_iu_i, \qquad v_1,\dots,v_n \text{ orthonormal in } \mathbb{R}^n, \qquad u_1,\dots,u_m \text{ orthonormal in } \mathbb{R}^m.$$</p>
+      <p>If we find them, the matrix form follows by stacking the columns (view 2 of <a href="four-views-of-matrix-multiplication.html">matrix multiplication</a>):</p>
+      <p>
+        $$
+        A\underbrace{\begin{pmatrix}\vert&&\vert\\v_1&\cdots&v_n\\\vert&&\vert\end{pmatrix}}_{V,\ n\times n}
+        =\begin{pmatrix}\vert&&\vert\\\sigma_1u_1&\cdots&\sigma_nu_n\\\vert&&\vert\end{pmatrix}
+        =\underbrace{U}_{m\times m}\,\underbrace{\Sigma}_{m\times n}.
+        $$
+      </p>
+      <p>$V$ is square with orthonormal columns, so $VV^T=I$. Multiply both sides on the right by $V^T$:</p>
+      <p>$$\boxed{\ \underbrace{A}_{m\times n}=\underbrace{U}_{m\times m}\,\underbrace{\Sigma}_{m\times n}\,\underbrace{V^T}_{n\times n}\ }$$</p>
+      <p>$\Sigma$ has $\sigma_i$ at position $(i,i)$ and zeros elsewhere. The rest of this note finds the $v_i$, $\sigma_i$, $u_i$.</p>
 
       <figure class="figure">
         <svg width="382" viewBox="0 0 450 196" role="img" aria-label="Left: the unit circle in the row space of A, the plane spanned by v1 and v2 inside R3. Right: A maps it onto an ellipse in R2 with semi-axes root 3 times u1 and 1 times u2.">
@@ -87,38 +96,83 @@
         <figcaption>Drawn in the row space ($v_1,v_2$ plane of $\mathbb R^3$; $v_3\mapsto0$): the unit circle becomes an ellipse with semi-axes $\sqrt3\,u_1$ and $1\,u_2$.</figcaption>
       </figure>
 
-      <h2>Constructing it</h2>
-      <p class="idea">$A$ may be rectangular, but $A^TA$ and $AA^T$ are square, symmetric, and positive semidefinite. The spectral theorem always applies to them, so every matrix has an SVD.</p>
-      <p>$$\underbrace{A^TA}_{n\times n}=V(\Sigma^T\Sigma)V^T, \qquad \underbrace{AA^T}_{m\times m}=U(\Sigma\Sigma^T)U^T,$$ $$\sigma_i=\sqrt{\lambda_i}, \quad u_i=\frac{Av_i}{\sigma_i},\ \ v_i=\frac{A^Tu_i}{\sigma_i}\ \ (\sigma_i\gt0).$$</p>
-      <p class="example-label">Example</p>
-      <p>$$A=\begin{pmatrix}1&0&1\\0&1&1\end{pmatrix}, \qquad AA^T=\begin{pmatrix}2&1\\1&2\end{pmatrix} \ \Rightarrow\ \sigma_1=\sqrt3,\ \sigma_2=1.$$</p>
-      <p>$$u_1=\tfrac1{\sqrt2}(1,1),\ \ v_1=\tfrac{A^Tu_1}{\sqrt3}=\tfrac1{\sqrt6}(1,1,2); \qquad u_2=\tfrac1{\sqrt2}(1,-1),\ \ v_2=A^Tu_2=\tfrac1{\sqrt2}(1,-1,0).$$</p>
-      <p>Check: $Av_1=\tfrac1{\sqrt6}(3,3)=\sqrt3\,u_1$. &#10003;</p>
+      <h2>Step 1: look at $A^TA$</h2>
+      <p class="idea">The length of an output is all we need to find the stretches, and $A^TA$ is exactly the matrix that measures output length.</p>
+      <p>$$\|Ax\|^2=(Ax)^T(Ax)=x^T\,\underbrace{A^TA}_{n\times n}\,x.$$</p>
+      <p>$A^TA$ is symmetric, $(A^TA)^T=A^T(A^T)^T=A^TA$, so by <a href="spectral-theorem.html">the spectral theorem</a> it has orthonormal eigenvectors $v_1,\dots,v_n$ with real eigenvalues $\lambda_i$. These $v_i$ are our input directions. Each $\lambda_i\ge0$, because</p>
+      <p>$$\lambda_i=\lambda_i\,v_i^Tv_i=v_i^T(A^TAv_i)=\|Av_i\|^2\ge0.$$</p>
 
-      <h2>Four subspaces for free</h2>
-      <p class="idea">The columns of $U$ and $V$ split into orthonormal bases for all four fundamental subspaces at once.</p>
+      <h2>Step 2: the stretch is $\sigma_i=\sqrt{\lambda_i}$</h2>
+      <p class="idea">The line above already says how long $Av_i$ is. Name that length $\sigma_i$.</p>
+      <p>$$\|Av_i\|^2=\lambda_i \quad\Rightarrow\quad \sigma_i:=\|Av_i\|=\sqrt{\lambda_i}.$$</p>
+      <p>Order them so $\sigma_1\ge\sigma_2\ge\cdots\ge0$.</p>
+
+      <h2>Step 3: the outputs stay perpendicular</h2>
+      <p class="idea">Divide each output by its length to get a unit vector $u_i$. The surprise is that these are automatically perpendicular.</p>
+      <p>For $\sigma_i\gt0$ define $u_i:=Av_i/\sigma_i$, so $Av_i=\sigma_iu_i$ holds by construction. Their dot products:</p>
+      <p>
+        $$
+        u_i^Tu_j=\frac{(Av_i)^T(Av_j)}{\sigma_i\sigma_j}=\frac{v_i^T(A^TAv_j)}{\sigma_i\sigma_j}=\frac{\lambda_j\,v_i^Tv_j}{\sigma_i\sigma_j}=\begin{cases}\lambda_i/\sigma_i^2=1 & i=j\\0 & i\ne j\end{cases}
+        $$
+      </p>
+      <p>If $\sigma_i=0$ then $\|Av_i\|=0$, so $Av_i=0=0\cdot u_i$ for any $u_i$. Complete the $u$'s to an orthonormal basis of $\mathbb{R}^m$ any way you like. Every requirement of the goal now holds, so <strong>every matrix has an SVD</strong>.</p>
+
+      <h2>Step 4: the same thing from the other side</h2>
+      <p class="idea">The $u_i$ are eigenvectors of $AA^T$, so you can start from whichever of $A^TA$, $AA^T$ is smaller.</p>
+      <p>Substitute $A=U\Sigma V^T$ and use $V^TV=I$:</p>
+      <p>$$AA^T=U\Sigma V^T\,V\Sigma^TU^T=U\,(\Sigma\Sigma^T)\,U^T, \qquad \Sigma\Sigma^T=\operatorname{diag}(\sigma_1^2,\dots).$$</p>
+      <p>That is a spectral decomposition, so $AA^Tu_i=\sigma_i^2u_i$. To go back from $u_i$ to $v_i$, apply $A^T$ to $Av_i=\sigma_iu_i$:</p>
+      <p>$$A^TAv_i=\sigma_iA^Tu_i \quad\Rightarrow\quad \sigma_i^2v_i=\sigma_iA^Tu_i \quad\Rightarrow\quad v_i=\frac{A^Tu_i}{\sigma_i}.$$</p>
+
+      <h2>Worked example, every step</h2>
+      <p>$$A=\begin{pmatrix}1&0&1\\0&1&1\end{pmatrix} \quad (2\times3).$$</p>
+      <p><strong>1. Smaller Gram matrix.</strong> $AA^T$ is $2\times2$ (versus $3\times3$ for $A^TA$). Each entry is a dot product of two rows of $A$:</p>
+      <p>$$AA^T=\begin{pmatrix}1+0+1&0+0+1\\0+0+1&0+1+1\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}.$$</p>
+      <p><strong>2. Its eigenvalues.</strong> $\det(AA^T-\lambda I)=(2-\lambda)^2-1=0$ gives $\lambda=3,1$, so $\sigma_1=\sqrt3$, $\sigma_2=1$.</p>
+      <p><strong>3. Its eigenvectors are the $u_i$.</strong></p>
+      <p>$$\lambda=3:\ \begin{pmatrix}-1&1\\1&-1\end{pmatrix}u=0\Rightarrow u_1=\tfrac1{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix}; \qquad \lambda=1:\ \begin{pmatrix}1&1\\1&1\end{pmatrix}u=0\Rightarrow u_2=\tfrac1{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix}.$$</p>
+      <p><strong>4. The $v_i$ from $v_i=A^Tu_i/\sigma_i$.</strong></p>
+      <p>$$v_1=\frac{1}{\sqrt3}\cdot\frac{1}{\sqrt2}\begin{pmatrix}1&0\\0&1\\1&1\end{pmatrix}\begin{pmatrix}1\\1\end{pmatrix}=\tfrac1{\sqrt6}\begin{pmatrix}1\\1\\2\end{pmatrix}, \qquad v_2=\frac11\cdot\frac1{\sqrt2}\begin{pmatrix}1\\-1\\0\end{pmatrix}.$$</p>
+      <p><strong>5. The last input direction.</strong> $\sigma_3=0$, so $v_3$ solves $Av=0$: $x_1+x_3=0$, $x_2+x_3=0$, giving $v_3=\tfrac1{\sqrt3}(-1,-1,1)$.</p>
+      <p><strong>6. Check.</strong> $Av_1=\tfrac1{\sqrt6}(1+2,\ 1+2)=\tfrac{3}{\sqrt6}(1,1)=\sqrt3\cdot\tfrac1{\sqrt2}(1,1)=\sigma_1u_1$. &#10003; Also $v_1\cdot v_2=0$, $v_1\cdot v_3=\tfrac{-1-1+2}{\sqrt{18}}=0$. &#10003;</p>
+
+      <h2>The four subspaces fall out</h2>
+      <p class="idea">Read each subspace off the construction; nothing new is needed.</p>
+      <p>$Av_i=0$ for $i\gt r$ (the zero $\sigma$'s), and there are $n-r=\dim N(A)$ of them, so they span $N(A)$. Next, write $x$ in the $v$ basis and apply $A$:</p>
+      <p>$$x=\sum_i(v_i^Tx)\,v_i \quad\Rightarrow\quad Ax=\sum_{i\le r}\sigma_i\,(v_i^Tx)\,u_i.$$</p>
+      <p>Every output is a mix of $u_1,\dots,u_r$, so they span $C(A)$. The rest follows by perpendicularity:</p>
       <table>
         <tr><td></td><td>first $r$ columns</td><td>remaining columns</td></tr>
-        <tr><td>$U$ (output, $\mathbb{R}^m$)</td><td>$C(A)$</td><td>$N(A^T)$</td></tr>
-        <tr><td>$V$ (input, $\mathbb{R}^n$)</td><td>$C(A^T)$</td><td>$N(A)$</td></tr>
+        <tr><td>$V$ (input, $\mathbb{R}^n$)</td><td>$C(A^T)$, since it is $\perp N(A)$</td><td>$N(A)$</td></tr>
+        <tr><td>$U$ (output, $\mathbb{R}^m$)</td><td>$C(A)$</td><td>$N(A^T)$, since it is $\perp C(A)$</td></tr>
       </table>
-      <p>$$\operatorname{rank}A=\text{number of nonzero } \sigma_i.$$</p>
-      <p class="example-label">Example</p>
-      <p>$r=2=m$: $C(A)=\mathbb{R}^2$, $N(A^T)=\{0\}$. The leftover $v_3=\tfrac1{\sqrt3}(-1,-1,1)$ spans $N(A)$: $Av_3=0$. &#10003;</p>
+      <p>So $\operatorname{rank}A=r=$ the number of nonzero $\sigma_i$. Example: $r=2$, and $v_3$ spans $N(A)$.</p>
 
-      <h2>Low-rank approximation</h2>
-      <p class="idea">The SVD writes $A$ as a sum of rank-one pieces, biggest first. Keep the top $k$ and you have the best rank-$k$ copy of $A$: the idea behind compression and PCA.</p>
-      <p>$$\underbrace{A}_{m\times n}=\sum_{i=1}^r\sigma_i\,\underbrace{u_i}_{m\times1}\underbrace{v_i^T}_{1\times n}, \qquad A_k=\sum_{i\le k}\sigma_iu_iv_i^T, \qquad \|A-A_k\|_F^2=\sum_{i\gt k}\sigma_i^2.$$</p>
-      <p>No rank-$k$ matrix gets closer (Eckart-Young).</p>
+      <h2>Rank-one pieces and the best approximation</h2>
+      <p class="idea">The SVD is a sum of rank-one layers, biggest stretch first. Dropping the small layers costs exactly their $\sigma^2$.</p>
+      <p>Apply view 4 (outer products) to $(U\Sigma)V^T$: column $i$ of $U\Sigma$ is $\sigma_iu_i$ and row $i$ of $V^T$ is $v_i^T$, so</p>
+      <p>$$A=\sum_{i=1}^r\sigma_i\,\underbrace{u_i}_{m\times1}\underbrace{v_i^T}_{1\times n}, \qquad A_k:=\sum_{i\le k}\sigma_iu_iv_i^T.$$</p>
+      <p>The error $A-A_k=\sum_{i\gt k}\sigma_iu_iv_i^T$. The layers are orthonormal as matrices, $\operatorname{tr}\big((u_iv_i^T)^T u_jv_j^T\big)=(u_i^Tu_j)(v_i^Tv_j)=0$ for $i\ne j$ and $1$ for $i=j$, so lengths add like Pythagoras:</p>
+      <p>$$\|A-A_k\|_F^2=\sum_{i\gt k}\sigma_i^2.$$</p>
+      <p><strong>No rank-$k$ matrix $B$ does better</strong> (Eckart-Young), shown here for the largest-stretch norm $\|M\|_2=\max_{\|x\|=1}\|Mx\|$. $B$ has rank $k$, so its null space has dimension $n-k$. It must meet the $(k+1)$-dimensional span of $v_1,\dots,v_{k+1}$ (the dimensions add to more than $n$). Take a unit $w$ in both. Then $Bw=0$ and</p>
+      <p>$$\|(A-B)w\|^2=\|Aw\|^2=\sum_{i\le k+1}\sigma_i^2(v_i^Tw)^2\ \ge\ \sigma_{k+1}^2\sum_{i\le k+1}(v_i^Tw)^2=\sigma_{k+1}^2=\|A-A_k\|_2^2.$$</p>
       <p class="example-label">Example</p>
-      <p>$$A_1=\sqrt3\,u_1v_1^T=\tfrac12\begin{pmatrix}1&1&2\\1&1&2\end{pmatrix},$$ $$A-A_1=\tfrac12\begin{pmatrix}1&-1&0\\-1&1&0\end{pmatrix}=\sigma_2u_2v_2^T, \qquad \|A-A_1\|_F^2=1=\sigma_2^2. \ \checkmark$$</p>
+      <p>
+        $$
+        \sigma_1u_1v_1^T=\sqrt3\cdot\tfrac{1}{\sqrt2}\cdot\tfrac1{\sqrt6}\begin{pmatrix}1\\1\end{pmatrix}\begin{pmatrix}1&1&2\end{pmatrix}=\tfrac12\begin{pmatrix}1&1&2\\1&1&2\end{pmatrix},\qquad
+        \sigma_2u_2v_2^T=\tfrac12\begin{pmatrix}1&-1&0\\-1&1&0\end{pmatrix}.
+        $$
+      </p>
+      <p>Adding them gives $\begin{pmatrix}1&0&1\\0&1&1\end{pmatrix}=A$. &#10003; Keeping only the first leaves error $\|\sigma_2u_2v_2^T\|_F^2=\tfrac14(1+1+1+1)=1=\sigma_2^2$. &#10003;</p>
 
       <h2>The pseudoinverse</h2>
-      <p class="idea">Invert the stretches you can, zero out the ones you can't. The result solves $Ax=b$ as well as possible, with the shortest $x$.</p>
-      <p>$$\underbrace{A^+}_{n\times m}=\underbrace{V}_{n\times n}\,\underbrace{\Sigma^+}_{n\times m}\,\underbrace{U^T}_{m\times m}, \qquad \Sigma^+_{ii}=\begin{cases}1/\sigma_i & \sigma_i\gt0\\0 & \text{otherwise}\end{cases}, \qquad x^+=A^+b.$$</p>
-      <p>$x^+$ is the minimum-norm least-squares solution; it lies in the row space $C(A^T)$.</p>
+      <p class="idea">Rotate into the SVD axes, where least squares splits into one easy equation per axis. Solve each, set the free ones to zero, rotate back.</p>
+      <p>Let $y=V^Tx$ and $c=U^Tb$. Rotations keep lengths, so</p>
+      <p>$$\|Ax-b\|^2=\|U\Sigma V^Tx-b\|^2=\|\Sigma y-c\|^2=\sum_{i\le r}(\sigma_iy_i-c_i)^2+\sum_{i\gt r}c_i^2.$$</p>
+      <p>The first sum is zero when $y_i=c_i/\sigma_i$. The last sum doesn't involve $y$, and $y_i$ for $i\gt r$ doesn't change the error, so the shortest choice ($\|x\|=\|y\|$) sets them to $0$:</p>
+      <p>$$y=\Sigma^+c, \quad \Sigma^+_{ii}=\begin{cases}1/\sigma_i&\sigma_i\gt0\\0&\text{else}\end{cases} \quad\Rightarrow\quad x^+=V\,\Sigma^+\,U^Tb=:\underbrace{A^+}_{n\times m}b.$$</p>
       <p class="example-label">Example</p>
-      <p>$b=(1,1)=\sqrt2\,u_1$, so $x^+=\tfrac{\sqrt2}{\sqrt3}v_1=\tfrac13(1,1,2)$. $Ax^+=(1,1)$ &#10003;, and $x^+\perp v_3$: adding any null-space piece only makes $x$ longer.</p>
+      <p>$b=(1,1)$: $c=U^Tb=(\sqrt2,0)$, so $y=(\sqrt2/\sqrt3,\ 0,\ 0)$ and $x^+=\sqrt{\tfrac23}\,v_1=\tfrac13(1,1,2)$. Check: $Ax^+=\tfrac13(3,3)=(1,1)$. &#10003;</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
@@ -138,7 +192,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

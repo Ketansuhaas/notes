@@ -55,6 +55,8 @@
       <h2>The sample mean is random</h2>
       <p class="idea">A different dataset gives a different $\bar x_n$. Its spread shrinks like $1/\sqrt n$, and that one fact drives both theorems below.</p>
       <p>$$x_i\overset{\text{iid}}{\sim}(\mu,\sigma^2), \qquad \bar x_n=\frac1n\sum_{i=1}^nx_i, \qquad \mathbb{E}[\bar x_n]=\mu, \qquad \operatorname{Var}(\bar x_n)=\frac{\sigma^2}n.$$</p>
+      <p>Linearity for the mean; for the variance, independent terms' variances add and the $\tfrac1n$ comes out squared (<a href="expectation-and-variance-algebra.html">variance algebra</a>):</p>
+      <p>$$\mathbb{E}[\bar x_n]=\frac1n\sum_i\mu=\mu, \qquad \operatorname{Var}(\bar x_n)=\frac1{n^2}\sum_i\sigma^2=\frac{\sigma^2}n.$$</p>
 
       <figure class="figure">
         <svg width="408" viewBox="0 0 480 176" role="img" aria-label="Three bell curves centered at mu for sample sizes n, 4n and 16n; each is half as wide and twice as tall as the previous one.">
@@ -76,37 +78,64 @@
       <table>
         <tr><td>$X_n\xrightarrow{\text{a.s.}}X$</td><td>$P(\lim_nX_n=X)=1$</td><td>each path settles</td></tr>
         <tr><td>$X_n\xrightarrow{p}X$</td><td>$P(|X_n-X|\gt\epsilon)\to0\ \ \forall\epsilon$</td><td>big gaps get rare</td></tr>
-        <tr><td>$X_n\xrightarrow{d}X$</td><td>$P(X_n\le x)\to P(X\le x)$</td><td>only the histogram settles</td></tr>
+        <tr><td>$X_n\xrightarrow{d}X$</td><td>$P(X_n\le x)\to P(X\le x)$ at every $x$ where the right side is continuous</td><td>only the histogram settles</td></tr>
       </table>
       <p>$$\xrightarrow{\text{a.s.}}\ \Rightarrow\ \xrightarrow{p}\ \Rightarrow\ \xrightarrow{d} \quad(\text{not the reverse}).$$</p>
+      <p><strong>a.s. $\Rightarrow$ p (Proof idea).</strong> Let $B_n$ = "some $|X_m-X|\gt\epsilon$ with $m\ge n$". These events shrink as $n$ grows, and a path in all of them never settles, so their limit has probability $0$. Since $P(|X_n-X|\gt\epsilon)\le P(B_n)\to0$, done. (The limit step is continuity of $P$ along shrinking events.)</p>
+      <p><strong>p $\Rightarrow$ d.</strong> If $X_n\le x$, then either $X\le x+\epsilon$ or $|X_n-X|\gt\epsilon$. Same idea the other way:</p>
+      <p>$$P(X_n\le x)\le P(X\le x+\epsilon)+P(|X_n-X|\gt\epsilon),$$</p>
+      <p>$$P(X_n\le x)\ge P(X\le x-\epsilon)-P(|X_n-X|\gt\epsilon).$$</p>
+      <p>Let $n\to\infty$ (the last terms vanish), then $\epsilon\to0$ at a continuity point: $P(X_n\le x)\to P(X\le x)$.</p>
+      <p><strong>Not the reverse.</strong> $X\sim\mathcal N(0,1)$ and $X_n=-X$: same distribution for every $n$ (symmetry), so $X_n\xrightarrow{d}X$, yet $|X_n-X|=2|X|$ never shrinks. For p without a.s.: independent $X_n\in\{0,1\}$ with $P(X_n=1)=\tfrac1n\to0$, but $\sum_n\tfrac1n=\infty$, so (second Borel-Cantelli lemma) $X_n=1$ infinitely often on almost every path.</p>
 
       <h2>Law of large numbers</h2>
       <p class="idea">Averaging cancels noise. With enough samples, $\bar x_n$ has nowhere to go but $\mu$.</p>
-      <p>$$\text{Weak: } \bar x_n\xrightarrow{p}\mu. \qquad \text{Chebyshev: } P(|\bar x_n-\mu|\ge\epsilon)\le\frac{\sigma^2}{n\epsilon^2}\to0.$$</p>
-      <p>$$\text{Strong: } \bar x_n\xrightarrow{\text{a.s.}}\mu \quad(\text{needs only a finite mean; proof omitted}).$$</p>
+      <p><strong>Weak: $\bar x_n\xrightarrow{p}\mu$.</strong> <a href="concentration-inequalities.html">Chebyshev</a> on $\bar x_n$, whose variance is $\sigma^2/n$ (first section):</p>
+      <p>$$P(|\bar x_n-\mu|\ge\epsilon)\le\frac{\operatorname{Var}\bar x_n}{\epsilon^2}=\frac{\sigma^2}{n\epsilon^2}\xrightarrow{n\to\infty}0 \quad\text{for every }\epsilon\gt0.$$</p>
+      <p>That is the definition of $\xrightarrow{p}$.</p>
+      <p>$$\text{Strong: } \bar x_n\xrightarrow{\text{a.s.}}\mu \quad(\text{needs only a finite mean}).$$</p>
+      <p><strong>Proof idea</strong> (assuming a finite 4th moment). With $Y_i=x_i-\mu$, expanding $(\sum_iY_i)^4$, every term containing a lone $Y_i$ has mean $0$; only $Y_i^4$ ($n$ terms) and $Y_i^2Y_j^2$ ($3n(n-1)$ terms) survive. So $\mathbb{E}[(\sum_iY_i)^4]\le Kn^2$ for a constant $K$, and Markov on the 4th power gives</p>
+      <p>$$P(|\bar x_n-\mu|\ge\epsilon)\le\frac{\mathbb{E}[(\sum_iY_i)^4]}{n^4\epsilon^4}\le\frac{K}{n^2\epsilon^4}.$$</p>
+      <p>These sum to something finite over $n$, so (first Borel-Cantelli lemma) only finitely many $n$ have a deviation $\ge\epsilon$: the path settles. Needing only a finite mean (Etemadi) takes a truncation argument.</p>
       <p class="example-label">Example: fair coin, $\sigma^2=\tfrac14$</p>
-      <p>$n=10{,}000$, $\epsilon=0.05$: $P(|\bar x_n-0.5|\ge0.05)\le\dfrac{0.25}{10^4\cdot0.0025}=0.01$.</p>
+      <p>$\sigma^2=p(1-p)=\tfrac12\cdot\tfrac12$ (<a href="common-distributions.html">Bernoulli</a>). $n=10{,}000$, $\epsilon=0.05$:</p>
+      <p>$$P(|\bar x_n-0.5|\ge0.05)\le\dfrac{0.25}{10^4\cdot0.0025}=\frac{0.25}{25}=0.01.$$</p>
 
       <h2>Central limit theorem</h2>
       <p class="idea">LLN says where $\bar x_n$ ends up. CLT zooms in on the error at the $\sqrt n$ scale: it always looks Gaussian, whatever $p$ is (if $\sigma^2\lt\infty$).</p>
       <p>$$\sqrt n\,(\bar x_n-\mu)\xrightarrow{d}\mathcal N(0,\sigma^2) \quad\iff\quad Z_n=\frac{\bar x_n-\mu}{\sigma/\sqrt n}\xrightarrow{d}\mathcal N(0,1).$$</p>
-      <p>So for large $n$: $\bar x_n\approx\mathcal N(\mu,\sigma^2/n)$. Proof (via characteristic functions) omitted.</p>
+      <p>The two forms differ by the constant factor $\tfrac1\sigma$: $Z_n=\tfrac1\sigma\cdot\sqrt n(\bar x_n-\mu)$, and dividing a $\mathcal N(0,\sigma^2)$ by $\sigma$ gives variance $\sigma^2/\sigma^2=1$.</p>
+      <p><strong>Proof idea: a sum of many small independent pieces.</strong> Write $Z_n=\sum_iY_i/(\sigma\sqrt n)$ with $Y_i=x_i-\mu$. Use $M(s)=\mathbb{E}e^{sY}$; independence turns the sum into a power:</p>
+      <p>$$\mathbb{E}\big[e^{sZ_n}\big]=\prod_i\mathbb{E}\big[e^{sY_i/(\sigma\sqrt n)}\big]=M\Big(\frac{s}{\sigma\sqrt n}\Big)^n.$$</p>
+      <p>Each piece is small, so Taylor-expand $M(u)=1+u\,\mathbb{E}Y+\tfrac{u^2}2\mathbb{E}Y^2+\dots=1+\tfrac{u^2\sigma^2}2+\dots$ (mean $0$, variance $\sigma^2$):</p>
+      <p>$$M\Big(\frac{s}{\sigma\sqrt n}\Big)^n=\Big(1+\frac{s^2}{2n}+o\big(\tfrac1n\big)\Big)^n\ \longrightarrow\ e^{s^2/2},$$</p>
+      <p>using $(1+\tfrac cn)^n\to e^c$. And $e^{s^2/2}$ is the MGF of $\mathcal N(0,1)$ (<a href="concentration-inequalities.html">concentration note</a>). Only the mean and variance of $Y$ survived the limit: that is why the shape of $p$ doesn't matter. A full proof uses characteristic functions $\mathbb{E}e^{isY}$ (which always exist, unlike the MGF) and Lévy's continuity theorem (converging transforms $\Rightarrow$ converging distributions).</p>
+      <p>So for large $n$: $\bar x_n=\mu+\tfrac{\sigma}{\sqrt n}Z_n$ with $Z_n\approx\mathcal N(0,1)$, and shifting and scaling a Gaussian keeps it Gaussian:</p>
+      <p>$$\bar x_n\approx\mathcal N\Big(\mu,\ \frac{\sigma^2}n\Big).$$</p>
       <p class="example-label">Example: fair coin, $n=100$</p>
-      <p>$\bar x_n\approx\mathcal N(0.5,\ 0.05^2)$, so $95\%$ of the time $\bar x_n\in0.5\pm1.96\cdot0.05\approx[0.40,\ 0.60]$.</p>
+      <p>$\sigma/\sqrt n=0.5/10=0.05$, so $\bar x_n\approx\mathcal N(0.5,\ 0.05^2)$. A standard normal lands in $[-1.96,1.96]$ with probability $0.95$ (normal table), so $95\%$ of the time</p>
+      <p>$$\bar x_n\in0.5\pm1.96\cdot0.05=0.5\pm0.098\approx[0.40,\ 0.60].$$</p>
 
       <h2>Where it shows up</h2>
+      <p class="idea">Each row is the CLT applied to some average.</p>
       <table>
         <tr><td>Confidence intervals</td><td>$\bar x_n\pm1.96\,\sigma/\sqrt n$</td></tr>
         <tr><td>Monte Carlo</td><td>error of $\frac1n\sum f(x_i)$ is $\approx$ Gaussian, size $\sigma/\sqrt n$</td></tr>
         <tr><td>Minibatch SGD</td><td>gradient noise $\propto1/\sqrt B$, often modeled as Gaussian</td></tr>
       </table>
+      <p>Confidence interval: $|\bar x_n-\mu|\le1.96\,\sigma/\sqrt n$ with probability $\approx0.95$, and that inequality is symmetric in $\bar x_n$ and $\mu$, so $\mu\in\bar x_n\pm1.96\,\sigma/\sqrt n$. Monte Carlo: the $f(x_i)$ are iid with some variance $\sigma^2$, so their mean is a $\bar x_n$. Minibatch: the batch gradient is a mean of $B$ per-example gradients, std $\sigma/\sqrt B$.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Show that $\sqrt n$ is the only scaling $n^a$ for which $n^a(\bar x_n-\mu)$ has a nontrivial limit: compute its variance and see what happens for $a\lt\tfrac12$ and $a\gt\tfrac12$.</p>
         <details>
           <summary>Solution</summary>
-          <p>$\operatorname{Var}\big(n^a(\bar x_n-\mu)\big)=n^{2a}\cdot\frac{\sigma^2}n=n^{2a-1}\sigma^2$. For $a\lt\tfrac12$ this $\to0$ (the error collapses to a point, the LLN view). For $a\gt\tfrac12$ it $\to\infty$. Only $a=\tfrac12$ keeps variance $\sigma^2$, the CLT scale.</p>
+          <p>Scale rule, then $\operatorname{Var}\bar x_n=\sigma^2/n$:</p>
+          <p>$$\operatorname{Var}\big(n^a(\bar x_n-\mu)\big)=n^{2a}\cdot\frac{\sigma^2}n=n^{2a-1}\sigma^2.$$</p>
+          <p>$a\lt\tfrac12$: $2a-1\lt0$, so the variance $\to0$ and Chebyshev gives $P(|n^a(\bar x_n-\mu)|\ge\epsilon)\le n^{2a-1}\sigma^2/\epsilon^2\to0$. The limit is the constant $0$ (the error collapses to a point, the LLN view).</p>
+          <p>$a\gt\tfrac12$: write $n^a(\bar x_n-\mu)=n^{a-1/2}\cdot\sqrt n(\bar x_n-\mu)$. The second factor stays $\approx\mathcal N(0,\sigma^2)$ by the CLT, the first $\to\infty$, so for any fixed $M$</p>
+          <p>$$P\big(|n^a(\bar x_n-\mu)|\le M\big)=P\big(|\sqrt n(\bar x_n-\mu)|\le Mn^{1/2-a}\big)\to0:$$</p>
+          <p>all the mass escapes to infinity. Only $a=\tfrac12$ keeps variance $\sigma^2$ and a proper limit, the CLT scale.</p>
         </details>
       </section>
     </article>
@@ -119,7 +148,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

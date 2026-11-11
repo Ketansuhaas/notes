@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Adaptive methods: RMSProp and Adam - Deep Learning Notes</title>
+  <meta name="description" content="Per-coordinate step sizes as diagonal preconditioning; why dividing by the root-mean-square gradient equalizes step sizes; Adam as momentum plus RMSProp plus a derived bias correction; and an honest look at what is and is not guaranteed.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Adaptive methods: RMSProp and Adam</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Adaptive methods: RMSProp and Adam</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">adam</span><span class="tag">rmsprop</span><span class="tag">preconditioning</span><span class="tag">momentum</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="momentum-and-nesterov.html">Momentum and Nesterov acceleration</a>, <a href="newtons-method.html">Newton's method</a>, <a href="sgd-convergence.html">Stochastic gradient descent: noise and step sizes</a> &middot; <strong>Leads to:</strong> <a href="lagrangian-and-kkt.html">The Lagrangian and KKT conditions</a></p>
+
+      <p class="idea">GD uses one step size for every coordinate, so the steepest coordinate dictates it for all. Adaptive methods give each coordinate its own step, scaled by how large its gradients have been: a cheap, diagonal stand-in for Newton's $H^{-1}$.</p>
+
+      <h2>Per-coordinate steps are diagonal preconditioning</h2>
+      <p class="idea">Dividing coordinate $i$'s gradient by $d_i$ is plain GD in stretched coordinates. Stretch well, and a long valley becomes a round bowl.</p>
+      <p>$$x_{k+1}=x_k-\eta\,D^{-1}\nabla f(x_k),\qquad D=\operatorname{diag}(d_1,\dots,d_n),\ d_i\gt0.$$</p>
+      <p>Why it is GD in other coordinates: let $x=D^{-1/2}y$ and $h(y)=f(D^{-1/2}y)$, so $\nabla h=D^{-1/2}\nabla f$ (chain rule). Take a GD step on $h$, then multiply by $D^{-1/2}$:</p>
+      <p>$$y\leftarrow y-\eta D^{-1/2}\nabla f\ \Rightarrow\ x\leftarrow x-\eta D^{-1}\nabla f,\qquad \nabla^2h=D^{-1/2}AD^{-1/2}.$$</p>
+      <p class="example-label">Example</p>
+      <p>$f=\tfrac12(x_1^2+100x_2^2)$: $A=\operatorname{diag}(1,100)$, $\kappa=100$. With $D=A$: $D^{-1/2}AD^{-1/2}=I$, $\kappa=1$, and $\eta=1$ lands on $0$ in one step (the $P=A^{-1}$ exercise of <a href="gradient-descent-on-a-quadratic.html">GD on a quadratic</a>).</p>
+      <p><strong>Limit: only axis-aligned stretch.</strong> Running example $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $D=\operatorname{diag}(d_1,d_2)$, $r=d_1/d_2$. For $\tilde A=D^{-1/2}AD^{-1/2}$, $\frac{(\operatorname{tr}\tilde A)^2}{\det\tilde A}=\frac{(\lambda_1+\lambda_2)^2}{\lambda_1\lambda_2}=\kappa+2+\frac1\kappa$, and</p>
+      <p>$$\frac{(\operatorname{tr}\tilde A)^2}{\det\tilde A}=\frac{(2/d_1+2/d_2)^2}{3/(d_1d_2)}=\frac{4(1+r)^2}{3r}\ge\frac{16}3\quad\big((1+r)^2\ge4r\big).$$</p>
+      <p>Equality at $r=1$: $\kappa+\frac1\kappa=\frac{10}3$, $\kappa=3$. No diagonal $D$ improves a rotated bowl.</p>
+
+      <h2>RMSProp: $d_i$ = root-mean-square gradient</h2>
+      <p class="idea">We don't know the curvature, but we see gradients. Use a running average of $g_i^2$, and divide by its square root.</p>
+      <p>$$v\leftarrow\beta_2v+(1-\beta_2)\,g\odot g,\qquad x\leftarrow x-\eta\,\frac{g}{\sqrt v+\epsilon}\quad(\text{elementwise}).$$</p>
+      <p><strong>Scale-free.</strong> Multiply all of coordinate $i$'s gradients by $c\gt0$: $v_i\to c^2v_i$, $\sqrt{v_i}\to c\sqrt{v_i}$, so $g_i/\sqrt{v_i}$ is unchanged (for $\epsilon\to0$). A coordinate's step does not depend on its gradient scale.</p>
+      <p><strong>Size.</strong> If $g_i$ has mean $\bar g_i$ and variance $s_i^2$, then $v_i\approx\mathbb E[g_i^2]=\bar g_i^2+s_i^2$ (<a href="expectation-and-variance-algebra.html">$\mathbb E[X^2]=\mu^2+\operatorname{Var}X$</a>), so</p>
+      <p>$$|\text{step}_i|\approx\eta\,\frac{|\bar g_i|}{\sqrt{\bar g_i^2+s_i^2}}\le\eta.$$</p>
+      <p>About $\eta$ where the gradient is clean, smaller where noise dominates.</p>
+      <p class="example-label">Example</p>
+      <p>From $x_0=(10,1)$ on the valley above, $g=(10,100)$. GD at its best $\eta=\frac2{101}$ steps $(-0.198,-1.98)$: ten times more across the valley than along it. The first RMSProp or Adam step (below, with $\hat v=g^2$) is $-\eta\frac{g}{|g|}=(-0.3,-0.3)$ for $\eta=0.3$: equal in both.</p>
+      <p>Two cautions. $d_i$ measures gradient size, not curvature: on a quadratic $g_i=\lambda_ix_i$, so $\sqrt{v_i}\approx\lambda_i|x_i|$, not $\lambda_i$. And a step of about $\eta$ does not shrink as $g\to0$ (GD's $\eta g$ does), so a constant $\eta$ cannot settle exactly; schedules decay it.</p>
+
+      <h2>Adam = momentum + RMSProp + bias correction</h2>
+      <p class="idea">Average the gradient itself (momentum, $m$) and its square (scale, $v$), correct both for starting at zero, and step by their ratio.</p>
+      <p>$$m\leftarrow\beta_1m+(1-\beta_1)\,g,\qquad v\leftarrow\beta_2v+(1-\beta_2)\,g\odot g,$$</p>
+      <p>$$\hat m=\frac{m}{1-\beta_1^t},\qquad\hat v=\frac{v}{1-\beta_2^t},\qquad x\leftarrow x-\eta\,\frac{\hat m}{\sqrt{\hat v}+\epsilon}.$$</p>
+      <p>Defaults $\beta_1=0.9$, $\beta_2=0.999$, $\epsilon=10^{-8}$. The cost: two extra full-size tensors (<a href="optimizers-and-their-state.html">optimizers and their memory</a>).</p>
+      <p><strong>Where $1-\beta^t$ comes from.</strong> $m_0=0$ drags early averages toward $0$. Unroll $m_t=\beta m_{t-1}+(1-\beta)g_t$ from $m_0=0$:</p>
+      <p>$$m_t=(1-\beta)\big(g_t+\beta g_{t-1}+\cdots+\beta^{t-1}g_1\big)=(1-\beta)\sum_{j=1}^{t}\beta^{t-j}g_j.$$</p>
+      <p>If every $g_j$ has the same mean $\mathbb E[g]$, linearity and the finite geometric sum give</p>
+      <p>$$\mathbb E[m_t]=(1-\beta)\,\frac{1-\beta^t}{1-\beta}\,\mathbb E[g]=(1-\beta^t)\,\mathbb E[g].$$</p>
+      <p>So $\hat m=m_t/(1-\beta^t)$ has the right mean. At $t=1$ with $\beta_1=0.9$: $m_1=0.1g$, $\hat m_1=g$. &#10003;</p>
+
+      <figure class="figure">
+          <svg width="408" viewBox="0 0 480 176" role="img" aria-label="A long narrow valley f = (x1 squared + 100 x2 squared)/2, drawn to scale. From (10, 1), gradient descent with its best step zig-zags across the narrow direction and after 40 steps is still near x1 = 4.5. Adam moves both coordinates at about the same rate, its first step pointing at 45 degrees, and after 40 steps is near the minimum.">
+          <defs><clipPath id="adam1-clip"><rect x="10" y="22" width="384" height="112"/></clipPath></defs>
+          <g clip-path="url(#adam1-clip)">
+          <ellipse class="outline" cx="50" cy="78" rx="480.8" ry="48.1"/>
+          <ellipse class="outline" cx="50" cy="78" rx="240.4" ry="24"/>
+          <ellipse class="outline" cx="50" cy="78" rx="120.2" ry="12"/>
+          </g>
+          <line class="faint" x1="10" y1="78" x2="394" y2="78"/>
+          <polyline class="accent-2" points="390,44 383.3,111.3 376.7,45.3 370.2,110 363.9,46.6 357.6,108.8 351.6,47.8 345.6,107.6 339.7,49 334,106.4 328.4,50.2 322.9,105.3 317.5,51.3 312.2,104.2 307,52.3 301.9,103.2 296.9,53.3 292,102.2 287.2,54.3 282.5,101.3 277.9,55.2 273.4,100.3 269,56.1 264.6,99.5 260.4,57 256.2,98.6 252.1,57.8 248.1,97.8 244.2,58.6 240.4,97 236.6,59.3 232.9,96.3 229.3,60.1 225.7,95.6 222.2,60.8 218.8,94.9 215.5,61.5 212.2,94.2 209,62.1 205.9,93.6 202.8,62.7"/>
+          <polyline class="accent" points="390,44 379.8,54.2 369.6,64.2 359.4,73.5 349.3,81.7 339.2,88.2 329.1,92.4 319,94.4 309,94.3 299.1,92.8 289.3,90.1 279.5,86.7 269.8,82.9 260.2,79.1 250.7,75.5 241.3,72.5 232.1,70.3 223,69 214,68.6 205.2,69 196.5,70.2 188,72 179.7,74.1 171.6,76.3 163.6,78.5 155.9,80.5 148.4,82.1 141.1,83.1 134,83.6 127.2,83.5 120.6,82.9 114.2,81.8 108.1,80.6 102.3,79.1 96.7,77.7 91.3,76.5 86.3,75.5 81.4,74.8 76.9,74.6 72.6,74.7 68.6,75.2"/>
+          <circle class="accent-2-fill" cx="202.8" cy="62.7" r="3"/>
+          <circle class="accent-fill" cx="68.6" cy="75.2" r="3"/>
+          <circle class="pt" cx="390" cy="44" r="4"/>
+          <circle class="origin" cx="50" cy="78" r="3"/>
+          <text class="lbl" x="399" y="49">x₀ = (10, 1)</text>
+          <text class="lbl muted" x="400" y="83">x₁ axis</text>
+          <text class="lbl accent-2" x="10" y="16">GD, best η = 2/101: f = 20 after 40 steps</text>
+          <text class="lbl accent" x="10" y="168">Adam, η = 0.3: f = 0.50 after 40 steps</text>
+          </svg>
+        <figcaption>Drawn to scale; hollow dot = minimum. GD's step is set by the steep $x_2$, so it zig-zags and crawls along $x_1$. Adam's first step is at $45^\circ$, then it runs down the valley floor at about $\eta$ per step.</figcaption>
+      </figure>
+
+      <h2>What is guaranteed? Honestly, little</h2>
+      <p class="idea">Adam works well in practice, but there is no clean general convergence theorem. The original convex proof (Kingma and Ba, 2015) had an error, and Reddi, Kale and Kumar (2018) built a simple convex problem where Adam goes the wrong way.</p>
+      <p class="example-label">Example: their idea, in numbers</p>
+      <p>1-D, $x\in[-1,1]$, gradients cycle $3,-1,-1$ (losses $3x,-x,-x$). Their sum is $+1$ per cycle, so the best point is $x=-1$. Take $\beta_1=0$, $\beta_2=0.1$ (short memory). In the repeating cycle $v_a=0.1v_c+0.9\cdot9$, $v_b=0.1v_a+0.9$, $v_c=0.1v_b+0.9$; substituting, $v_c=0.001v_c+1.071$:</p>
+      <p>$$v_c=1.072,\quad v_a=8.21,\quad v_b=1.72.$$</p>
+      <p>$$\text{moves per cycle (units of }\eta):\ -\tfrac{3}{\sqrt{8.21}}+\tfrac1{\sqrt{1.72}}+\tfrac1{\sqrt{1.072}}=-1.05+0.76+0.97=+0.68.$$</p>
+      <p>Adam drifts to $x=+1$, the worst point. The rare big gradient inflates $v$ just as it arrives, so its push is capped near $\eta$; the small ones arrive after $v$ has decayed, so they get nearly $\eta$ each. <strong>AMSGrad</strong> fixes the proof by using $\hat v_t=\max(\hat v_{t-1},v_t)$, so step sizes never grow: here $\hat v$ stays $8.21$ and the cycle moves $\frac{-3+1+1}{\sqrt{8.21}}=-0.35$, the right way.</p>
+      <p>What does hold is the picture above: per-coordinate scaling that removes axis-aligned ill-conditioning, at $O(n)$ cost.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Derive the bias-correction factor for $v_t$. Then, with $\beta_1=0.9$, $\beta_2=0.999$ and a constant gradient, find how much larger the uncorrected step $m_t/\sqrt{v_t}$ is than the corrected $\hat m_t/\sqrt{\hat v_t}$ at $t=1$ and $t=10$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Same unrolling with $g^2$ in place of $g$: $v_t=(1-\beta_2)\sum_{j=1}^t\beta_2^{t-j}g_j^2$, so</p>
+          <p>$$\mathbb E[v_t]=(1-\beta_2)\frac{1-\beta_2^t}{1-\beta_2}\mathbb E[g^2]=(1-\beta_2^t)\,\mathbb E[g^2]\ \Rightarrow\ \hat v_t=\frac{v_t}{1-\beta_2^t}.$$</p>
+          <p>Since $m_t=(1-\beta_1^t)\hat m_t$ and $\sqrt{v_t}=\sqrt{1-\beta_2^t}\,\sqrt{\hat v_t}$:</p>
+          <p>$$\frac{m_t/\sqrt{v_t}}{\hat m_t/\sqrt{\hat v_t}}=\frac{1-\beta_1^t}{\sqrt{1-\beta_2^t}}.$$</p>
+          <p>$t=1$: $\frac{0.1}{\sqrt{0.001}}=\frac{0.1}{0.0316}=3.16$. $\ t=10$: $\frac{1-0.9^{10}}{\sqrt{1-0.999^{10}}}=\frac{1-0.349}{\sqrt{0.00996}}=\frac{0.651}{0.0998}=6.5$.</p>
+          <p>Without correction the early steps are $3$ to $6.5$ times too large; the ratio only falls to $1.26$ by $t=1000$, because $0.999^t$ forgets slowly.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

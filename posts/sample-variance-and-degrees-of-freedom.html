@@ -55,29 +55,55 @@
       <h2>Estimators and bias</h2>
       <p class="idea">An estimator turns a random sample into a guess, so the guess is random too. Unbiased means right on average, not right every time.</p>
       <p>$$\hat\theta=\hat\theta(x_1,\dots,x_n), \qquad \text{unbiased: } \mathbb{E}[\hat\theta]=\theta, \qquad \text{bias}=\mathbb{E}[\hat\theta]-\theta.$$</p>
-      <p class="example-label">Example</p>
-      <p>$\bar x_n$ is unbiased for $\mu$: $\mathbb{E}[\bar x_n]=\mu$.</p>
+      <p>Throughout, $x_1,\dots,x_n$ are independent with mean $\mu$ and variance $\sigma^2$. Two facts about $\bar x_n=\frac1n\sum_ix_i$ that everything below uses:</p>
+      <p>$$\mathbb{E}[\bar x_n]=\frac1n\sum_i\mathbb{E}[x_i]=\frac1n\cdot n\mu=\mu \qquad\text{(linearity)},$$</p>
+      <p>$$\operatorname{Var}(\bar x_n)=\frac1{n^2}\sum_i\operatorname{Var}(x_i)=\frac{n\sigma^2}{n^2}=\frac{\sigma^2}n \qquad\text{(independence: variances add)}.$$</p>
+      <p>So $\bar x_n$ is unbiased for $\mu$ (see <a href="expectation-and-variance-algebra.html">expectation and variance algebra</a>).</p>
 
       <h2>Dividing by $n$ is biased low</h2>
       <p class="idea">$\bar x_n$ is fit to the very same data, so the points sit a little too close to it. The spread looks smaller than it is.</p>
-      <p>$$S_n^2=\frac1n\sum_i(x_i-\bar x_n)^2: \qquad \mathbb{E}[S_n^2]=\frac{n-1}n\sigma^2\lt\sigma^2.$$</p>
-      <p>$$\text{Fix: } \hat\sigma^2=\frac1{n-1}\sum_i(x_i-\bar x_n)^2, \qquad \mathbb{E}[\hat\sigma^2]=\sigma^2.$$</p>
-      <p>Proof. Expand the square and use $\sum_ix_i=n\bar x_n$:</p>
-      <p>$$\sum_i(x_i-\bar x_n)^2=\sum_ix_i^2-n\bar x_n^2.$$</p>
-      <p>Then $\mathbb{E}[X^2]=\operatorname{Var}X+(\mathbb{E}X)^2$ on each piece:</p>
-      <p>$$\mathbb{E}\Big[\sum_i(x_i-\bar x_n)^2\Big]=n(\sigma^2+\mu^2)-n\Big(\frac{\sigma^2}n+\mu^2\Big)=(n-1)\sigma^2.$$</p>
-      <p>Divide by $n$: biased. Divide by $n-1$: exactly $\sigma^2$. &#10003;</p>
+      <p><strong>Goal.</strong> Compute $\mathbb{E}\big[\sum_i(x_i-\bar x_n)^2\big]$, then divide by $n$ or $n-1$.</p>
+      <p><strong>Step 1: expand the square.</strong> Use $\sum_ix_i=n\bar x_n$ in the middle term:</p>
+      <p>$$\sum_i(x_i-\bar x_n)^2=\sum_ix_i^2-2\bar x_n\sum_ix_i+n\bar x_n^2$$</p>
+      <p>$$=\sum_ix_i^2-2n\bar x_n^2+n\bar x_n^2=\sum_ix_i^2-n\bar x_n^2.$$</p>
+      <p><strong>Step 2: second moments.</strong> $\operatorname{Var}X=\mathbb{E}[X^2]-(\mathbb{E}X)^2$, so $\mathbb{E}[X^2]=\operatorname{Var}X+(\mathbb{E}X)^2$. Apply it to $x_i$ and to $\bar x_n$ (facts above):</p>
+      <p>$$\mathbb{E}[x_i^2]=\sigma^2+\mu^2, \qquad \mathbb{E}[\bar x_n^2]=\frac{\sigma^2}n+\mu^2.$$</p>
+      <p><strong>Step 3: take $\mathbb{E}$ of Step 1.</strong></p>
+      <p>$$\mathbb{E}\Big[\sum_i(x_i-\bar x_n)^2\Big]=n(\sigma^2+\mu^2)-n\Big(\frac{\sigma^2}n+\mu^2\Big)$$</p>
+      <p>$$=n\sigma^2+n\mu^2-\sigma^2-n\mu^2=(n-1)\sigma^2.$$</p>
+      <p><strong>Step 4: divide.</strong></p>
+      <p>$$S_n^2=\frac1n\sum_i(x_i-\bar x_n)^2: \qquad \mathbb{E}[S_n^2]=\frac{n-1}n\sigma^2\lt\sigma^2, \quad \text{bias}=-\frac{\sigma^2}n.$$</p>
+      <p>$$\hat\sigma^2=\frac1{n-1}\sum_i(x_i-\bar x_n)^2: \qquad \mathbb{E}[\hat\sigma^2]=\frac{(n-1)\sigma^2}{n-1}=\sigma^2. \ \checkmark$$</p>
+      <p>The lost $\sigma^2$ is exactly $n\operatorname{Var}(\bar x_n)$: the wobble of the estimated center.</p>
       <p class="example-label">Example: $n=2$</p>
-      <p>$\sum_i(x_i-\bar x)^2=\tfrac12(x_1-x_2)^2$, and $\mathbb{E}[(x_1-x_2)^2]=2\sigma^2$. So the sum averages $\sigma^2$: $S_2^2$ guesses only $\sigma^2/2$.</p>
+      <p>$\bar x=\tfrac{x_1+x_2}2$, so $x_1-\bar x=\tfrac{x_1-x_2}2$ and $x_2-\bar x=-\tfrac{x_1-x_2}2$:</p>
+      <p>$$\sum_i(x_i-\bar x)^2=2\cdot\frac{(x_1-x_2)^2}4=\frac{(x_1-x_2)^2}2.$$</p>
+      <p>$x_1-x_2$ has mean $0$ and variance $\sigma^2+\sigma^2$ (independent), so $\mathbb{E}[(x_1-x_2)^2]=2\sigma^2$ and the sum averages $\sigma^2$. Then $S_2^2=\text{sum}/2$ guesses $\sigma^2/2$, while $\hat\sigma^2=\text{sum}/1$ guesses $\sigma^2$. Matches $(n-1)\sigma^2$ with $n=2$. &#10003;</p>
 
       <h2>Degrees of freedom, geometrically</h2>
       <p class="idea">Residuals from $\bar x_n$ always sum to zero, so only $n-1$ of them are free. Estimating the mean spent one dimension.</p>
-      <p>$$e_i=x_i-\bar x_n: \quad \sum_ie_i=0 \ \text{always}, \qquad \text{but} \quad \sum_i(x_i-\mu)=n(\bar x_n-\mu)\ne0.$$</p>
-      <p class="idea">$\bar x_n$ is the projection of the data vector onto the all-ones direction. The residual is perpendicular to it.</p>
-      <p>$$\bar x_n=(\mathbb 1^T\mathbb 1)^{-1}\mathbb 1^Tx, \qquad \underbrace{x}_{n\times1}=\underbrace{\bar x_n\mathbb 1}_{\text{1 dim}}+\underbrace{e}_{n-1\text{ dims}}, \qquad e\perp\mathbb 1.$$</p>
+      <p>$$e_i=x_i-\bar x_n: \qquad \sum_ie_i=\sum_ix_i-n\bar x_n=0 \ \text{ always},$$</p>
+      <p>$$\text{but} \quad \sum_i(x_i-\mu)=n(\bar x_n-\mu)\ne0 \ \text{ in general}.$$</p>
+      <p class="idea">$\bar x_n$ is the projection of the data vector onto the all-ones direction. The residual is perpendicular to it, and lives in an $(n-1)$-dimensional space.</p>
+      <p><strong>Step 1: the mean is a projection.</strong> The closest multiple $c\mathbb 1$ to $x$ minimizes $\|x-c\mathbb 1\|^2$. Set the derivative in $c$ to zero:</p>
+      <p>$$-2\,\mathbb 1^T(x-c\mathbb 1)=0 \ \Rightarrow\ c=\frac{\mathbb 1^Tx}{\mathbb 1^T\mathbb 1}=\frac{\sum_ix_i}{n}=\bar x_n.$$</p>
+      <p>So $x=\bar x_n\mathbb 1+e$ with $\mathbb 1^Te=0$ (shown above). In matrix form, with $P=\frac1n\mathbb 1\mathbb 1^T$ (see <a href="linear-algebra-fundamentals.html">projections</a>):</p>
+      <p>$$\underbrace{x}_{n\times1}=\underbrace{Px}_{\text{1 dim}}+\underbrace{(I-P)x}_{e,\ n-1\text{ dims}},$$</p>
+      <p>$$\operatorname{rank}P=\operatorname{tr}P=\frac{\mathbb 1^T\mathbb 1}n=1, \qquad \operatorname{rank}(I-P)=\operatorname{tr}(I-P)=n-1,$$</p>
+      <p>using rank $=$ trace for a projection (eigenvalues are $0$ or $1$).</p>
+      <p><strong>Step 2: rotate so the split is along axes.</strong> Pick an orthonormal basis $q_1=\mathbb 1/\sqrt n,\ q_2,\dots,q_n$ (the last $n-1$ span the plane $\perp\mathbb 1$). Let $\varepsilon=x-\mu\mathbb 1$ and $z_k=q_k^T\varepsilon$. Since $(I-P)\mathbb 1=0$, $e=(I-P)\varepsilon$, and in the new axes</p>
+      <p>$$z_1=\frac{\mathbb 1^T\varepsilon}{\sqrt n}=\sqrt n(\bar x_n-\mu), \qquad e=\sum_{k=2}^nz_kq_k \ \Rightarrow\ \|e\|^2=\sum_{k=2}^nz_k^2.$$</p>
+      <p><strong>Step 3: each free axis carries $\sigma^2$.</strong> $\operatorname{Cov}(\varepsilon)=\sigma^2I$ and $Q=(q_1,\dots,q_n)$ is orthogonal, so</p>
+      <p>$$\operatorname{Cov}(Q^T\varepsilon)=Q^T(\sigma^2I)Q=\sigma^2I \ \Rightarrow\ \mathbb{E}[z_k^2]=\sigma^2 \text{ for each } k.$$</p>
+      <p>$$\mathbb{E}\|e\|^2=\sum_{k=2}^n\mathbb{E}[z_k^2]=(n-1)\sigma^2.$$</p>
+      <p>Same answer as before, now with a reason: the residual has $n-1$ coordinates, each worth $\sigma^2$. Centering at the true $\mu$ instead keeps all $n$: $\|\varepsilon\|^2=\sum_{k=1}^nz_k^2$, mean $n\sigma^2$.</p>
+      <p><strong>Bonus for Gaussian data.</strong> If $x_i\sim\mathcal N(\mu,\sigma^2)$, then $z_1,\dots,z_n$ are jointly Gaussian and uncorrelated, hence independent $\mathcal N(0,\sigma^2)$. So $\bar x_n$ (built from $z_1$) is independent of $\hat\sigma^2$ (built from $z_2,\dots,z_n$), and $(n-1)\hat\sigma^2/\sigma^2$ is a sum of $n-1$ squared standard normals, a $\chi^2_{n-1}$. The <a href="confidence-intervals.html">t-interval</a> uses both facts.</p>
 
       <p class="example-label">Example: $x=(1,2,6)$</p>
-      <p>$\bar x=3$, $e=(-2,-1,3)$, $\sum e_i=0$ &#10003;. $\sum e_i^2=14$: $S^2=14/3$, $\hat\sigma^2=14/2=7$.</p>
+      <p>$$\bar x=\frac{1+2+6}3=3, \qquad e=(1-3,\ 2-3,\ 6-3)=(-2,-1,3),$$</p>
+      <p>$$\textstyle\sum e_i=-2-1+3=0. \ \checkmark$$</p>
+      <p>$$\|e\|^2=4+1+9=14 \ \Rightarrow\ S^2=\tfrac{14}3\approx4.67, \qquad \hat\sigma^2=\tfrac{14}2=7.$$</p>
+      <p>Pythagoras check: $\|x\|^2=1+4+36=41$ and $\|3\cdot\mathbb 1\|^2+\|e\|^2=27+14=41$. &#10003;</p>
 
       <figure class="figure">
         <svg width="357" viewBox="0 0 420 204" role="img" aria-label="For x = (1,2,6), the data vector x splits into its projection 3 times the all-ones vector along the all-ones line, and a perpendicular residual e = (-2,-1,3), drawn to scale.">
@@ -111,7 +137,11 @@
         <p>Show $\sum_i(x_i-\mu)^2=\sum_i(x_i-\bar x_n)^2+n(\bar x_n-\mu)^2$ (Pythagoras), then take expectations to get $(n-1)\sigma^2$ again.</p>
         <details>
           <summary>Solution</summary>
-          <p>Write $x_i-\mu=(x_i-\bar x_n)+(\bar x_n-\mu)$ and square. The cross term is $2(\bar x_n-\mu)\sum_i(x_i-\bar x_n)=0$. Taking $\mathbb{E}$: $n\sigma^2=\mathbb{E}\big[\sum_i(x_i-\bar x_n)^2\big]+n\cdot\frac{\sigma^2}n$, so $\mathbb{E}\big[\sum_i(x_i-\bar x_n)^2\big]=(n-1)\sigma^2$.</p>
+          <p>Split each deviation and square:</p>
+          <p>$$x_i-\mu=(x_i-\bar x_n)+(\bar x_n-\mu)$$</p>
+          <p>$$\sum_i(x_i-\mu)^2=\sum_i(x_i-\bar x_n)^2+2(\bar x_n-\mu)\underbrace{\textstyle\sum_i(x_i-\bar x_n)}_{=0}+n(\bar x_n-\mu)^2.$$</p>
+          <p>Take $\mathbb{E}$. Left: $\mathbb{E}[(x_i-\mu)^2]=\sigma^2$, summed $n\sigma^2$. Last term: $n\,\mathbb{E}[(\bar x_n-\mu)^2]=n\operatorname{Var}(\bar x_n)=n\cdot\frac{\sigma^2}n=\sigma^2$. So</p>
+          <p>$$n\sigma^2=\mathbb{E}\Big[\sum_i(x_i-\bar x_n)^2\Big]+\sigma^2 \ \Rightarrow\ \mathbb{E}\Big[\sum_i(x_i-\bar x_n)^2\Big]=(n-1)\sigma^2.$$</p>
         </details>
       </section>
     </article>
@@ -124,7 +154,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -96,18 +96,34 @@ x.grad, w.grad      # (tensor(64.), tensor(32.))</code></pre>
         </svg>
         <figcaption>One node per op, recorded during forward. Leaves end in an <code>AccumulateGrad</code> node that writes <code>.grad</code>.</figcaption>
       </figure>
-      <p>Check by hand: $L=(wx+x)^2$, $\partial L/\partial z=2z=16$. $x$ has two paths, so $\partial L/\partial x=16w+16=64$ and $\partial L/\partial w=16x=32$. &#10003;</p>
+      <p><strong>Forward</strong> (values each node will need later):</p>
+      <p>$$y=wx=3\cdot2=6,\qquad z=y+x=6+2=8,\qquad L=z^2=64.$$</p>
+      <p><strong>Backward.</strong> Write $\bar v=\partial L/\partial v$ (the adjoint, as in <a href="automatic-differentiation.html">Automatic differentiation</a>). Each node multiplies the adjoint arriving from its output by its local derivative and passes the result to each input. Seed $\bar L=1$.</p>
+      <p>$$\text{Pow: } \bar z=\bar L\cdot\frac{\partial(z^2)}{\partial z}=1\cdot2z=16.$$</p>
+      <p>$$\text{Add: } \frac{\partial z}{\partial y}=\frac{\partial z}{\partial x}=1\ \Rightarrow\ \bar y=16,\quad \bar x\mathrel{+}=16.$$</p>
+      <p>$$\text{Mul: } \frac{\partial y}{\partial w}=x=2,\qquad \frac{\partial y}{\partial x}=w=3$$</p>
+      <p>$$\Rightarrow\quad \bar w=\bar y\cdot2=32,\qquad \bar x\mathrel{+}=\bar y\cdot3=48.$$</p>
+      <p>$$\text{AccumulateGrad: } \texttt{x.grad}=16+48=64,\qquad \texttt{w.grad}=32.$$</p>
+      <p><strong>Check</strong> against the closed form $L=(wx+x)^2=x^2(w+1)^2$:</p>
+      <p>$$\frac{\partial L}{\partial x}=2x(w+1)^2=2\cdot2\cdot16=64,\qquad \frac{\partial L}{\partial w}=2x^2(w+1)=2\cdot4\cdot4=32.\ \checkmark$$</p>
 
       <h2>Gradients accumulate</h2>
       <p class="idea"><code>backward()</code> adds into <code>.grad</code>, never overwrites. That is how a value used twice collects both terms, and why you must clear grads between steps.</p>
+      <p><strong>Why "add" is the right operation.</strong> Above, $x$ feeds two nodes. Give each use its own name, $u_1=x$ (into Add) and $u_2=x$ (into Mul), so $L=F(u_1,u_2)$. The multivariable chain rule:</p>
+      <p>$$\frac{dL}{dx}=\frac{\partial F}{\partial u_1}\underbrace{\frac{du_1}{dx}}_{1}+\frac{\partial F}{\partial u_2}\underbrace{\frac{du_2}{dx}}_{1}=16+48=64.$$</p>
+      <p>One term per use, summed. The engine implements that sum as "$\mathrel{+}=$ into the adjoint", one contribution at a time (<a href="automatic-differentiation.html">Automatic differentiation</a>). A second <code>backward()</code> looks to <code>.grad</code> exactly like more uses, so it keeps adding:</p>
 <pre><code>x.grad = None           # clear (what optimizer.zero_grad() does)
 for _ in range(2):
     L = (w * x + x) ** 2
     L.backward()
     print(x.grad)       # tensor(64.), then tensor(128.): added</code></pre>
+      <p>$$\text{call 1: } 0+64=64,\qquad \text{call 2: } 64+64=128.$$</p>
 
       <h2>Turning recording off</h2>
       <p class="idea">Recording costs memory: every node keeps the inputs it needs for its backward. Switch it off when you will not differentiate.</p>
+      <p>What a node must keep is read off its local derivatives in the example above:</p>
+      <p>$$\text{Pow needs } 2z\Rightarrow\text{saves } z;\quad \text{Mul needs } x,w\Rightarrow\text{saves both};\quad \text{Add needs } 1\Rightarrow\text{saves nothing}.$$</p>
+      <p>A linear layer $y=Wx$ has $\bar W=\bar y\,x^T$, so it saves its input $x$: one activation tensor per layer stays alive until <code>backward()</code>.</p>
       <table>
         <tr><td><code>with torch.no_grad():</code></td><td>nothing inside is recorded (evaluation, weight updates)</td></tr>
         <tr><td><code>t.detach()</code></td><td>same storage, cut from the graph: a constant to autograd</td></tr>
@@ -119,19 +135,26 @@ c = (w * x).detach()    # c.requires_grad == False</code></pre>
 
       <h2>Vector outputs need a vector</h2>
       <p class="idea">Reverse mode computes $u^TJ$. For a scalar loss $u=1$ is implied. For a vector output you must pass $u$, shaped like the output.</p>
+      <p>Where $u^TJ$ comes from: if $y=f(x)$ feeds some scalar $L$, the chain rule sums over the outputs,</p>
+      <p>$$\frac{\partial L}{\partial x_j}=\sum_i\frac{\partial L}{\partial y_i}\frac{\partial y_i}{\partial x_j}=\sum_iu_iJ_{ij}=(u^TJ)_j,\qquad u=\frac{\partial L}{\partial y}.$$</p>
+      <p>When $y$ is itself the scalar $L$, $u=\partial L/\partial L=1$. Otherwise autograd has no $L$, so you supply $u$.</p>
 <pre><code>x = torch.tensor([1., 2., 3.], requires_grad=True)
 y = x ** 2                  # J = diag(2x)
 y.backward(torch.ones(3))   # u^T J with u = 1: same as y.sum().backward()
 x.grad                      # tensor([2., 4., 6.])</code></pre>
-      <p>Plain <code>y.backward()</code> here raises "grad can be implicitly created only for scalar outputs".</p>
+      <p>Here $y_i=x_i^2$, so $J_{ij}=\partial y_i/\partial x_j=2x_i$ if $i=j$, else $0$. With $u=(1,1,1)$:</p>
+      <p>$$(u^TJ)_j=\sum_iu_iJ_{ij}=u_j\,2x_j=2x_j=(2,4,6).$$</p>
+      <p>This is also the gradient of $\sum_iy_i$, since $\partial(\sum_iy_i)/\partial x_j=\sum_iJ_{ij}=(\mathbf 1^TJ)_j$: hence "same as <code>y.sum().backward()</code>". Plain <code>y.backward()</code> here raises "grad can be implicitly created only for scalar outputs".</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p><code>a = [1., 2.]</code>, <code>b = [3., 4.]</code>, both with <code>requires_grad=True</code>. <code>L = (a * b).sum() + (a ** 2).sum()</code>, then <code>L.backward()</code>. What are <code>a.grad</code> and <code>b.grad</code>? You recompute <code>L</code> and call <code>backward()</code> again without zeroing: now what?</p>
         <details>
           <summary>Solution</summary>
-          <p>$L=\sum_i a_ib_i+a_i^2$, so $\partial L/\partial a=b+2a=(5,\,8)$ and $\partial L/\partial b=a=(1,\,2)$.</p>
-          <p>Second call adds the same amounts: <code>a.grad = [10., 16.]</code>, <code>b.grad = [2., 4.]</code>.</p>
+          <p>Write it per index: $L=\sum_i(a_ib_i+a_i^2)$. Only the $i=j$ term involves $a_j$ or $b_j$. $a_j$ has two uses (in <code>a * b</code> and in <code>a ** 2</code>), so its gradient is a sum of two terms:</p>
+          <p>$$\frac{\partial L}{\partial a_j}=\underbrace{b_j}_{\text{from }a_jb_j}+\underbrace{2a_j}_{\text{from }a_j^2}\ \Rightarrow\ (3+2,\ 4+4)=(5,\,8).$$</p>
+          <p>$$\frac{\partial L}{\partial b_j}=a_j\ \Rightarrow\ (1,\,2).$$</p>
+          <p>Each <code>.sum()</code> passes $u=\mathbf 1$ back to its input (as in the last section), so these are exactly what lands in <code>.grad</code>. The second <code>backward()</code> adds the same amounts again: $(5,8)+(5,8)$ gives <code>a.grad = [10., 16.]</code>, $(1,2)+(1,2)$ gives <code>b.grad = [2., 4.]</code>.</p>
         </details>
       </section>
     </article>
@@ -144,7 +167,7 @@ x.grad                      # tensor([2., 4., 6.])</code></pre>
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -54,17 +54,23 @@
 
       <h2>Surprise: $-\log p(x)$</h2>
       <p class="idea">Rare events surprise you more. The $\log$ makes surprises of independent events add.</p>
-      <p>$$p=1\to0, \qquad p=\tfrac12\to1 \text{ bit}, \qquad p=\tfrac1{1024}\to10 \text{ bits}; \qquad -\log(p_1p_2)=-\log p_1-\log p_2.$$</p>
-      <p>$\log_2$ gives bits, $\ln$ gives nats.</p>
+      <p><strong>Why $\log$.</strong> Ask for a surprise $s(p)$ that is $0$ for a sure thing and adds over independent events, whose probabilities multiply:</p>
+      <p>$$s(p_1p_2)=s(p_1)+s(p_2).$$</p>
+      <p>Put $g(t)=s(e^{-t})$; then $g(t_1+t_2)=g(t_1)+g(t_2)$, and a continuous additive $g$ is linear, $g(t)=ct$. With $t=-\ln p$ that is $s(p)=-c\ln p$. Choosing $c$ picks the unit: $\log_2$ gives bits, $\ln$ gives nats ($1$ nat $=1/\ln2\approx1.44$ bits).</p>
+      <p>$$-\log_21=0, \qquad -\log_2\tfrac12=\log_22=1 \text{ bit}, \qquad -\log_2 2^{-10}=10 \text{ bits}.$$</p>
 
       <h2>Entropy: average surprise</h2>
       <p class="idea">How unpredictable a distribution is.</p>
-      <p>$$H(p)=\mathbb{E}_{x\sim p}[-\log p(x)].$$</p>
+      <p>$$H(p)=\mathbb{E}_{x\sim p}[-\log p(x)]=-\sum_xp(x)\log p(x).$$</p>
+      <p>Each row of the table, in bits ($0\log0:=0$, the limit of $p\log p$ as $p\to0$):</p>
+      <p>$$\text{fair coin: } \tfrac12\cdot1+\tfrac12\cdot1=1.$$</p>
+      <p>$$(0.9,0.1):\ 0.9\cdot\underbrace{(-\log_20.9)}_{0.152}+0.1\cdot\underbrace{(-\log_20.1)}_{3.322}=0.137+0.332=0.47.$$</p>
+      <p>$$\text{certain: } 1\cdot(-\log_21)=0, \qquad \text{uniform over } K:\ \sum_{x=1}^K\tfrac1K\log K=\log K.$$</p>
       <table>
         <tr><td>Fair coin</td><td>$1$ bit</td></tr>
         <tr><td>Coin $(0.9,0.1)$</td><td>$0.47$ bits</td></tr>
         <tr><td>Certain outcome</td><td>$0$</td></tr>
-        <tr><td>Uniform over $K$</td><td>$\log K$ (the maximum)</td></tr>
+        <tr><td>Uniform over $K$</td><td>$\log K$ (the maximum, shown below)</td></tr>
       </table>
 
       <figure class="figure">
@@ -92,7 +98,10 @@
       <h2>Cross-entropy: surprise under wrong beliefs</h2>
       <p class="idea">The world draws from $p$, you expect $q$. Wrong beliefs cost extra surprise.</p>
       <p>$$H(p,q)=\mathbb{E}_{x\sim p}[-\log q(x)].$$</p>
-      <p class="example-label">Example: $p=(0.9,\ 0.1)$</p>
+      <p class="example-label">Example: $p=(0.9,\ 0.1)$, in bits ($-\log_20.9=0.152$, $-\log_20.1=3.322$, $-\log_20.5=1$)</p>
+      <p>$$q=(0.9,0.1):\ 0.9\cdot0.152+0.1\cdot3.322=0.47 \quad (=H(p)),$$</p>
+      <p>$$q=(0.5,0.5):\ 0.9\cdot1+0.1\cdot1=1.00,$$</p>
+      <p>$$q=(0.1,0.9):\ 0.9\cdot3.322+0.1\cdot0.152=2.990+0.015=3.01.$$</p>
       <table>
         <tr><td>$q=(0.9,\ 0.1)$</td><td>$0.47$ bits</td><td>right beliefs</td></tr>
         <tr><td>$q=(0.5,\ 0.5)$</td><td>$1.00$ bit</td><td>no opinion</td></tr>
@@ -100,25 +109,33 @@
       </table>
 
       <h2>The gap is KL</h2>
-      <p class="idea">Extra surprise $=$ KL divergence, which is never negative (proved via Jensen).</p>
-      <p>
-        $$
-        H(p,q)=\mathbb{E}_p[-\log p]+\mathbb{E}_p\Big[\log\frac pq\Big]=H(p)+\mathrm{KL}(p\|q)\ \ge\ H(p).
-        $$
-      </p>
-      <p>Check: $1.00=0.47+0.53$. &#10003;</p>
+      <p class="idea">Extra surprise $=$ KL divergence, which is never negative.</p>
+      <p><strong>Step 1: split the surprise.</strong> $-\log q=-\log p+\log\frac pq$ (add and subtract $\log p$). Take $\mathbb{E}_p$ (linearity):</p>
+      <p>$$H(p,q)=\mathbb{E}_p[-\log p]+\mathbb{E}_p\Big[\log\frac pq\Big]=H(p)+\mathrm{KL}(p\|q).$$</p>
+      <p><strong>Step 2: $\mathrm{KL}\ge0$.</strong> $\log$ is concave, so <a href="convexity-and-jensen.html">Jensen</a> gives $\mathbb{E}[\log Y]\le\log\mathbb{E}[Y]$. With $Y=q/p$:</p>
+      <p>$$-\mathrm{KL}(p\|q)=\mathbb{E}_p\Big[\log\frac qp\Big]\le\log\mathbb{E}_p\Big[\frac qp\Big]$$</p>
+      <p>$$=\log\sum_{x:\,p(x)\gt0}p(x)\frac{q(x)}{p(x)}=\log\sum_{x:\,p(x)\gt0}q(x)\le\log1=0.$$</p>
+      <p>Equality needs $q/p$ constant, i.e. $q=p$. So $H(p,q)\ge H(p)$, with equality only for right beliefs.</p>
+      <p>Check with the table: $\mathrm{KL}(p\|(0.5,0.5))=0.9\log_21.8+0.1\log_20.2=0.763-0.232=0.53$, and $1.00=0.47+0.53$. &#10003; For the last row, $\mathrm{KL}=0.9\log_29+0.1\log_2\tfrac19=0.8\log_29=2.54$, and $0.47+2.54=3.01$. &#10003;</p>
+      <p><strong>Uniform is the maximum.</strong> Take $q=u$, uniform over $K$, so $-\log u(x)=\log K$ for every $x$:</p>
+      <p>$$\mathrm{KL}(p\|u)=H(p,u)-H(p)=\log K-H(p)\ge0 \ \Rightarrow\ H(p)\le\log K,$$</p>
+      <p>with equality only at $p=u$. (A direct Jensen proof is the exercise.)</p>
 
       <h2>The classification loss</h2>
       <p class="idea">Label $y$ is a one-hot $p$, the model's softmax is $q$. Cross-entropy picks out one term.</p>
-      <p>$$H(y,q)=-\log q_{\text{true class}}.$$</p>
-      <p>$H(p_{\text{data}})$ is fixed, so minimizing cross-entropy $=$ minimizing $\mathrm{KL}(p_{\text{data}}\|q)$.</p>
+      <p>True class $k$ means $p=e_k$: $p(j)=1$ if $j=k$, else $0$. Every other term is multiplied by $0$:</p>
+      <p>$$H(e_k,q)=-\sum_je_k(j)\log q_j=-\log q_k=-\log q_{\text{true class}}.$$</p>
+      <p>Over a dataset, average this; by Step 1 the average is $H(p_{\text{data}})+\mathrm{KL}(p_{\text{data}}\|q)$, and $H(p_{\text{data}})$ has no model parameters in it. So minimizing cross-entropy $=$ minimizing $\mathrm{KL}(p_{\text{data}}\|q)$.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Show $H(p)\le\log K$ over $K$ outcomes.</p>
         <details>
           <summary>Solution</summary>
-          <p>$H(p)=\mathbb{E}_p\big[\log\tfrac1p\big]\le\log\mathbb{E}_p\big[\tfrac1p\big]=\log\sum_xp(x)\tfrac1{p(x)}=\log K$, by Jensen ($\log$ concave). Equality when $p$ is uniform.</p>
+          <p>Write entropy as an average of $\log(1/p)$ and apply Jensen ($\log$ concave, so $\mathbb{E}\log Y\le\log\mathbb{E}Y$):</p>
+          <p>$$H(p)=\mathbb{E}_p\Big[\log\frac1{p(x)}\Big]\le\log\mathbb{E}_p\Big[\frac1{p(x)}\Big]$$</p>
+          <p>$$=\log\sum_{x:\,p(x)\gt0}p(x)\frac1{p(x)}=\log\#\{x:p(x)\gt0\}\le\log K.$$</p>
+          <p>Equality in Jensen needs $1/p(x)$ constant on the support, and the last step needs all $K$ outcomes in it: $p$ uniform. Check: the fair coin gives $\log_22=1$ bit. &#10003;</p>
         </details>
       </section>
     </article>
@@ -131,7 +148,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

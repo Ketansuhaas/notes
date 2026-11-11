@@ -70,6 +70,9 @@
         <tr><td>$P(X=x)$</td><td>$p(x)$</td><td>$0$</td></tr>
       </table>
       <p>$P(x)$ alone is ill-formed: $x$ is a number, not an event. Write $P(X=x)$.</p>
+      <p><strong>Why the last two rows.</strong> A pmf value is itself a probability, so it is at most $1$. A density is probability <em>per unit length</em>: squeeze an interval of width $h$ around $x$,</p>
+      <p>$$P(x\le X\le x+h)=\int_x^{x+h}p(t)\,dt\approx p(x)\,h \quad(\text{short interval, } p \text{ nearly constant}).$$</p>
+      <p>Divide by $h$: $p(x)\approx P(\cdot)/h$, which can exceed $1$ when $h$ is small. And a single point sits inside every such interval: $P(X=x)\le P(x\le X\le x+h)\approx p(x)\,h\to0$ as $h\to0$.</p>
 
       <figure class="figure">
         <svg width="442" viewBox="0 0 520 190" role="img" aria-label="Left, a probability mass function as bars; the highlighted bar's height is the probability P(X = x2). Right, a probability density curve; the shaded area between a and b is the probability P(a at most X at most b).">
@@ -97,7 +100,8 @@
         <figcaption>A bar's height is a probability. A density's height is not; only area under it is.</figcaption>
       </figure>
       <p class="example-label">Example</p>
-      <p>$X\sim\text{Unif}[0,\tfrac12]$: $p(x)=2$ on the interval, yet $P(X=\tfrac14)=0$ and $P(X\le\tfrac14)=2\cdot\tfrac14=\tfrac12$.</p>
+      <p>$X\sim\text{Unif}[0,\tfrac12]$: constant height $c$ with total area $1$ forces $c\cdot\tfrac12=1$, so $p(x)=2\gt1$. Then</p>
+      <p>$$P(X\le\tfrac14)=\int_0^{1/4}2\,dx=2\cdot\tfrac14=\tfrac12, \qquad P(X=\tfrac14)=\int_{1/4}^{1/4}2\,dx=0.$$</p>
 
       <h2>Random vectors: joint, marginal, conditional</h2>
       <p class="idea">$p$ takes the whole vector and returns one number. Three moves shrink a joint into smaller pieces.</p>
@@ -107,16 +111,31 @@
         <tr><td>conditional</td><td>$p(y\mid x)=\dfrac{p(x,y)}{p(x)}$</td><td>restrict, renormalize</td></tr>
         <tr><td>independence</td><td>$p(x,y)=p(x)\,p(y)$</td><td>conditioning changes nothing</td></tr>
       </table>
-      <p>Chain rule (any ordering), the engine of autoregressive models:</p>
-      <p>$$p(x_1,\dots,x_n)=\prod_{i=1}^np(x_i\mid x_{\lt i}).$$</p>
+      <p><strong>Marginal.</strong> "$X\in A$" is the same event as "$X\in A$ and $Y$ anything":</p>
+      <p>$$P(X\in A)=P(X\in A,\ Y\in\mathbb{R})=\int_A\Big[\int p(x,y)\,dy\Big]dx,$$</p>
+      <p>so the bracket is the density of $X$. (Discrete: the events $\{X=x,Y=y\}$ for different $y$ are disjoint, so their probabilities add.)</p>
+      <p><strong>Conditional.</strong> Keep only the slice where $X=x$, then rescale it to total $1$. The rescaling is exactly the marginal:</p>
+      <p>$$\int p(y\mid x)\,dy=\frac{\int p(x,y)\,dy}{p(x)}=\frac{p(x)}{p(x)}=1.$$</p>
+      <p><strong>Independence.</strong> Substitute the factorized joint into the conditional:</p>
+      <p>$$p(y\mid x)=\frac{p(x)\,p(y)}{p(x)}=p(y) \quad(\text{seeing } x \text{ changes nothing}).$$</p>
+      <p><strong>Chain rule</strong> (any ordering), the engine of autoregressive models. The conditional definition, rearranged, peels one variable at a time:</p>
+      <p>$$p(x_1,x_2,x_3)=p(x_1,x_2)\,p(x_3\mid x_1,x_2)=p(x_1)\,p(x_2\mid x_1)\,p(x_3\mid x_1,x_2).$$</p>
+      <p>In general each factor is a ratio of consecutive joints, and the product telescopes:</p>
+      <p>$$\prod_{i=1}^np(x_i\mid x_{\lt i})=\prod_{i=1}^n\frac{p(x_{\le i})}{p(x_{\lt i})}=\frac{p(x_{\le n})}{1}=p(x_1,\dots,x_n).$$</p>
       <p class="example-label">Example</p>
-      <p>Two coins, $x_2$ copies $x_1$: $p(x_1,x_2)=p(x_1)\,p(x_2\mid x_1)=\tfrac12\cdot1$ if $x_1=x_2$, else $0$. Not independent ($\tfrac12\ne\tfrac14$), but the chain rule holds.</p>
+      <p>Two fair coins, $x_2$ copies $x_1$: $p(x_2\mid x_1)=1$ if $x_2=x_1$, else $0$. Chain rule:</p>
+      <p>$$p(x_1,x_2)=p(x_1)\,p(x_2\mid x_1)=\begin{cases}\tfrac12\cdot1=\tfrac12 & x_1=x_2\\ \tfrac12\cdot0=0 & x_1\ne x_2\end{cases}$$</p>
+      <p>Marginal of $x_2$: $p(x_2=1)=p(0,1)+p(1,1)=0+\tfrac12=\tfrac12$. So $p(x_1)\,p(x_2)=\tfrac14\ne\tfrac12=p(1,1)$: not independent, yet the chain rule holds.</p>
 
       <h2>Expectation: name the distribution</h2>
       <p class="idea">The subscript says whose randomness you average over. Once two distributions appear, never drop it.</p>
       <p>$$\mathbb{E}_{x\sim p}[f(x)]=\sum_xp(x)f(x) \quad\text{or}\quad \int p(x)f(x)\,dx.$$</p>
+      <p>The integral is the sum in the limit: cut the line into bins of width $h$; bin $k$ has probability $\approx p(x_k)\,h$ (previous section), so</p>
+      <p>$$\sum_kf(x_k)\,P(\text{bin }k)\approx\sum_kf(x_k)\,p(x_k)\,h\ \xrightarrow{h\to0}\ \int f(x)\,p(x)\,dx.$$</p>
       <p class="example-label">Example</p>
-      <p>$\mathbb{E}_{x\sim p}[-\log q(x)]$ (cross-entropy) and $\mathbb{E}_{x\sim q}[-\log q(x)]$ (entropy of $q$) differ only in the subscript.</p>
+      <p>$\mathbb{E}_{x\sim p}[-\log q(x)]$ (cross-entropy) and $\mathbb{E}_{x\sim q}[-\log q(x)]$ (entropy of $q$) differ only in the subscript, yet give different numbers. Take $p=(\tfrac12,\tfrac12)$, $q=(\tfrac34,\tfrac14)$, so $-\log q\approx(0.288,\ 1.386)$:</p>
+      <p>$$\mathbb{E}_{p}[-\log q]\approx\tfrac12(0.288)+\tfrac12(1.386)=0.837,$$</p>
+      <p>$$\mathbb{E}_{q}[-\log q]\approx\tfrac34(0.288)+\tfrac14(1.386)=0.562.$$</p>
 
       <h2>The data distribution</h2>
       <p class="idea">There is one unknown true distribution; the dataset is a few samples of it. Every model approximates some piece.</p>
@@ -144,7 +163,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

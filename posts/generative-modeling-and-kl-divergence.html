@@ -56,17 +56,34 @@
 
       <h2>Same objective, one level up</h2>
       <p class="idea">Swap $p(y\mid x)$ for $p(x)$. Forward KL to the data is still maximum likelihood.</p>
+      <p>Start from the definition of <a href="lebesgue-measure-and-kl-divergence.html">KL</a> and split the log of a ratio:</p>
       <p>
-        $$
-        \mathrm{KL}(p_{\text{data}}\|p_\theta)=\underbrace{-H(p_{\text{data}})}_{\text{const}}-\mathbb{E}_{x\sim p_{\text{data}}}[\log p_\theta(x)] \quad\Rightarrow\quad \min_\theta\mathrm{KL}\iff\max_\theta\,\mathbb{E}_{p_{\text{data}}}[\log p_\theta(x)].
-        $$
+        $$\mathrm{KL}(p_{\text{data}}\|p_\theta)=\mathbb{E}_{x\sim p_{\text{data}}}\Big[\log\frac{p_{\text{data}}(x)}{p_\theta(x)}\Big]$$
+        $$=\underbrace{\mathbb{E}_{p_{\text{data}}}[\log p_{\text{data}}(x)]}_{-H(p_{\text{data}}),\ \text{no }\theta}-\mathbb{E}_{p_{\text{data}}}[\log p_\theta(x)].$$
       </p>
+      <p>The first term is a constant in $\theta$, so</p>
+      <p>$$\min_\theta\mathrm{KL}(p_{\text{data}}\|p_\theta)\iff\max_\theta\,\mathbb{E}_{p_{\text{data}}}[\log p_\theta(x)].$$</p>
+      <p>We only have samples $x_1,\dots,x_N$. Put $p_{\text{data}}$ = the empirical distribution (mass $\tfrac1N$ on each), and the expectation becomes an average: $\tfrac1N\sum_n\log p_\theta(x_n)$, the log-likelihood. That is MLE.</p>
       <p class="example-label">Example</p>
-      <p>Data: 7 heads in 10 flips, $p_\theta=\text{Bernoulli}(\theta)$. Maximize $7\log\theta+3\log(1-\theta)$: $\ \frac7\theta=\frac3{1-\theta}\Rightarrow\theta=0.7$.</p>
+      <p>Data: 7 heads (H) and 3 tails (T) in 10 flips, $p_\theta=\text{Bernoulli}(\theta)$, so $\log p_\theta(H)=\log\theta$, $\log p_\theta(T)=\log(1-\theta)$. The average:</p>
+      <p>$$\ell(\theta)=\tfrac{7}{10}\log\theta+\tfrac{3}{10}\log(1-\theta).$$</p>
+      <p>Set the derivative to zero:</p>
+      <p>$$\ell'(\theta)=\frac{0.7}{\theta}-\frac{0.3}{1-\theta}=0 \ \Rightarrow\ 0.7(1-\theta)=0.3\,\theta \ \Rightarrow\ \theta=0.7.$$</p>
+      <p>It is a maximum: $\ell''=-\tfrac{0.7}{\theta^2}-\tfrac{0.3}{(1-\theta)^2}\lt0$. The fitted model matches the data frequency.</p>
 
-      <h2>Why it's hard</h2>
-      <p class="idea">A density over images must integrate to $1$ over a huge space. That normalizer is an intractable integral.</p>
-      <p>$$p_\theta(x)=\frac{\tilde p_\theta(x)}{Z_\theta}, \qquad Z_\theta=\int\tilde p_\theta(x)\,dx \quad (\text{no closed form for a neural } \tilde p_\theta).$$</p>
+      <h2>Why it's hard: the normalizer</h2>
+      <p class="idea">A neural net can output any positive score $\tilde p_\theta(x)$. To be a density it must be divided by its total, an integral over every possible $x$. That integral is the problem.</p>
+      <p>A density must integrate to $1$, so divide the score by its integral:</p>
+      <p>$$p_\theta(x)=\frac{\tilde p_\theta(x)}{Z_\theta}, \qquad Z_\theta=\int\tilde p_\theta(x)\,dx \ \ \Rightarrow\ \ \int p_\theta=\frac{Z_\theta}{Z_\theta}=1.$$</p>
+      <p>The log-likelihood needs $Z_\theta$, and so does its gradient. Take logs, then use $\nabla\log Z=\nabla Z/Z$ and move $\nabla$ inside the integral:</p>
+      <p>
+        $$\nabla_\theta\log p_\theta(x)=\nabla_\theta\log\tilde p_\theta(x)-\nabla_\theta\log Z_\theta,$$
+        $$\nabla_\theta\log Z_\theta=\frac1{Z_\theta}\int\nabla_\theta\tilde p_\theta(x')\,dx'=\int\underbrace{\frac{\tilde p_\theta(x')}{Z_\theta}}_{p_\theta(x')}\nabla_\theta\log\tilde p_\theta(x')\,dx'$$
+        $$=\mathbb{E}_{x'\sim p_\theta}\big[\nabla_\theta\log\tilde p_\theta(x')\big].$$
+      </p>
+      <p>(The middle step is $\nabla\tilde p=\tilde p\,\nabla\log\tilde p$.) So the gradient needs samples <em>from the model</em>, which is exactly what we can't produce without $Z_\theta$.</p>
+      <p class="example-label">Example: how big is the integral?</p>
+      <p>Binary $28\times28$ images: $Z_\theta$ is a sum over $2^{784}$ images, and $784\log_{10}2=784\times0.301\approx236$, so about $10^{236}$ terms. No closed form exists for a neural $\tilde p_\theta$, and no computer can enumerate them.</p>
       <p>Every method below is a different way around $Z_\theta$.</p>
 
       <h2>A map of the methods</h2>
@@ -78,17 +95,79 @@
         <tr><td>GAN</td><td>sampler only, trained against a discriminator</td><td>none</td><td>Jensen-Shannon, not KL; unstable</td></tr>
         <tr><td>Diffusion</td><td>learn the score $\nabla_x\log p$ by denoising at many noise levels</td><td>bound (weighted ELBO)</td><td>many sampling steps</td></tr>
       </table>
-      <p>One project in five disguises: fit $p_\theta$ to $p_{\text{data}}$.</p>
+      <p>One project in five disguises: fit $p_\theta$ to $p_{\text{data}}$. Each row is derived below.</p>
+
+      <h2>Autoregressive: a product of small softmaxes</h2>
+      <p class="idea">Never normalize over whole sequences. Normalize one token at a time, where the sum is only over the vocabulary.</p>
+      <p>Apply the definition of conditional probability, $p(a,b)=p(a)\,p(b\mid a)$, repeatedly:</p>
+      <p>
+        $$p(x_1,\dots,x_n)=p(x_1)\,p(x_2,\dots,x_n\mid x_1)$$
+        $$=p(x_1)\,p(x_2\mid x_1)\,p(x_3,\dots,x_n\mid x_1,x_2)=\cdots=\prod_{i=1}^np(x_i\mid x_{\lt i}).$$
+      </p>
+      <p>Each factor is a softmax over a vocabulary of size $V$, whose normalizer is a finite sum of $V$ terms (e.g. $5\times10^4$), cheap to compute. Taking logs, $\log p_\theta(x)=\sum_i\log p_\theta(x_i\mid x_{\lt i})$ exactly. The price: sampling $x_i$ needs $x_{\lt i}$ first, so one token at a time.</p>
+
+      <h2>Normalizing flows: change of variables</h2>
+      <p class="idea">Push a simple normalized density through an invertible map. Mass is conserved, so the new density is automatically normalized; only the local stretching changes it.</p>
+      <p><strong>1D.</strong> Let $x=f(z)$ with $f$ increasing. Probability of the same event, then differentiate in $x$:</p>
+      <p>
+        $$P(X\le x)=P\big(Z\le f^{-1}(x)\big) \ \Rightarrow\ p_X(x)=p_Z(z)\,\frac{dz}{dx}=\frac{p_Z(z)}{f'(z)}.$$
+      </p>
+      <p>For decreasing $f$ the sign flips, giving $|f'(z)|$. <strong>In $d$ dimensions</strong> a tiny box of volume $dV$ around $z$ maps to a parallelepiped of volume $|\det J|\,dV$, $J=\partial f/\partial z$ (the determinant is the volume scale factor of a linear map). Same mass, so $p_X(x)\,|\det J|\,dV=p_Z(z)\,dV$, and taking logs:</p>
+      <p>$$\log p_\theta(x)=\log p_Z(z)-\log\big|\det\tfrac{\partial f_\theta}{\partial z}\big|, \qquad z=f_\theta^{-1}(x).$$</p>
+      <p>Exact, with $Z_\theta=1$ for free. The price: $f_\theta$ must be invertible with a cheap determinant.</p>
+      <p class="example-label">Example</p>
+      <p>$z\sim\mathcal N(0,1)$, $x=f(z)=2z$. Then $f'=2$ and $p_X(x)=\tfrac12p_Z(x/2)$, which is the $\mathcal N(0,4)$ density. &#10003;</p>
+
+      <h2>VAE: a lower bound you can compute</h2>
+      <p class="idea">Explain $x$ with a hidden $z$. The exact $\log p_\theta(x)$ is an integral over $z$, but averaging with a guess $q(z\mid x)$ gives a computable lower bound.</p>
+      <p>$$p_\theta(x)=\int p_\theta(x\mid z)\,p(z)\,dz \quad(\text{intractable}),$$</p>
+      <p>$$\log p_\theta(x)\ \ge\ \underbrace{\mathbb{E}_{z\sim q}[\log p_\theta(x\mid z)]-\mathrm{KL}\big(q(z\mid x)\,\|\,p(z)\big)}_{\text{ELBO}},$$</p>
+      <p>with the gap exactly $\mathrm{KL}\big(q(z\mid x)\|p_\theta(z\mid x)\big)$. Both facts are derived in the exercise. The price: the ELBO is an average over $z\sim q_\phi$, and its gradient in $\phi$ needs <a href="reparameterization-trick.html">the reparameterization trick</a>.</p>
+
+      <h2>GAN: what the discriminator measures</h2>
+      <p class="idea">A GAN never writes down $p_\theta(x)$. A discriminator $D$ tries to tell data from samples; at its best, the game's value is a Jensen-Shannon divergence, not KL.</p>
+      <p>The value, written as one integral over $x$ ($p_g$ = the generator's distribution):</p>
+      <p>
+        $$V(D)=\mathbb{E}_{p_{\text{data}}}[\log D(x)]+\mathbb{E}_{p_g}[\log(1-D(x))]$$
+        $$=\int\big[p_{\text{data}}(x)\log D(x)+p_g(x)\log(1-D(x))\big]dx.$$
+      </p>
+      <p>Maximize pointwise in $y=D(x)$: $a\log y+b\log(1-y)$ has derivative $\tfrac ay-\tfrac b{1-y}=0$, so</p>
+      <p>$$D^*(x)=\frac{p_{\text{data}}(x)}{p_{\text{data}}(x)+p_g(x)}.$$</p>
+      <p>Plug in, with the mixture $m=\tfrac12(p_{\text{data}}+p_g)$, so $p_{\text{data}}+p_g=2m$:</p>
+      <p>
+        $$V(D^*)=\mathbb{E}_{p_{\text{data}}}\Big[\log\frac{p_{\text{data}}}{2m}\Big]+\mathbb{E}_{p_g}\Big[\log\frac{p_g}{2m}\Big]$$
+        $$=\mathrm{KL}(p_{\text{data}}\|m)+\mathrm{KL}(p_g\|m)-2\log2$$
+        $$=2\,\mathrm{JS}(p_{\text{data}},p_g)-\log4.$$
+      </p>
+      <p>So the generator minimizes Jensen-Shannon. No likelihood appears anywhere; the price is a min-max game, which is unstable to train.</p>
+
+      <h2>Diffusion: the score has no normalizer</h2>
+      <p class="idea">Take the gradient in $x$, not $\theta$. The normalizer is a constant in $x$, so it vanishes.</p>
+      <p>$$\nabla_x\log p_\theta(x)=\nabla_x\log\tilde p_\theta(x)-\underbrace{\nabla_x\log Z_\theta}_{0,\ Z_\theta\text{ has no }x}=\nabla_x\log\tilde p_\theta(x).$$</p>
+      <p>So a network can model the score $\nabla_x\log p$ directly with no $Z_\theta$. Diffusion learns it at many noise levels by denoising, and samples by many small steps along it.</p>
+      <p><em>Proof idea</em> for "bound (weighted ELBO)": treat the noisy versions $x_1,\dots,x_T$ as the latent $z$ of a VAE whose encoder (adding Gaussian noise) is fixed. The ELBO from the exercise then splits into one KL per step between two Gaussians, and each such KL reduces to a squared denoising error. A full derivation needs the closed-form Gaussian $q(x_{t-1}\mid x_t,x_0)$ (Ho et al., 2020).</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
-        <p>VAE: $p_\theta(x)=\int p_\theta(x\mid z)\,p(z)\,dz$. For any $q(z\mid x)$, prove the ELBO:</p>
+        <p>VAE: $p_\theta(x)=\int p_\theta(x\mid z)\,p(z)\,dz$. For any $q(z\mid x)$, prove the ELBO, and show the gap is the KL from $q$ to the true posterior:</p>
         <p>$$\log p_\theta(x)\ \ge\ \mathbb{E}_{z\sim q}[\log p_\theta(x\mid z)]-\mathrm{KL}\big(q(z\mid x)\,\|\,p(z)\big).$$</p>
         <details>
           <summary>Solution</summary>
-          <p>Multiply and divide by $q$, then Jensen ($\log$ is concave):</p>
-          <p>$$\log p_\theta(x)=\log\mathbb{E}_{q}\Big[\frac{p_\theta(x\mid z)\,p(z)}{q(z\mid x)}\Big]\ \ge\ \mathbb{E}_q[\log p_\theta(x\mid z)]+\mathbb{E}_q\Big[\log\frac{p(z)}{q(z\mid x)}\Big].$$</p>
-          <p>The last term is $-\mathrm{KL}(q\|p(z))$. The gap is $\mathrm{KL}\big(q(z\mid x)\|p_\theta(z\mid x)\big)$: zero when $q$ is the true posterior.</p>
+          <p><strong>The bound (Jensen).</strong> Multiply and divide the integrand by $q$, so the integral becomes an average under $q$:</p>
+          <p>$$\log p_\theta(x)=\log\int q(z\mid x)\,\frac{p_\theta(x\mid z)\,p(z)}{q(z\mid x)}\,dz=\log\mathbb{E}_{q}\Big[\frac{p_\theta(x\mid z)\,p(z)}{q(z\mid x)}\Big].$$</p>
+          <p>$\log$ is concave, so by <a href="convexity-and-jensen.html">Jensen</a> $\log\mathbb{E}[Y]\ge\mathbb{E}[\log Y]$. Then split the log of the product:</p>
+          <p>
+            $$\log p_\theta(x)\ \ge\ \mathbb{E}_q\Big[\log\frac{p_\theta(x\mid z)\,p(z)}{q(z\mid x)}\Big]$$
+            $$=\mathbb{E}_q[\log p_\theta(x\mid z)]+\mathbb{E}_q\Big[\log\frac{p(z)}{q(z\mid x)}\Big].$$
+          </p>
+          <p>The last term is $-\mathrm{KL}\big(q(z\mid x)\|p(z)\big)$ by definition of KL. That is the ELBO.</p>
+          <p><strong>The gap.</strong> Bayes: $p_\theta(x\mid z)\,p(z)=p_\theta(x,z)=p_\theta(z\mid x)\,p_\theta(x)$. Substitute into the ELBO's integrand:</p>
+          <p>
+            $$\text{ELBO}=\mathbb{E}_q\Big[\log\frac{p_\theta(z\mid x)\,p_\theta(x)}{q(z\mid x)}\Big]$$
+            $$=\underbrace{\log p_\theta(x)}_{\text{no }z}-\mathbb{E}_q\Big[\log\frac{q(z\mid x)}{p_\theta(z\mid x)}\Big]$$
+            $$=\log p_\theta(x)-\mathrm{KL}\big(q(z\mid x)\,\|\,p_\theta(z\mid x)\big).$$
+          </p>
+          <p>KL $\ge0$, which re-proves the bound, and the gap is zero exactly when $q$ is the true posterior $p_\theta(z\mid x)$.</p>
         </details>
       </section>
     </article>
@@ -101,7 +180,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

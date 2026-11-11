@@ -56,15 +56,25 @@
 
       <h2>A matrix squeezed into a number</h2>
       <p class="idea">Sandwich $A$ between a row and a column and every $x$ gets one number. Plot it and you get a curved surface.</p>
-      <p>$$f(x)=\underbrace{x^T}_{1\times n}\underbrace{A}_{n\times n}\underbrace{x}_{n\times1}=\sum_{i,j}A_{ij}\,x_ix_j,$$ $$A=A^T \ \ (\text{only the symmetric part of } A \text{ contributes}).$$</p>
+      <p>Expand: $(Ax)_i=\sum_jA_{ij}x_j$, then dot with $x$:</p>
+      <p>$$f(x)=\underbrace{x^T}_{1\times n}\underbrace{A}_{n\times n}\underbrace{x}_{n\times1}=\sum_ix_i(Ax)_i=\sum_{i,j}A_{ij}\,x_ix_j.$$</p>
+      <p><strong>Only the symmetric part matters, so take $A=A^T$.</strong> $f$ is a $1\times1$ number, so it equals its own transpose:</p>
+      <p>$$x^TAx=(x^TAx)^T=x^TA^Tx \ \Rightarrow\ x^TAx=x^T\Big(\underbrace{\tfrac{A+A^T}{2}}_{\text{symmetric part}}\Big)x.$$</p>
+      <p>The leftover $K=\tfrac{A-A^T}2$ has $K^T=-K$, and the same transpose trick gives $x^TKx=x^TK^Tx=-x^TKx$, so $x^TKx=0$: it never contributes.</p>
       <p class="example-label">Example</p>
-      <p>$$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}: \qquad f(x)=2x_1^2+2x_1x_2+2x_2^2, \qquad f(1,1)=6.$$</p>
+      <p>$$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}: \qquad f(x)=2x_1^2+1\,x_1x_2+1\,x_2x_1+2x_2^2=2x_1^2+2x_1x_2+2x_2^2,$$</p>
+      <p>$f(1,1)=2+2+2=6$. The non-symmetric $\left(\begin{smallmatrix}2&2\\0&2\end{smallmatrix}\right)$ gives $2x_1^2+2x_1x_2+2x_2^2$ too: its symmetric part is $A$.</p>
 
       <h2>In the eigenbasis: a sum of squares</h2>
       <p class="idea">Rotate onto the eigenvector axes and the cross terms vanish. Each axis adds its eigenvalue times a square.</p>
-      <p>$$A=Q\Lambda Q^T, \quad \underbrace{y}_{n\times1}=\underbrace{Q^T}_{n\times n}\underbrace{x}_{n\times1}: \qquad f(x)=y^T\Lambda y=\sum_i\lambda_iy_i^2.$$</p>
+      <p>$A$ is symmetric, so <a href="spectral-theorem.html">the spectral theorem</a> gives $A=Q\Lambda Q^T$. Substitute and regroup, using $x^TQ=(Q^Tx)^T$:</p>
+      <p>$$f(x)=x^TQ\Lambda Q^Tx=(Q^Tx)^T\Lambda(Q^Tx)=y^T\Lambda y, \qquad \underbrace{y}_{n\times1}=\underbrace{Q^T}_{n\times n}\underbrace{x}_{n\times1}.$$</p>
+      <p>$\Lambda$ is diagonal, so only the $i=j$ terms of $\sum_{i,j}\Lambda_{ij}y_iy_j$ survive:</p>
+      <p>$$f(x)=\sum_i\lambda_iy_i^2, \qquad y_i=q_i^Tx \ (\text{the coordinate of } x \text{ along } q_i).$$</p>
       <p class="example-label">Example</p>
-      <p>$\lambda_1=3$ along $q_1=\tfrac1{\sqrt2}(1,1)$, $\lambda_2=1$ along $q_2=\tfrac1{\sqrt2}(1,-1)$. For $x=(1,1)$: $y=(\sqrt2,0)$, so $f=3\cdot2+1\cdot0=6$. &#10003;</p>
+      <p>$\lambda_1=3$ along $q_1=\tfrac1{\sqrt2}(1,1)$, $\lambda_2=1$ along $q_2=\tfrac1{\sqrt2}(1,-1)$. For $x=(1,1)$:</p>
+      <p>$$y_1=\tfrac{1+1}{\sqrt2}=\sqrt2,\quad y_2=\tfrac{1-1}{\sqrt2}=0 \ \Rightarrow\ f=3\cdot(\sqrt2)^2+1\cdot0^2=6. \ \checkmark$$</p>
+      <p><strong>Level sets are ellipses.</strong> When all $\lambda_i\gt0$, $f=c$ reads $\sum_i\dfrac{y_i^2}{c/\lambda_i}=1$: an ellipse with semi-axis $\sqrt{c/\lambda_i}$ along $q_i$. Large $\lambda$ means a short axis (steep direction): here $\sqrt{c/3}$ along $q_1$, $\sqrt c$ along $q_2$.</p>
 
       <h2>Bowl, dome, or saddle</h2>
       <p class="idea">Each $\lambda_i$ is the curvature along its axis. All curving up: a bowl with one bottom. All down: a dome. Mixed: a saddle.</p>
@@ -74,13 +84,24 @@
         <tr><td>all $\lambda_i\lt0$</td><td>negative definite, $A\prec0$</td><td>$x^TAx\lt0$ for $x\ne0$</td><td>dome</td></tr>
         <tr><td>mixed signs</td><td>indefinite</td><td>both signs</td><td>saddle</td></tr>
       </table>
-      <p>Why: $f(q_i)=\lambda_i$, and $\sum_i\lambda_iy_i^2\gt0$ for every $y\ne0$ iff every $\lambda_i\gt0$. A $2\times2$ test with no eigenvalues:</p>
+      <p><strong>Why the table.</strong> $Q^T$ is invertible, so $x\ne0\iff y\ne0$, and it is enough to look at $\sum_i\lambda_iy_i^2$.</p>
+      <p>($\Leftarrow$) All $\lambda_i\gt0$ and $y\neq0$: every term is $\ge0$ and the term with $y_i\neq0$ is $\gt0$, so the sum is $\gt0$.</p>
+      <p>($\Rightarrow$) Plug in an eigenvector, $x=q_j$ (so $y=e_j$):</p>
+      <p>$$f(q_j)=q_j^TAq_j=\lambda_j\,q_j^Tq_j=\lambda_j.$$</p>
+      <p>If some $\lambda_j\le0$, this $x\ne0$ has $f\le0$. The other rows work the same way with the inequalities flipped or relaxed; mixed signs give $f(q_j)\gt0$ and $f(q_k)\lt0$.</p>
+      <p><strong>A $2\times2$ test with no eigenvalues.</strong></p>
       <p>$$\begin{pmatrix}a&b\\b&d\end{pmatrix}\succ0 \iff a\gt0 \ \text{ and } \ ad-b^2\gt0.$$</p>
+      <p>The form is $f=ax_1^2+2bx_1x_2+dx_2^2$. ($\Rightarrow$) $f(1,0)=a$ must be $\gt0$. With $a\gt0$, complete the square in $x_1$:</p>
+      <p>$$f=a\Big(x_1^2+\tfrac{2b}{a}x_1x_2\Big)+dx_2^2=a\Big(x_1+\tfrac bax_2\Big)^2-\tfrac{b^2}{a}x_2^2+dx_2^2$$</p>
+      <p>$$=a\Big(x_1+\tfrac bax_2\Big)^2+\frac{ad-b^2}{a}\,x_2^2.$$</p>
+      <p>The point $x=(-\tfrac ba,1)$ zeroes the first square and gives $f=\tfrac{ad-b^2}{a}$, so $ad-b^2\gt0$ is needed. ($\Leftarrow$) Both coefficients are $\gt0$, so $f\ge0$, and $f=0$ forces $x_2=0$, then $x_1+0=0$: only $x=0$.</p>
+      <p>Cross-check with eigenvalues: $ad-b^2=\det A=\lambda_1\lambda_2$ and $a+d=\operatorname{tr}A=\lambda_1+\lambda_2$. Positive product means same signs; $a\gt0$ and $ad\gt b^2\ge0$ force $d\gt0$, so the sum is positive, so both are positive.</p>
       <p class="example-label">Example</p>
       <table>
-        <tr><td>$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$</td><td>$a=2$, $ad-b^2=3$</td><td>$\lambda=3,1$</td><td>bowl</td></tr>
-        <tr><td>$B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$</td><td>$a=0$ fails</td><td>$\lambda=1,-1$</td><td>saddle: $x^TBx=2x_1x_2$</td></tr>
+        <tr><td>$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$</td><td>$a=2\gt0$, $ad-b^2=4-1=3\gt0$</td><td>$\lambda=3,1$</td><td>bowl</td></tr>
+        <tr><td>$B=\begin{pmatrix}0&1\\1&0\end{pmatrix}$</td><td>$a=0$ fails</td><td>$\lambda^2-1=0$: $\lambda=1,-1$</td><td>saddle: $x^TBx=2x_1x_2$</td></tr>
       </table>
+      <p>For $B$: $f(1,1)=2\gt0$ but $f(1,-1)=-2\lt0$, both signs. &#10003;</p>
 
       <figure class="figure">
         <svg width="459" viewBox="0 0 540 248" role="img" aria-label="Level sets of two quadratic forms. Left, A: nested ellipses on the eigenvector axes, narrowest along q1 where lambda is 3; the surface curves up along both axes. Right, B: hyperbolas, blue where f is positive along q1 which curves up, orange where f is negative along q2 which curves down.">
@@ -113,13 +134,19 @@
       </figure>
 
       <p class="idea">Up close, near a point where the slope is zero, every smooth function looks like a quadratic form. So bowl, dome, or saddle is exactly how minima, maxima, and saddle points are classified; see <a href="taylor-expansion.html">Taylor expansion</a>.</p>
+      <p>The second-order Taylor expansion with $\nabla f(x_0)=0$ drops the linear term, leaving the Hessian $H$ (symmetric) as a quadratic form:</p>
+      <p>$$f(x_0+h)\approx f(x_0)+\underbrace{\nabla f(x_0)^Th}_{=0}+\tfrac12h^THh.$$</p>
+      <p>$H\succ0$: every small step goes up (minimum). $H\prec0$: every step goes down (maximum). Indefinite: up along some $q_i$, down along others (saddle).</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Show $M^TM\succeq0$ for any matrix $M$ (any shape), and $M^TM\succ0$ exactly when $M$ has independent columns.</p>
         <details>
           <summary>Solution</summary>
-          <p>$x^TM^TMx=(Mx)^T(Mx)=\|Mx\|^2\ge0$. It equals $0$ iff $Mx=0$, and independent columns mean $Mx=0$ only for $x=0$. This is why $A^TA$ in the SVD and every covariance matrix are positive semidefinite.</p>
+          <p>$M^TM$ is symmetric, $(M^TM)^T=M^T(M^T)^T=M^TM$, so it has a quadratic form to test. Regroup with $x^TM^T=(Mx)^T$:</p>
+          <p>$$x^TM^TMx=(Mx)^T(Mx)=\|Mx\|^2\ge0.$$</p>
+          <p>It equals $0$ iff $Mx=0$. By view 2, $Mx=\sum_jx_jm_j$ mixes the columns, and independent columns mean this is $0$ only for $x=0$. So $x\neq0\Rightarrow\|Mx\|^2\gt0$, i.e. $M^TM\succ0$; with dependent columns some $x\neq0$ gives $f=0$, so only $\succeq0$.</p>
+          <p>A covariance matrix is $\tfrac1n X_c^TX_c$ ($X_c$ = centered data), the case $M=X_c/\sqrt n$; $A^TA$ in the SVD is $M=A$. Both are positive semidefinite.</p>
         </details>
       </section>
     </article>
@@ -132,7 +159,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

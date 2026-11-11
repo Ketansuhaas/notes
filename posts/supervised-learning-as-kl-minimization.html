@@ -64,28 +64,48 @@
 
       <h2>Forward KL = maximum likelihood</h2>
       <p class="idea">Pull $p_\theta(y\mid x)$ toward $p_{\text{data}}(y\mid x)$ at every $x$. The data's entropy has no $\theta$, so only the log-likelihood term matters.</p>
+      <p><strong>Step 1: split the KL at one $x$</strong> (definition of KL, then linearity of $\mathbb{E}_{y\mid x}$):</p>
+      <p>$$\mathrm{KL}\big(p_{\text{data}}(\cdot\mid x)\,\|\,p_\theta(\cdot\mid x)\big)=\mathbb{E}_{y\mid x}\Big[\log\frac{p_{\text{data}}(y\mid x)}{p_\theta(y\mid x)}\Big]$$</p>
+      <p>$$=\underbrace{\mathbb{E}_{y\mid x}\big[\log p_{\text{data}}(y\mid x)\big]}_{-H(y\mid x{=}x),\ \text{no }\theta}-\mathbb{E}_{y\mid x}\big[\log p_\theta(y\mid x)\big].$$</p>
+      <p><strong>Step 2: average over $x$.</strong> $\mathbb{E}_x\mathbb{E}_{y\mid x}=\mathbb{E}_{(x,y)\sim p_{\text{data}}}$:</p>
       <p>$$\mathbb{E}_x\,\mathrm{KL}\big(p_{\text{data}}(y\mid x)\,\|\,p_\theta(y\mid x)\big)=\underbrace{-H(y\mid x)}_{\text{no }\theta}-\mathbb{E}_{(x,y)\sim p_{\text{data}}}\big[\log p_\theta(y\mid x)\big].$$</p>
-      <p>Replace $\mathbb{E}$ by the training average (LLN):</p>
-      <p>$$\min_\theta\ \underbrace{-\frac1N\sum_{i=1}^N\log p_\theta(y_i\mid x_i)}_{\text{NLL}}.$$</p>
+      <p><strong>Step 3: replace $\mathbb{E}$ by the training average.</strong> For i.i.d. pairs, $\frac1N\sum_i\log p_\theta(y_i\mid x_i)\to\mathbb{E}[\log p_\theta(y\mid x)]$ (<a href="lln-and-clt.html">LLN</a>). So minimize</p>
+      <p>$$\underbrace{-\frac1N\sum_{i=1}^N\log p_\theta(y_i\mid x_i)}_{\text{NLL}}=-\frac1N\log\prod_{i=1}^Np_\theta(y_i\mid x_i).$$</p>
+      <p>$\log$ is increasing, so minimizing the NLL is maximizing the likelihood $\prod_ip_\theta(y_i\mid x_i)$ of the training set: forward KL $=$ maximum likelihood.</p>
 
       <h2>Gaussian $\to$ MSE</h2>
       <p class="idea">Assume $y$ is Gaussian around the prediction, and squared error is what MLE hands you.</p>
-      <p>$$-\log\mathcal N\big(y;f_\theta(x),\sigma^2\big)=\frac{(y-f_\theta(x))^2}{2\sigma^2}+\underbrace{\tfrac12\log(2\pi\sigma^2)}_{\text{const}}$$</p>
-      <p>$$\Rightarrow\quad \min_\theta\ \frac1N\sum_i\big(y_i-f_\theta(x_i)\big)^2 \quad(\text{MSE}).$$</p>
+      <p>Take $-\log$ of the density $\mathcal N(y;f,\sigma^2)=\frac1{\sqrt{2\pi\sigma^2}}\exp\!\big(-\frac{(y-f)^2}{2\sigma^2}\big)$; $\log$ undoes $\exp$:</p>
+      <p>$$-\log\mathcal N\big(y;f_\theta(x),\sigma^2\big)=\frac{(y-f_\theta(x))^2}{2\sigma^2}+\underbrace{\tfrac12\log(2\pi\sigma^2)}_{\text{const}}.$$</p>
+      <p>Average over the data. With $\sigma$ fixed, the factor $\frac1{2\sigma^2}\gt0$ and the constant do not move the minimizer:</p>
+      <p>$$\text{NLL}=\frac1{2\sigma^2}\cdot\frac1N\sum_i\big(y_i-f_\theta(x_i)\big)^2+\text{const} \quad\Rightarrow\quad \min_\theta\ \text{MSE}.$$</p>
       <p class="example-label">Example</p>
-      <p>$\sigma=1$, $y=3$, $f_\theta(x)=2.5$: loss $=\tfrac12(0.5)^2=0.125$ plus a constant.</p>
+      <p>$\sigma=1$, $y=3$, $f_\theta(x)=2.5$:</p>
+      <p>$$\frac{(3-2.5)^2}{2\cdot1}=\frac{0.25}2=0.125, \qquad \text{const}=\tfrac12\ln(2\pi)=0.919, \qquad \text{NLL}=1.044 \text{ nats}.$$</p>
 
       <h2>Categorical $\to$ cross-entropy</h2>
       <p class="idea">The NLL of the true class is exactly cross-entropy against the one-hot label.</p>
-      <p>$$-\log p_\theta(y{=}k\mid x)=-\log\operatorname{softmax}(z)_k=H\big(e_k,\,\operatorname{softmax}(z)\big).$$</p>
+      <p>A categorical with probabilities $\pi=\operatorname{softmax}(z)$ assigns $p(y{=}k)=\pi_k=\prod_j\pi_j^{[k=j]}$. Take $-\log$:</p>
+      <p>$$-\log p_\theta(y{=}k\mid x)=-\sum_j[j{=}k]\log\pi_j=H\big(e_k,\,\pi\big)=-\log\pi_k,$$</p>
+      <p>the one-hot cross-entropy from <a href="entropy-and-cross-entropy.html">the entropy note</a>. With $\pi_k=e^{z_k}/\sum_je^{z_j}$ it becomes</p>
+      <p>$$-\log\operatorname{softmax}(z)_k=-z_k+\log\sum_je^{z_j}.$$</p>
       <p class="example-label">Example</p>
-      <p>$z=(2,1,0)$, true class $1$: $\operatorname{softmax}(z)_1=\dfrac{e^2}{e^2+e+1}=0.665$, loss $=-\ln0.665=0.41$.</p>
+      <p>$z=(2,1,0)$, true class $1$ (the logit $2$). With $e^2=7.389$, $e^1=2.718$, $e^0=1$:</p>
+      <p>$$\operatorname{softmax}(z)_1=\frac{7.389}{7.389+2.718+1}=\frac{7.389}{11.107}=0.665, \qquad -\ln0.665=0.41.$$</p>
+      <p>Same from the logit form: $-2+\ln11.107=-2+2.408=0.41$. &#10003;</p>
 
       <h2>Both losses learn a mean</h2>
       <p class="idea">At the optimum, the output equals the average of what it is built to predict.</p>
+      <p>Assume the model is flexible enough to pick its output freely at each $x$; then the expected loss $\mathbb{E}_x\mathbb{E}_{y\mid x}[\cdots]$ is minimized separately at each $x$.</p>
+      <p><strong>MSE.</strong> Let $\bar y=\mathbb{E}[y\mid x]$ and $m$ the prediction. Split $y-m=(y-\bar y)+(\bar y-m)$ and square; the cross term has $\mathbb{E}[y-\bar y\mid x]=0$:</p>
+      <p>$$\mathbb{E}\big[(y-m)^2\mid x\big]=\underbrace{\operatorname{Var}(y\mid x)}_{\text{no }m}+(\bar y-m)^2.$$</p>
+      <p>Minimized at $m=\bar y$, so $f_\theta(x)\to\mathbb{E}[y\mid x]$, and the leftover loss is the noise $\operatorname{Var}(y\mid x)$. (Same as setting $\frac{d}{dm}\mathbb{E}[(y-m)^2]=-2\,\mathbb{E}[y-m]=0$.)</p>
+      <p><strong>Cross-entropy.</strong> Average $-\log\pi_y$ over $y\mid x$:</p>
+      <p>$$\mathbb{E}_{y\mid x}[-\log\pi_y]=-\sum_kp_{\text{data}}(k\mid x)\log\pi_k=H\big(p_{\text{data}}(\cdot\mid x),\,\pi\big),$$</p>
+      <p>minimized at $\pi=p_{\text{data}}(\cdot\mid x)$ (exercise). That is a mean too: coordinate $k$ of $\mathbb{E}[e_y\mid x]$ is $P(y{=}k\mid x)$.</p>
       <table>
-        <tr><td>MSE</td><td>$\frac{d}{dm}\mathbb{E}[(y-m)^2]=-2\,\mathbb{E}[y-m]=0$</td><td>$f_\theta(x)\to\mathbb{E}[y\mid x]$</td></tr>
-        <tr><td>Cross-entropy</td><td>see exercise</td><td>$\operatorname{softmax}(z)\to\mathbb{E}[e_y\mid x]=p_{\text{data}}(\cdot\mid x)$</td></tr>
+        <tr><td>MSE</td><td>$f_\theta(x)\to\mathbb{E}[y\mid x]$</td></tr>
+        <tr><td>Cross-entropy</td><td>$\operatorname{softmax}(z)\to\mathbb{E}[e_y\mid x]=p_{\text{data}}(\cdot\mid x)$</td></tr>
       </table>
 
       <figure class="figure">
@@ -110,7 +130,11 @@
         <p>Minimize $-\sum_kp_k\log q_k$ over the simplex $\sum_kq_k=1$. Show $q^\star=p$.</p>
         <details>
           <summary>Solution</summary>
-          <p>Lagrangian $L=-\sum_kp_k\log q_k+\nu\big(\sum_kq_k-1\big)$. Then $\partial L/\partial q_k=-p_k/q_k+\nu=0\Rightarrow q_k=p_k/\nu$. Summing, $1=1/\nu$, so $\nu=1$ and $q^\star=p$. (Or: $H(p,q)=H(p)+\mathrm{KL}(p\|q)$, minimized at $\mathrm{KL}=0$.)</p>
+          <p>Add a multiplier $\nu$ for the constraint (see <a href="lagrangian-and-kkt.html">the Lagrangian</a>):</p>
+          <p>$$L=-\sum_kp_k\log q_k+\nu\Big(\sum_kq_k-1\Big).$$</p>
+          <p>$$\frac{\partial L}{\partial q_k}=-\frac{p_k}{q_k}+\nu=0 \ \Rightarrow\ q_k=\frac{p_k}\nu.$$</p>
+          <p>$$\text{Constraint: } 1=\sum_kq_k=\frac{\sum_kp_k}\nu=\frac1\nu \ \Rightarrow\ \nu=1,\quad q^\star=p.$$</p>
+          <p>It is a minimum: each $-p_k\log q_k$ is convex in $q_k$, and the constraint is linear. (Or, without calculus: $H(p,q)=H(p)+\mathrm{KL}(p\|q)$, and $\mathrm{KL}\ge0$ with equality only at $q=p$.)</p>
         </details>
       </section>
     </article>
@@ -123,7 +147,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

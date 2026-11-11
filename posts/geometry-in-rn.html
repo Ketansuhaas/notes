@@ -63,13 +63,23 @@
       <h2>Hyperplanes</h2>
       <p class="idea">All points with the same dot product against one normal vector $w$. One equation removes one dimension, so it is flat and $(n-1)$-dimensional. A linear classifier's decision boundary $w^Tx+b=0$ is one.</p>
       <p>$$w^T(x-p)=0 \iff \underbrace{w^T}_{1\times n}\underbrace{x}_{n\times1}=\underbrace{c}_{1\times1}, \qquad c=w^Tp.$$</p>
+      <p><strong>Why $w$ is normal.</strong> Take any two points $x,x'$ on it and subtract their equations:</p>
+      <p>$$w^Tx=c,\ \ w^Tx'=c \ \Rightarrow\ w^T(x-x')=0,$$</p>
+      <p>so $w$ is perpendicular to every direction $x-x'$ lying inside the hyperplane.</p>
+      <p><strong>Why $n-1$ dimensions.</strong> $w\ne0$, so some entry, say $w_n$, is nonzero. Solve the one equation for that coordinate:</p>
+      <p>$$x_n=\frac{c-w_1x_1-\cdots-w_{n-1}x_{n-1}}{w_n}.$$</p>
+      <p>$x_1,\dots,x_{n-1}$ are free dials and $x_n$ is then fixed: $n-1$ free dials.</p>
+      <p><strong>Which side is which.</strong> Step from a point $p$ on it along $w$:</p>
+      <p>$$w^T(p+tw)=w^Tp+t\,w^Tw=c+t\|w\|^2,$$</p>
+      <p>which is $\gt c$ for $t\gt0$ and $\lt c$ for $t\lt0$. So $w$ points into the side $w^Tx\gt c$.</p>
       <table>
         <tr><td>$n=2$</td><td>a line</td></tr>
         <tr><td>$n=3$</td><td>an ordinary plane</td></tr>
         <tr><td>$n=784$ (MNIST)</td><td>a flat 783-dimensional wall</td></tr>
       </table>
       <p class="example-label">Example</p>
-      <p>$$p=\begin{pmatrix}0\\0\\1\end{pmatrix},\ w=\begin{pmatrix}1\\1\\1\end{pmatrix} \ \Rightarrow\ x+y+z=1. \qquad (0,0,1),\ (1,0,0) \text{ both lie on it.}$$</p>
+      <p>$$p=\begin{pmatrix}0\\0\\1\end{pmatrix},\ w=\begin{pmatrix}1\\1\\1\end{pmatrix} \ \Rightarrow\ c=w^Tp=0+0+1=1 \ \Rightarrow\ x+y+z=1.$$</p>
+      <p>Check: $(0,0,1)$ gives $0+0+1=1$ and $(1,0,0)$ gives $1+0+0=1$, both on it. &#10003;</p>
 
       <figure class="figure">
         <svg width="255" viewBox="0 0 300 200" role="img" aria-label="A hyperplane drawn as a line, with its normal vector w perpendicular to it at a point p; a point x0 off the plane connects to it by a perpendicular segment, the shortest distance.">
@@ -98,7 +108,10 @@
 
       <h2>Spheres</h2>
       <p class="idea">All points at distance $r$ from a center $c$. Now $x$ appears twice, so the equation is quadratic: the first curved shape.</p>
+      <p>Both sides are $\ge0$, so square them, and use $\|v\|^2=v^Tv$:</p>
       <p>$$\|x-c\|=r \iff \underbrace{(x-c)^T}_{1\times n}\underbrace{(x-c)}_{n\times1}=r^2.$$</p>
+      <p>Expand the product to see the quadratic term:</p>
+      <p>$$x^Tx-2c^Tx+c^Tc=r^2 \qquad (\text{using } x^Tc=c^Tx).$$</p>
       <p class="example-label">Example</p>
       <p>$c=0,\ r=1$: $x^2+y^2=1$, the unit circle. Check $(1,0)$: $1^2+0^2=1$. &#10003;</p>
 
@@ -113,7 +126,15 @@
         <p>Show the distance from a point $x_0$ to the hyperplane $w^Tx=c$ is $\dfrac{|c-w^Tx_0|}{\|w\|}$. (Hint: the shortest path runs along the normal, a line $x_0+sw$.)</p>
         <details>
           <summary>Solution</summary>
-          <p>Plug the line into the plane: $w^T(x_0+sw)=c \Rightarrow s=\dfrac{c-w^Tx_0}{\|w\|^2}$. The distance travelled is $|s|\,\|w\|=\dfrac{|c-w^Tx_0|}{\|w\|}$. Example: origin to $x+y+z=1$ is $\tfrac1{\sqrt3}$. &#10003;</p>
+          <p><strong>1. Where the normal line hits the plane.</strong> Plug $x=x_0+sw$ into $w^Tx=c$:</p>
+          <p>$$w^Tx_0+s\,w^Tw=c \ \Rightarrow\ s=\frac{c-w^Tx_0}{\|w\|^2}, \qquad x^\star:=x_0+sw.$$</p>
+          <p><strong>2. That point is the closest.</strong> For any $y$ on the plane, split $x_0-y$ into a piece along $w$ and a piece inside the plane:</p>
+          <p>$$x_0-y=\underbrace{(x_0-x^\star)}_{=-sw}+\underbrace{(x^\star-y)}_{\perp w \text{ (both on plane)}}.$$</p>
+          <p>The two pieces are perpendicular, so Pythagoras gives</p>
+          <p>$$\|x_0-y\|^2=\|x_0-x^\star\|^2+\|x^\star-y\|^2\ \ge\ \|x_0-x^\star\|^2.$$</p>
+          <p><strong>3. Its length.</strong></p>
+          <p>$$\|x_0-x^\star\|=|s|\,\|w\|=\frac{|c-w^Tx_0|}{\|w\|^2}\,\|w\|=\frac{|c-w^Tx_0|}{\|w\|}.$$</p>
+          <p>Example: origin to $x+y+z=1$: $w=(1,1,1)$, $c=1$, $w^Tx_0=0$, $\|w\|=\sqrt3$, so the distance is $\tfrac{|1-0|}{\sqrt3}=\tfrac1{\sqrt3}$. &#10003;</p>
         </details>
       </section>
     </article>
@@ -126,7 +147,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

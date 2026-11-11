@@ -54,21 +54,41 @@
 
       <h2>Linearity of expectation</h2>
       <p class="idea">Average of a sum = sum of averages. Always, even if the pieces depend on each other.</p>
-      <p>$$\mathbb{E}[aX+bY+c]=a\,\mathbb{E}X+b\,\mathbb{E}Y+c. \qquad \text{Two dice: } 3.5+3.5=7.$$</p>
+      <p>$$\mathbb{E}[aX+bY+c]=a\,\mathbb{E}X+b\,\mathbb{E}Y+c.$$</p>
+      <p>Write the expectation as a sum over the joint, split it into three sums, and marginalize each (<a href="random-variables-and-notation.html">notation note</a>):</p>
+      <p>$$\mathbb{E}[aX+bY+c]=\sum_{x,y}p(x,y)\,(ax+by+c)$$</p>
+      <p>$$=a\sum_xx\underbrace{\textstyle\sum_yp(x,y)}_{p(x)}+b\sum_yy\underbrace{\textstyle\sum_xp(x,y)}_{p(y)}+c\underbrace{\textstyle\sum_{x,y}p(x,y)}_{1}.$$</p>
+      <p>No factorization of $p(x,y)$ was used, so no independence is needed. Two dice: one die has $\mathbb{E}=\tfrac{1+2+\cdots+6}{6}=\tfrac{21}{6}=3.5$, so the sum has $3.5+3.5=7$.</p>
 
       <h2>Shift and scale</h2>
       <p class="idea">Shifting moves the cloud, it doesn't spread it. Scaling by $a$ stretches distances by $a$, squared distances by $a^2$.</p>
       <p>$$\operatorname{Var}X=\mathbb{E}[(X-\mu)^2]=\mathbb{E}[X^2]-\mu^2, \qquad \operatorname{Var}(aX+b)=a^2\operatorname{Var}X.$$</p>
+      <p><strong>First identity.</strong> Expand the square, then use linearity ($\mu$ is a constant, $\mathbb{E}X=\mu$):</p>
+      <p>$$\mathbb{E}[(X-\mu)^2]=\mathbb{E}[X^2-2\mu X+\mu^2]=\mathbb{E}[X^2]-2\mu\cdot\mu+\mu^2=\mathbb{E}[X^2]-\mu^2.$$</p>
+      <p><strong>Second.</strong> By linearity $\mathbb{E}[aX+b]=a\mu+b$, so the deviation from the mean loses the $b$:</p>
+      <p>$$(aX+b)-(a\mu+b)=a(X-\mu) \ \Rightarrow\ \operatorname{Var}(aX+b)=\mathbb{E}[a^2(X-\mu)^2]=a^2\operatorname{Var}X.$$</p>
 
       <h2>Sums</h2>
       <p class="idea">Spreads add, plus a term for moving together. Independent: that term is $0$.</p>
-      <p>$$\operatorname{Var}(X+Y)=\operatorname{Var}X+\operatorname{Var}Y+2\operatorname{Cov}(X,Y).$$</p>
+      <p>$$\operatorname{Var}(X+Y)=\operatorname{Var}X+\operatorname{Var}Y+2\operatorname{Cov}(X,Y),$$</p>
+      <p>$$\operatorname{Cov}(X,Y):=\mathbb{E}[(X-\mu_X)(Y-\mu_Y)].$$</p>
+      <p>The deviation of the sum is the sum of deviations. Expand the square, then take $\mathbb{E}$ term by term (linearity):</p>
+      <p>$$(X+Y)-(\mu_X+\mu_Y)=(X-\mu_X)+(Y-\mu_Y)$$</p>
+      <p>$$\big[(X-\mu_X)+(Y-\mu_Y)\big]^2=(X-\mu_X)^2+(Y-\mu_Y)^2+2(X-\mu_X)(Y-\mu_Y).$$</p>
+      <p>The three expectations are $\operatorname{Var}X$, $\operatorname{Var}Y$, $2\operatorname{Cov}(X,Y)$. Expanding the product the same way as above gives the shortcut $\operatorname{Cov}(X,Y)=\mathbb{E}[XY]-\mu_X\mu_Y$.</p>
+      <p><strong>Independent $\Rightarrow$ $\operatorname{Cov}=0$.</strong> The joint factorizes, so the double sum splits into two single sums:</p>
+      <p>$$\mathbb{E}[XY]=\sum_{x,y}xy\,p(x)\,p(y)=\Big(\sum_xx\,p(x)\Big)\Big(\sum_yy\,p(y)\Big)=\mathbb{E}X\,\mathbb{E}Y.$$</p>
+      <p>Not the reverse: $X$ uniform on $\{-1,0,1\}$, $Y=X^2$. Then $\operatorname{Cov}=\mathbb{E}[X^3]-\mathbb{E}X\,\mathbb{E}Y=0-0=0$, but $Y$ is a function of $X$.</p>
 
       <h2>Averages: $\sigma^2/n$</h2>
       <p class="idea">Independent errors partly cancel. Noise of an average shrinks like $1/\sqrt n$.</p>
       <p>$$X_i\overset{\text{iid}}{\sim}(\mu,\sigma^2): \quad \operatorname{Var}\Big(\textstyle\sum_iX_i\Big)=n\sigma^2, \qquad \operatorname{Var}\Big(\tfrac1n\textstyle\sum_iX_i\Big)=\dfrac{\sigma^2}{n}.$$</p>
+      <p>Expanding $(\sum_i(X_i-\mu))^2$ gives $n$ squares and a cross term for every pair, exactly as for two variables:</p>
+      <p>$$\operatorname{Var}\Big(\sum_iX_i\Big)=\sum_i\underbrace{\operatorname{Var}X_i}_{\sigma^2}+2\sum_{i\lt j}\underbrace{\operatorname{Cov}(X_i,X_j)}_{0\text{ (independent)}}=n\sigma^2.$$</p>
+      <p>Then the scale rule with $a=\tfrac1n$:</p>
+      <p>$$\operatorname{Var}\Big(\tfrac1n\sum_iX_i\Big)=\frac1{n^2}\cdot n\sigma^2=\frac{\sigma^2}n, \qquad \text{std}=\frac{\sigma}{\sqrt n}.$$</p>
       <p class="example-label">Example</p>
-      <p>Mini-batch of size $B$: gradient noise $\sigma/\sqrt B$. $4\times$ the batch, half the noise.</p>
+      <p>A mini-batch gradient is the mean of $B$ per-example gradients (each with std $\sigma$), so its noise is $\sigma/\sqrt B$. With $4B$: $\sigma/\sqrt{4B}=\tfrac12\cdot\sigma/\sqrt B$, half the noise.</p>
 
       <figure class="figure">
         <svg width="306" viewBox="0 0 360 150" role="img" aria-label="Two bell curves with the same center: a wide one for a single sample with spread sigma, and a narrow, taller one for the mean of four samples with spread sigma over two.">
@@ -91,7 +111,12 @@
         \mathbb{E}[AX+b]=A\mu+b, \qquad \underbrace{\operatorname{Cov}(AX+b)}_{m\times m}=\underbrace{A}_{m\times n}\underbrace{\Sigma}_{n\times n}\underbrace{A^T}_{n\times m}.
         $$
       </p>
-      <p>Proof: $AX+b-\mathbb{E}[AX+b]=A(X-\mu)$, so $\mathbb{E}[A(X-\mu)(X-\mu)^TA^T]=A\Sigma A^T$.</p>
+      <p>Here $\Sigma=\operatorname{Cov}(X):=\mathbb{E}[(X-\mu)(X-\mu)^T]$, whose $(j,k)$ entry is $\operatorname{Cov}(X_j,X_k)$.</p>
+      <p><strong>Mean.</strong> Entry $j$ of $AX+b$ is $\sum_kA_{jk}X_k+b_j$, a linear combination, so linearity applies entry by entry: $\mathbb{E}[AX+b]=A\mu+b$.</p>
+      <p><strong>Covariance.</strong> Subtract the mean, then pull the constant matrices out of $\mathbb{E}$ (linearity again, entry by entry):</p>
+      <p>$$AX+b-(A\mu+b)=A(X-\mu)$$</p>
+      <p>$$\operatorname{Cov}(AX+b)=\mathbb{E}\big[A(X-\mu)\,\big(A(X-\mu)\big)^T\big]=\mathbb{E}\big[A(X-\mu)(X-\mu)^TA^T\big]$$</p>
+      <p>$$=A\,\mathbb{E}\big[(X-\mu)(X-\mu)^T\big]A^T=A\Sigma A^T.$$</p>
 
       <figure class="figure">
         <svg width="408" viewBox="0 0 480 212" role="img" aria-label="Left, a round cloud of points with covariance I and its unit circle. Right, the same points after multiplying by A: a tilted ellipse with spread 3 along the (1,1) diagonal and 1 along (1,-1).">
@@ -192,15 +217,25 @@
         <figcaption>Same points after $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: std $3=\sqrt9$ along $(1,1)$, $1$ along $(1,-1)$.</figcaption>
       </figure>
 
+      <p class="example-label">Example (the figure)</p>
+      <p>$\operatorname{Cov}X=I$, $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$. Then $\operatorname{Cov}(AX)=AIA^T=AA^T$; entry $(j,k)$ is row $j$ dotted with row $k$:</p>
+      <p>$$AA^T=\begin{pmatrix}4+1&2+2\\2+2&1+4\end{pmatrix}=\begin{pmatrix}5&4\\4&5\end{pmatrix}.$$</p>
+      <p>$$\begin{pmatrix}5&4\\4&5\end{pmatrix}\begin{pmatrix}1\\1\end{pmatrix}=9\begin{pmatrix}1\\1\end{pmatrix}, \qquad \begin{pmatrix}5&4\\4&5\end{pmatrix}\begin{pmatrix}1\\-1\end{pmatrix}=1\begin{pmatrix}1\\-1\end{pmatrix}.$$</p>
+      <p>Variance $9$ along $(1,1)$, $1$ along $(1,-1)$: std $3$ and $1$, the ellipse drawn.</p>
+
       <p class="example-label">Special case</p>
-      <p>$A=v^T$, a unit row: $\operatorname{Var}(v^TX)=v^T\Sigma v$, the spread along $v$. Next note.</p>
+      <p>$A=v^T$, a unit row ($1\times n$): $\operatorname{Cov}(v^TX)$ is $1\times1$, so it is a variance, $\operatorname{Var}(v^TX)=v^T\Sigma v$, the spread along $v$. Next note.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>$q,k\in\mathbb{R}^d$ independent, entries iid with mean $0$, variance $1$. Show $\operatorname{Var}(q^Tk)=d$. Why does attention divide by $\sqrt d$?</p>
         <details>
           <summary>Solution</summary>
-          <p>$q^Tk=\sum_iq_ik_i$. Each term: mean $0$, variance $\mathbb{E}[q_i^2]\,\mathbb{E}[k_i^2]=1$, uncorrelated with the others. Sum: variance $d$. Dividing by $\sqrt d$ brings it back to $1$, so the softmax doesn't saturate as $d$ grows.</p>
+          <p>$q^Tk=\sum_iq_ik_i$. Each term, using independence ($\mathbb{E}$ of a product of independent factors splits):</p>
+          <p>$$\mathbb{E}[q_ik_i]=\mathbb{E}q_i\,\mathbb{E}k_i=0, \qquad \operatorname{Var}(q_ik_i)=\mathbb{E}[q_i^2k_i^2]-0^2=\mathbb{E}[q_i^2]\,\mathbb{E}[k_i^2]=1\cdot1.$$</p>
+          <p>Different terms are uncorrelated: for $i\ne j$, $\operatorname{Cov}(q_ik_i,q_jk_j)=\mathbb{E}q_i\,\mathbb{E}k_i\,\mathbb{E}q_j\,\mathbb{E}k_j-0=0$. So the sum rule gives</p>
+          <p>$$\operatorname{Var}(q^Tk)=\sum_{i=1}^d1=d, \qquad \operatorname{Var}\Big(\frac{q^Tk}{\sqrt d}\Big)=\frac1d\cdot d=1.$$</p>
+          <p>Without the division, logits have std $\sqrt d$ and the softmax saturates as $d$ grows; with it, they stay at std $1$.</p>
         </details>
       </section>
     </article>
@@ -213,7 +248,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

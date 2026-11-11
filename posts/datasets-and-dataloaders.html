@@ -105,20 +105,46 @@ x = x.to('cuda', non_blocking=True)       # async copy from pinned memory</code>
         <tr><td><code>pin_memory</code></td><td>page-locked host memory: faster, asynchronous copies to the GPU</td></tr>
         <tr><td><code>drop_last</code></td><td>skip the final short batch</td></tr>
       </table>
+      <p><strong>Shape <code>(64,)</code>.</strong> Each <code>__getitem__</code> returns a pair of 0-d tensors $(x_i,\,x_i^2)$. The default collate stacks field by field over the $64$ sampled indices $i_1,\dots,i_{64}$:</p>
+      <p>$$x=\operatorname{stack}(x_{i_1},\dots,x_{i_{64}})\in\mathbb R^{64},\qquad y=\operatorname{stack}(x_{i_1}^2,\dots,x_{i_{64}}^2)\in\mathbb R^{64}.$$</p>
+      <p><strong>How many workers.</strong> One worker builds a batch in $B\,t_{\text{item}}$. With $w$ workers in parallel a batch is ready every $B\,t_{\text{item}}/w$, and the GPU never waits if that is at most one training step:</p>
+      <p>$$\frac{B\,t_{\text{item}}}{w}\le t_{\text{step}}\quad\Rightarrow\quad w\ge\frac{B\,t_{\text{item}}}{t_{\text{step}}}.$$</p>
+      <p>Illustrative numbers: $B=64$, $2$ ms to decode and augment an image, $40$ ms per step gives $w\ge64\cdot2/40=3.2$, so $4$ workers.</p>
+      <p><strong>Why pinned.</strong> (Hardware fact.) The GPU's copy engine reads host memory directly only if the OS cannot page it out. From ordinary memory the driver first copies into a pinned staging buffer, then to the GPU; pinning skips that extra copy and lets <code>non_blocking=True</code> overlap the transfer with compute.</p>
 
       <h2>Why shuffle</h2>
       <p class="idea">SGD needs each mini-batch gradient to be an honest, noisy estimate of the full gradient. Random batches give that; sorted data does not.</p>
-      <p>$$\hat g_B=\frac1B\sum_{i\in\text{batch}}\nabla\ell_i, \qquad \mathbb{E}[\hat g_B]=\nabla L, \qquad \operatorname{Var}\approx\frac{\sigma^2}{B}.$$</p>
-      <p class="example-label">Example</p>
-      <p>MNIST sorted by label, batch 64: the first ~90 batches are all "0"s, so every step pushes toward predicting 0, then toward 1, and so on. Each batch gradient is biased; the model chases the latest class. The $\sigma^2/B$ is from <a href="expectation-and-variance-algebra.html">variance algebra</a>.</p>
+      <p>The full-data loss and a batch estimate of its gradient:</p>
+      <p>$$L=\frac1N\sum_{i=1}^N\ell_i,\qquad \hat g_B=\frac1B\sum_{m=1}^{B}\nabla\ell_{I_m},$$</p>
+      <p>where $I_1,\dots,I_B$ are the indices the sampler put in this batch.</p>
+      <p><strong>Step 1: every slot is a uniform draw.</strong> <code>shuffle=True</code> draws a uniformly random permutation $\pi$ of $1..N$ and cuts it into consecutive batches, so $I_m=\pi(p)$ for some fixed position $p$. Permutations with $\pi(p)=i$ number $(N-1)!$ out of $N!$, so</p>
+      <p>$$P(I_m=i)=\frac{(N-1)!}{N!}=\frac1N\qquad\text{for every } i.$$</p>
+      <p><strong>Step 2: so the batch gradient is unbiased.</strong> Linearity of expectation, then Step 1:</p>
+      <p>$$\mathbb E[\hat g_B]=\frac1B\sum_{m=1}^B\mathbb E[\nabla\ell_{I_m}]=\frac1B\sum_{m=1}^B\sum_{i=1}^N\frac1N\nabla\ell_i$$</p>
+      <p>$$=\frac1B\cdot B\cdot\nabla L=\nabla L.$$</p>
+      <p>This holds for every batch, including a short last one.</p>
+      <p><strong>Step 3: its noise shrinks like $1/B$.</strong> Per coordinate, let $X_m=\nabla\ell_{I_m}$ and $\sigma^2=\tfrac1N\sum_i(\nabla\ell_i-\nabla L)^2$, the spread of single-example gradients. If the $X_m$ were independent (sampling with replacement), variances add (<a href="expectation-and-variance-algebra.html">variance algebra</a>):</p>
+      <p>$$\operatorname{Var}(\hat g_B)=\frac1{B^2}\sum_{m=1}^B\operatorname{Var}(X_m)=\frac{B\sigma^2}{B^2}=\frac{\sigma^2}{B}.$$</p>
+      <p>A permutation samples without replacement, which adds a covariance $c$ between any two slots. Find it from the case $B=N$, where the batch is the whole dataset and its sum never changes:</p>
+      <p>$$0=\operatorname{Var}\Big(\sum_{m=1}^NX_m\Big)=N\sigma^2+N(N-1)\,c\ \Rightarrow\ c=-\frac{\sigma^2}{N-1}.$$</p>
+      <p>$$\operatorname{Var}(\hat g_B)=\frac{B\sigma^2+B(B-1)c}{B^2}=\frac{\sigma^2}{B}\cdot\frac{N-B}{N-1}.$$</p>
+      <p>For $N=50{,}000$, $B=64$ the factor is $49{,}936/49{,}999\approx0.999$: $\operatorname{Var}\approx\sigma^2/B$.</p>
+      <p class="example-label">Example: sorted data breaks Step 1</p>
+      <p>MNIST's training set has $5{,}923$ zeros, sorted first. $5923/64\approx92.5$, so the first $92$ batches are all "0"s. Nothing is random: that batch gradient is the class-0 gradient every time, while the full gradient mixes all classes by their share $N_c/N$:</p>
+      <p>$$\hat g_B=\nabla L_0\ \ne\ \nabla L=\sum_{c=0}^{9}\frac{N_c}{N}\nabla L_c.$$</p>
+      <p>Every step pushes toward predicting 0, then toward 1, and so on: the model chases the latest class.</p>
 
       <section class="exercise">
         <h2>Work it out yourself</h2>
         <p>$N=50{,}000$ examples, <code>batch_size=64</code>. How many optimizer steps per epoch with <code>drop_last=False</code> and with <code>drop_last=True</code>? How big is the last batch, and why might you drop it?</p>
         <details>
           <summary>Solution</summary>
-          <p>$50{,}000=781\cdot64+16$. <code>drop_last=False</code>: $\lceil 50000/64\rceil=782$ steps, the last with only $16$ examples. <code>drop_last=True</code>: $781$ steps; $16$ examples skipped this epoch (different ones each epoch, thanks to shuffling).</p>
-          <p>Why drop: a batch of $16$ has $4\times$ the gradient variance of $64$ ($\sigma^2/B$), BatchNorm statistics get noisy, and every batch keeping the same shape helps compiled code.</p>
+          <p>Divide with remainder, $N=qB+r$ with $0\le r\lt B$: there are $q$ full batches and, if $r\gt0$, one short batch of $r$.</p>
+          <p>$$\texttt{drop\_last=False}:\ q+[r\gt0]=\lceil N/B\rceil;\qquad \texttt{drop\_last=True}:\ q=\lfloor N/B\rfloor.$$</p>
+          <p>Here $64\cdot781=49{,}984$ and $50{,}000-49{,}984=16$, so $q=781$, $r=16$:</p>
+          <p>$$\texttt{False}:\ 782\text{ steps, the last of }16;\qquad \texttt{True}:\ 781\text{ steps}.$$</p>
+          <p>The $16$ dropped examples are the last $16$ positions of a fresh random permutation, so by Step 1 each example is dropped with probability $16/50{,}000=0.032\%$ per epoch: different ones each epoch, nothing permanently skipped.</p>
+          <p>Why drop: by Step 3 a batch of $16$ has variance $\sigma^2/16=4\cdot\sigma^2/64$, $4\times$ that of a full batch. BatchNorm statistics over $16$ examples are noisy too, and every batch keeping the same shape helps compiled code.</p>
         </details>
       </section>
     </article>
@@ -131,7 +157,7 @@ x = x.to('cuda', non_blocking=True)       # async copy from pinned memory</code>
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

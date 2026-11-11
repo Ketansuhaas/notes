@@ -62,6 +62,9 @@
         <tr><td>warp</td><td>32 lanes of that SM</td><td>formed automatically</td></tr>
         <tr><td>thread</td><td>one lane</td><td><code>threadIdx.x</code></td></tr>
       </table>
+      <p>Number the threads globally in order: all of block 0, then all of block 1, and so on. Every block has <code>blockDim.x</code> threads, so</p>
+      <p>$$\underbrace{\texttt{blockIdx.x}\cdot\texttt{blockDim.x}}_{\text{threads in the blocks before mine}}+\underbrace{\texttt{threadIdx.x}}_{\text{threads before me in my block}}$$</p>
+      <p>threads come before me, and that count is my global index:</p>
       <p>$$i=\texttt{blockIdx.x}\cdot\texttt{blockDim.x}+\texttt{threadIdx.x}.$$</p>
       <figure class="figure">
         <svg width="493" viewBox="0 0 580 170" role="img" aria-label="Sixteen threads in four blocks of four, laid over an array of fourteen elements. Thread 1 of block 2 has global index 9 and handles x[9]; threads 14 and 15 have no element.">
@@ -163,8 +166,16 @@ int threads = 256;                                   // 8 warps per block
 int blocks  = (n + threads - 1) / threads;           // ceil(n / threads)
 add&lt;&lt;&lt;blocks, threads&gt;&gt;&gt;(x, y, out, n);              // x, y, out live on the GPU</code></pre>
       <p>Blocks are independent and may run in any order on any SM. That is what lets one kernel scale from a laptop GPU to an H100.</p>
+      <p><strong>Why <code>(n + t - 1) / t</code> is $\lceil n/t\rceil$.</strong> C integer division rounds down. Write $n=qt+r$ with $0\le r\lt t$:</p>
+      <p>$$r=0:\quad \Big\lfloor\frac{qt+t-1}{t}\Big\rfloor=q+\Big\lfloor\frac{t-1}{t}\Big\rfloor=q=\frac nt.$$</p>
+      <p>$$r\ge1:\quad \Big\lfloor\frac{qt+r+t-1}{t}\Big\rfloor=q+1+\Big\lfloor\frac{r-1}{t}\Big\rfloor=q+1,$$</p>
+      <p>since $0\le r-1\lt t$. Either way it is the fewest blocks covering $n$. The idle threads number $t\cdot\lceil n/t\rceil-n=t-r$ (or $0$), always fewer than one block.</p>
       <p class="example-label">Example: $n=1000$</p>
-      <p>blocks $=\lceil1000/256\rceil=4$, so $1024$ threads; the last $24$ fail the check. Each element reads 8 B and writes 4 B for 1 FLOP: $I=1/12$, firmly on the roofline's slope.</p>
+      <p>$$\text{blocks}=\Big\lfloor\frac{1000+255}{256}\Big\rfloor=\lfloor4.90\rfloor=4.$$</p>
+      <p>$$4\cdot256=1024\ \text{threads},\qquad 1024-1000=24\ \text{idle}.$$</p>
+      <p>Each element reads two floats and writes one, for one add:</p>
+      <p>$$I=\frac{1\ \text{FLOP}}{(4+4+4)\ \text{B}}=\frac1{12}\ \text{FLOP/B}\ \ll\ I^\ast,$$</p>
+      <p>firmly on the <a href="roofline-and-arithmetic-intensity.html">roofline</a>'s slope.</p>
 
       <h2>Cooperation inside a block</h2>
       <p class="idea">Threads of a block share a small, fast <code>__shared__</code> array on their SM, and <code>__syncthreads()</code> is a barrier: everyone finishes writing before anyone reads. Tiled matmul is built on exactly this.</p>
@@ -174,8 +185,10 @@ add&lt;&lt;&lt;blocks, threads&gt;&gt;&gt;(x, y, out, n);              // x, y, 
         <p>$n=10^6$, 256 threads per block. How many blocks, idle threads, and warps per block? Which element does thread 5 of block 3 handle? What goes wrong without <code>if (i &lt; n)</code>?</p>
         <details>
           <summary>Solution</summary>
-          <p>Blocks $=\lceil10^6/256\rceil=\lceil3906.25\rceil=3907$. Threads $3907\cdot256=1{,}000{,}192$, so $192$ idle. Warps per block: $256/32=8$.</p>
-          <p>$i=3\cdot256+5=773$.</p>
+          <p>$10^6=3906\cdot256+64$, so $q=3906$, $r=64$:</p>
+          <p>$$\text{blocks}=\Big\lceil\frac{10^6}{256}\Big\rceil=\lceil3906.25\rceil=3907.$$</p>
+          <p>$$\text{threads}=3907\cdot256=1{,}000{,}192,\qquad \text{idle}=1{,}000{,}192-10^6=192=256-64.$$</p>
+          <p>$$\text{warps per block}=\frac{256}{32}=8,\qquad i=\underbrace{3\cdot256}_{\text{blocks }0,1,2}+5=773.$$</p>
           <p>Without the check, the last 192 threads read and write past the ends of the arrays: an illegal memory access error, or silent corruption of neighbouring data.</p>
         </details>
       </section>
@@ -189,7 +202,7 @@ add&lt;&lt;&lt;blocks, threads&gt;&gt;&gt;(x, y, out, n);              // x, y, 
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

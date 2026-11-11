@@ -55,7 +55,22 @@
       <p class="idea">Zoom in close enough and any smooth function looks like a tilted plane (first order), then like a bowl or saddle (second order). Most "to first order" arguments in papers are this.</p>
 
       <h2>One variable</h2>
-      <p>$$f(x+h)\approx f(x)+f'(x)\,h+\tfrac12f''(x)\,h^2, \qquad e^{h}\approx1+h+\tfrac12h^2.$$</p>
+      <p class="idea">Find the parabola in $h$ that has the same value, slope and curvature as $f$ at $x$. That parabola is the second-order Taylor model.</p>
+      <p><strong>Matching derivatives.</strong> Try $p(h)=a+bh+ch^2$ and demand it agree with $f(x+h)$ to second order at $h=0$:</p>
+      <p>$$p(0)=a=f(x), \qquad p'(0)=b=f'(x), \qquad p''(0)=2c=f''(x).$$</p>
+      <p>$$\Rightarrow\quad f(x+h)\approx f(x)+f'(x)\,h+\tfrac12f''(x)\,h^2.$$</p>
+      <p>The $\tfrac12$ is there because $\frac{d^2}{dh^2}h^2=2$.</p>
+      <p><strong>Why it is accurate (repeated integration).</strong> The fundamental theorem of calculus, used twice:</p>
+      <p>$$f(x+h)=f(x)+\int_0^hf'(x+s)\,ds, \qquad f'(x+s)=f'(x)+\int_0^sf''(x+u)\,du.$$</p>
+      <p>Substitute the second into the first; the $f'(x)$ part integrates to $f'(x)h$:</p>
+      <p>$$f(x+h)=f(x)+f'(x)\,h+\underbrace{\int_0^h\!\!\int_0^sf''(x+u)\,du\,ds}_{R}.$$</p>
+      <p>This is exact. The region $0\le u\le s\le h$ is a triangle of area $\tfrac12h^2$ (for $h\gt0$), so $R$ is $\tfrac12h^2$ times an average of $f''$ over $[x,x+h]$. Since $f''$ is continuous, that average is a value $f''(\xi)$:</p>
+      <p>$$\boxed{\ f(x+h)=f(x)+f'(x)\,h+\tfrac12f''(\xi)\,h^2,\quad \xi\text{ between }x,\,x+h\ }$$</p>
+      <p>Replacing $f''(\xi)$ by $f''(x)$ errs by $\tfrac12|f''(\xi)-f''(x)|h^2$, which is $O(h^3)$ when $f'''$ is bounded (the mean value theorem gives $|f''(\xi)-f''(x)|\le\max|f'''|\cdot h$).</p>
+      <p class="example-label">Example</p>
+      <p>$f=e^x$ at $x=0$: every derivative is $e^0=1$, so</p>
+      <p>$$e^{h}\approx1+1\cdot h+\tfrac12\cdot1\cdot h^2=1+h+\tfrac12h^2.$$</p>
+      <p>At $h=0.1$: $1.105$ versus $e^{0.1}=1.10517$; the gap $0.00017\approx h^3/6$ is the next term.</p>
       <figure class="figure">
         <svg width="374" viewBox="0 0 440 225" role="img" aria-label="The curve e to the h with its tangent line 1 + h and its second-order parabola 1 + h + h squared over 2 at h = 0; the parabola stays on the curve much longer than the line.">
           <line class="faint" x1="18.4" y1="182" x2="305.6" y2="182"/>
@@ -78,16 +93,22 @@
 
       <h2>Many variables: walk along a line</h2>
       <p class="idea">Reduce to one variable: walk from $x$ in direction $\Delta$, $\ g(t)=f(x+t\Delta)$, and apply the 1-D formula at $t=1$.</p>
+      <p>The slope and curvature of $f$ along a line were derived in <a href="gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a>:</p>
+      <p>$$g'(t)=\nabla f(x+t\Delta)^T\Delta, \qquad g''(t)=\Delta^TH(x+t\Delta)\,\Delta.$$</p>
+      <p>Apply the 1-D formula to $g$ with base $0$ and step $1$, then set $g(1)=f(x+\Delta)$, $g(0)=f(x)$:</p>
+      <p>$$g(1)\approx g(0)+g'(0)\cdot1+\tfrac12g''(0)\cdot1^2$$</p>
       <p>
         $$
-        g'(0)=\nabla f^T\Delta, \quad g''(0)=\Delta^TH\Delta
-        \quad\Rightarrow\quad
+        \Rightarrow\quad
         f(x+\Delta)\approx\underbrace{f(x)}_{1\times1}+\underbrace{\nabla f^T}_{1\times n}\underbrace{\Delta}_{n\times1}+\tfrac12\underbrace{\Delta^T}_{1\times n}\underbrace{H}_{n\times n}\underbrace{\Delta}_{n\times1}.
         $$
       </p>
+      <p>The exact 1-D version carries over the same way: $f(x+\Delta)=f(x)+\nabla f^T\Delta+\tfrac12\Delta^TH(z)\Delta$ for some $z=x+\tau\Delta$ on the segment, $\tau\in(0,1)$.</p>
       <p class="example-label">Example</p>
-      <p>$f=x_1^2+x_1x_2+x_2^2$ at $(1,1)$: $f=3$, $\nabla f=(3,3)$, $H=\begin{pmatrix}2&1\\1&2\end{pmatrix}$. Step $\Delta=(0.1,0)$:</p>
-      <p>$$3+0.3+\tfrac12(0.02)=3.31=f(1.1,1). \ \checkmark \ \ (\text{exact, since } f \text{ is quadratic})$$</p>
+      <p>$f=x_1^2+x_1x_2+x_2^2$ at $(1,1)$: $f=1+1+1=3$, $\nabla f=(3,3)$, $H=\begin{pmatrix}2&1\\1&2\end{pmatrix}$ (all from the gradients note). Step $\Delta=(0.1,0)$:</p>
+      <p>$$\nabla f^T\Delta=3(0.1)+3(0)=0.3, \qquad \Delta^TH\Delta=H_{11}(0.1)^2=0.02.$$</p>
+      <p>$$f(x+\Delta)\approx3+0.3+\tfrac12(0.02)=3.31.$$</p>
+      <p>Exact: $f(1.1,1)=1.21+1.1+1=3.31$. &#10003; Along this line $g(t)=f(1+t,1)=(1+t)^2+(1+t)+1=t^2+3t+3$ is itself a parabola ($g'''=0$, so $R$ has no error), which is why the model is exact for a quadratic $f$.</p>
       <figure class="figure">
         <svg width="442" viewBox="0 0 520 215" role="img" aria-label="Left: level curves of f with the line x + t Delta through x = (1,1) in direction Delta = (1,0). Right: f restricted to that line, a one-variable function g of t.">
           <defs><marker id="tay2-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker></defs>
@@ -113,18 +134,25 @@
       </figure>
 
       <h2>What each term tells you</h2>
-      <table>
-        <tr><td>$\nabla f^T\Delta$</td><td>slope: step $\Delta=-\eta\nabla f$ lowers $f$ by $\eta\|\nabla f\|^2$</td><td>gradient descent</td></tr>
-        <tr><td>$\tfrac12\Delta^TH\Delta$</td><td>curvature: bowl, dome, or saddle</td><td>step size, stability</td></tr>
-        <tr><td>both</td><td>minimize the bowl: $\nabla f+H\Delta=0$</td><td>Newton: $\Delta=-H^{-1}\nabla f$</td></tr>
-      </table>
+      <p class="idea">Read off what each term does to a step: the linear term picks the downhill direction, the quadratic term says how far you can go, and minimizing both together gives Newton's step.</p>
+      <p><strong>Slope term.</strong> Put $\Delta=-\eta\nabla f$ into the linear part:</p>
+      <p>$$\nabla f^T(-\eta\nabla f)=-\eta\|\nabla f\|^2\lt0,$$</p>
+      <p>so a small step against the gradient lowers $f$ by about $\eta\|\nabla f\|^2$. That is gradient descent.</p>
+      <p><strong>Curvature term.</strong> At a point where $\nabla f=0$ the model is $f(x)+\tfrac12\Delta^TH\Delta$, so the sign of $\Delta^TH\Delta$ (<a href="quadratic-forms-and-positive-definiteness.html">quadratic forms</a>) decides: all positive = bowl (minimum), all negative = dome, mixed = saddle. Away from such points it limits the step size (see <a href="gradient-descent-on-a-quadratic.html">gradient descent on a quadratic</a>).</p>
+      <p><strong>Both: Newton.</strong> Minimize the model $m(\Delta)=f+\nabla f^T\Delta+\tfrac12\Delta^TH\Delta$ over $\Delta$. Its partial in $\Delta_i$, using $H$ symmetric:</p>
+      <p>$$\frac{\partial m}{\partial\Delta_i}=(\nabla f)_i+\tfrac12\Big(\sum_kH_{ik}\Delta_k+\sum_j\Delta_jH_{ji}\Big)=(\nabla f+H\Delta)_i.$$</p>
+      <p>Set it to zero (for $H$ positive definite this is the bottom of the bowl):</p>
+      <p>$$\nabla f+H\Delta=0 \quad\Rightarrow\quad \Delta_{\text{Newton}}=-H^{-1}\nabla f.$$</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Take one Newton step from $(1,1)$ on the $f$ above. Where do you land, and why exactly there?</p>
         <details>
           <summary>Solution</summary>
-          <p>$H\Delta=-\nabla f=-(3,3)$. Since $H(1,1)^T=(3,3)$, $\Delta=-(1,1)$: you land at $(0,0)$, the minimum. For a quadratic the bowl model <em>is</em> $f$, so one Newton step is exact.</p>
+          <p>Solve $H\Delta=-\nabla f$:</p>
+          <p>$$\begin{pmatrix}2&1\\1&2\end{pmatrix}\begin{pmatrix}\Delta_1\\\Delta_2\end{pmatrix}=\begin{pmatrix}-3\\-3\end{pmatrix}.$$</p>
+          <p>Subtract the rows: $\Delta_1-\Delta_2=0$. Then $3\Delta_1=-3$, so $\Delta=(-1,-1)$ and you land at $(1,1)+(-1,-1)=(0,0)$.</p>
+          <p>Why exactly there: $f$ is quadratic, so the model $m$ <em>is</em> $f$ (the remainder vanishes, $g'''=0$ on every line). Newton minimizes $m$, hence minimizes $f$. Check: $\nabla f(0,0)=(0,0)$, $f(0,0)=0$, and $H$ is positive definite, so this is the global minimum.</p>
         </details>
       </section>
     </article>
@@ -137,7 +165,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

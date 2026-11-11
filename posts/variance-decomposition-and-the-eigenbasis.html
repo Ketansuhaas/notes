@@ -57,6 +57,11 @@
       <h2>The variance profile</h2>
       <p class="idea">As the ruler turns, its spread traces a smooth wave between $\lambda_{\min}$ and $\lambda_{\max}$. Its weights are squared cosines to the axes.</p>
       <p>$$\operatorname{Var}(u^Tx)=\sum_i\lambda_i\cos^2\theta_i,\quad \textstyle\sum_i\cos^2\theta_i=1. \qquad d=2:\ \ \lambda_1\cos^2\theta+\lambda_2\sin^2\theta.$$</p>
+      <p>From the <a href="covariance-matrix-intuition.html">covariance note</a>: $\operatorname{Var}(u^Tx)=u^TCu=\sum_i\lambda_ic_i^2$ with $c_i=q_i^Tu$. Both are unit vectors, so the dot product is the cosine of the angle $\theta_i$ between $u$ and axis $q_i$:</p>
+      <p>$$c_i=q_i^Tu=\|q_i\|\|u\|\cos\theta_i=\cos\theta_i, \qquad \sum_i\cos^2\theta_i=\|c\|^2=\|u\|^2=1.$$</p>
+      <p>In $d=2$, $u$ at angle $\theta$ from $q_1$ is $90^\circ-\theta$ from $q_2$, so $\cos\theta_2=\sin\theta$. Using $\cos^2\theta=\tfrac{1+\cos2\theta}2$, $\sin^2\theta=\tfrac{1-\cos2\theta}2$, the profile is a pure wave:</p>
+      <p>$$\lambda_1\cos^2\theta+\lambda_2\sin^2\theta=\frac{\lambda_1+\lambda_2}2+\frac{\lambda_1-\lambda_2}2\cos2\theta \ \overset{3,\,1}{=}\ 2+\cos2\theta.$$</p>
+      <p>It swings between $2+1=3$ (at $\theta=0^\circ$) and $2-1=1$ (at $90^\circ$) around the mean $2$: the curve in the figure.</p>
 
       <figure class="figure">
         <svg width="383" viewBox="0 0 450 190" role="img" aria-label="Variance along a unit direction u as the angle from the first eigenvector goes from 0 to 180 degrees: a smooth wave between 3 at q1 and 1 at q2, averaging 2. The direction (1,0) sits at 45 degrees with variance 2.">
@@ -86,20 +91,31 @@
         <figcaption>Running $C=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $\theta$ from $q_1$: peak $3$ at $q_1$, trough $1$ at $q_2$, average $2$.</figcaption>
       </figure>
       <p class="example-label">Example</p>
-      <p>$u=(1,0)$ sits at $45^\circ$: $3\cdot\tfrac12+1\cdot\tfrac12=2=C_{11}$. &#10003;</p>
+      <p>$u=(1,0)$: $\cos\theta_1=q_1^Tu=\tfrac1{\sqrt2}$, so it sits at $45^\circ$, and $\cos^2\theta_1=\cos^2\theta_2=\tfrac12$:</p>
+      <p>$$3\cdot\tfrac12+1\cdot\tfrac12=2=C_{11}, \qquad\text{and } 2+\cos90^\circ=2. \ \checkmark$$</p>
 
       <h2>A random ruler gets the average</h2>
       <p class="idea">Point the ruler at random and you capture the mean eigenvalue. PCA's payoff is how far $\lambda_1$ sits above that.</p>
       <p>$$u \text{ uniform on the unit sphere}: \qquad \mathbb{E}_u\big[u^TCu\big]=\frac{\operatorname{tr}C}{d}=\frac1d\sum_i\lambda_i.$$</p>
+      <p>In $d=2$ it is one line: a uniform direction means $\theta$ uniform on $[0,2\pi)$, and $\cos2\theta$ averages to $0$ over full periods:</p>
+      <p>$$\mathbb{E}_\theta\Big[\tfrac{\lambda_1+\lambda_2}2+\tfrac{\lambda_1-\lambda_2}2\cos2\theta\Big]=\frac{\lambda_1+\lambda_2}2.$$</p>
+      <p>General $d$: the exercise below. The last equality is $\operatorname{tr}C=\sum_i\lambda_i$ (covariance note).</p>
       <p class="example-label">Example</p>
-      <p>Average of the wave: $\tfrac{3+1}{2}=2$. PC1 gets $3$, i.e. $1.5\times$ a random direction. In $d=1000$ with one dominant axis, the gap is enormous.</p>
+      <p>Average of the wave: $\tfrac{3+1}{2}=2$. PC1 gets $3$, i.e. $\tfrac32=1.5\times$ a random direction.</p>
+      <p>In $d=1000$ with one dominant axis, say $\lambda_1=1000$ and the other $999$ eigenvalues $1$:</p>
+      <p>$$\text{random}=\frac{1000+999\cdot1}{1000}\approx2, \qquad \text{PC1}=1000, \qquad \text{ratio}\approx500.$$</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Prove $\mathbb{E}_u[u^TCu]=\operatorname{tr}C/d$ for $u$ uniform on the unit sphere.</p>
         <details>
           <summary>Solution</summary>
-          <p>$u^TCu=\operatorname{tr}(Cuu^T)$, so $\mathbb{E}[u^TCu]=\operatorname{tr}(C\,\mathbb{E}[uu^T])$. By symmetry $\mathbb{E}[u_iu_j]=0$ for $i\ne j$ and all $\mathbb{E}[u_i^2]$ are equal; they sum to $\mathbb{E}\|u\|^2=1$. So $\mathbb{E}[uu^T]=I/d$, giving $\operatorname{tr}C/d$.</p>
+          <p>A scalar is its own trace, and $\operatorname{tr}(AB)=\operatorname{tr}(BA)$; then $\mathbb{E}$ is linear and passes through $\operatorname{tr}$ and the constant $C$:</p>
+          <p>$$u^TCu=\operatorname{tr}(u^TCu)=\operatorname{tr}(Cuu^T) \ \Rightarrow\ \mathbb{E}[u^TCu]=\operatorname{tr}\big(C\,\mathbb{E}[uu^T]\big).$$</p>
+          <p>Now find $\mathbb{E}[uu^T]$ by symmetry. Flipping the sign of coordinate $i$ maps the sphere to itself, so $u$ and the flipped $u$ have the same distribution:</p>
+          <p>$$\mathbb{E}[u_iu_j]=\mathbb{E}[(-u_i)u_j]=-\mathbb{E}[u_iu_j]\ \Rightarrow\ \mathbb{E}[u_iu_j]=0 \quad(i\ne j).$$</p>
+          <p>Swapping coordinates $i,j$ also preserves the distribution, so all $\mathbb{E}[u_i^2]$ are equal; and they add to $\mathbb{E}\|u\|^2=1$:</p>
+          <p>$$d\,\mathbb{E}[u_1^2]=1 \ \Rightarrow\ \mathbb{E}[uu^T]=\frac Id \ \Rightarrow\ \mathbb{E}[u^TCu]=\operatorname{tr}\Big(\frac Cd\Big)=\frac{\operatorname{tr}C}d.$$</p>
         </details>
       </section>
     </article>
@@ -112,7 +128,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

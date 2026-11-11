@@ -55,47 +55,72 @@
       <p class="idea">Don't differentiate entry by entry. Nudge the input, keep only the part of the change that's linear in the nudge, and read the gradient off it.</p>
 
       <h2>The reading rule</h2>
-      <p>
-        $$
-        df=\underbrace{\nabla f^T}_{1\times n}\underbrace{dx}_{n\times1} \ \Rightarrow\ \nabla f, \qquad
-        df=\operatorname{tr}\big(G^T\,dX\big)=\textstyle\sum_{ij}G_{ij}\,dX_{ij} \ \Rightarrow\ \frac{\partial f}{\partial X}=G.
-        $$
-      </p>
-      <p class="idea">The gradient with respect to $X$ always has the same shape as $X$.</p>
+      <p class="idea">The differential $df$ is the part of $f(x+dx)-f(x)$ that is linear in the nudge $dx$. Whatever multiplies $dx$ is the gradient.</p>
+      <p>From <a href="gradients-jacobians-and-hessians.html">the gradient note</a>, $f(x+dx)-f(x)\approx\nabla f^Tdx$. So if algebra hands you $df=g^Tdx$ for some vector $g$, then $g=\nabla f$:</p>
+      <p>$$df=\underbrace{\nabla f^T}_{1\times n}\underbrace{dx}_{n\times1} \ \Rightarrow\ \nabla f.$$</p>
+      <p>For a matrix input, the same first-order change is a sum over every entry (each $X_{ij}$ is just another coordinate):</p>
+      <p>$$df=\sum_{ij}\frac{\partial f}{\partial X_{ij}}\,dX_{ij}=\sum_{ij}G_{ij}\,dX_{ij}, \qquad G_{ij}:=\frac{\partial f}{\partial X_{ij}}.$$</p>
+      <p>Write that sum as a trace: diagonal entry $j$ of $G^TdX$ is (column $j$ of $G$) $\cdot$ (column $j$ of $dX$), so</p>
+      <p>$$\operatorname{tr}(G^TdX)=\sum_j\sum_iG_{ij}\,dX_{ij}.$$</p>
+      <p>$$df=\operatorname{tr}\big(G^T\,dX\big) \ \Rightarrow\ \frac{\partial f}{\partial X}=G.$$</p>
+      <p class="idea">$G_{ij}$ sits where $X_{ij}$ sits, so the gradient with respect to $X$ always has the same shape as $X$.</p>
 
       <h2>Toolkit</h2>
+      <p class="idea">Four rules, each one line from the definitions. Together they turn any $df$ into the form $\operatorname{tr}(G^TdX)$.</p>
       <table>
         <tr><td>Product rule</td><td>$d(XY)=dX\,Y+X\,dY$</td></tr>
         <tr><td>Constants pass through</td><td>$d(AXB)=A\,dX\,B$</td></tr>
         <tr><td>A scalar is its own trace</td><td>$s=\operatorname{tr}(s)$</td></tr>
         <tr><td>Trace is cyclic</td><td>$\operatorname{tr}(ABC)=\operatorname{tr}(CAB)$</td></tr>
       </table>
+      <p><strong>Product rule.</strong> Expand and drop the term that is second order in the nudges:</p>
+      <p>$$(X+dX)(Y+dY)-XY=dX\,Y+X\,dY+\underbrace{dX\,dY}_{\text{2nd order}}.$$</p>
+      <p><strong>Constants.</strong> Apply the product rule twice with $dA=dB=0$. <strong>Scalar = trace</strong>: a $1\times1$ matrix is its own diagonal.</p>
+      <p><strong>Cyclic trace.</strong> First for two factors, by swapping the order of summation:</p>
+      <p>$$\operatorname{tr}(PQ)=\sum_i\sum_jP_{ij}Q_{ji}=\sum_j\sum_iQ_{ji}P_{ij}=\operatorname{tr}(QP).$$</p>
+      <p>Then take $P=AB$, $Q=C$: $\operatorname{tr}(ABC)=\operatorname{tr}(CAB)$.</p>
 
       <h2>Example: $f=\tfrac12x^TAx$, $A$ symmetric</h2>
-      <p>$$df=\tfrac12(dx^TAx+x^TA\,dx)=x^TA\,dx \ \Rightarrow\ \nabla f=Ax.$$</p>
-      <p>At $(1,1)$ with $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: $(3,3)$, matching Gradients, Jacobians, and Hessians. &#10003;</p>
+      <p>Product rule on the factors $x^T$ and $Ax$ ($A$ is constant):</p>
+      <p>$$df=\tfrac12\big(dx^T\,Ax+x^TA\,dx\big).$$</p>
+      <p>The first term is a scalar, so it equals its transpose: $dx^TAx=x^TA^Tdx=x^TA\,dx$ (as $A^T=A$). The two halves are equal:</p>
+      <p>$$df=x^TA\,dx=(Ax)^Tdx \ \Rightarrow\ \nabla f=Ax.$$</p>
+      <p>At $(1,1)$ with $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: $Ax=(2+1,\ 1+2)=(3,3)$, matching <a href="gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a>. &#10003;</p>
 
       <h2>Example: a linear layer</h2>
       <p class="idea">The weight gradient is an outer product: error times input.</p>
-      <p>
-        $$
-        L=\tfrac12\|Wx-y\|^2,\ r=Wx-y: \quad dL=r^T\,dW\,x=\operatorname{tr}(x\,r^T\,dW) \ \Rightarrow\ \underbrace{\frac{\partial L}{\partial W}}_{k\times d}=\underbrace{r}_{k\times1}\underbrace{x^T}_{1\times d}.
-        $$
-      </p>
+      <p>$L=\tfrac12\|Wx-y\|^2=\tfrac12r^Tr$ with $r=Wx-y$, $W$ of shape $k\times d$. Only $W$ moves, so $dr=dW\,x$. Then</p>
+      <p>$$dL=\tfrac12(dr^Tr+r^Tdr)=r^Tdr\qquad(\text{scalar}=\text{its transpose})$$</p>
+      <p>$$=r^T\,dW\,x=\operatorname{tr}(r^T\,dW\,x)\qquad(\text{scalar}=\text{trace})$$</p>
+      <p>$$=\operatorname{tr}(x\,r^T\,dW)\qquad(\text{cyclic: move }x\text{ to the front}).$$</p>
+      <p>Match with $\operatorname{tr}(G^TdW)$: $G^T=xr^T$, so</p>
+      <p>$$\underbrace{\frac{\partial L}{\partial W}}_{k\times d}=G=\underbrace{r}_{k\times1}\underbrace{x^T}_{1\times d}.$$</p>
+      <p>Check one entry directly: $L=\tfrac12\sum_i\big(\sum_jW_{ij}x_j-y_i\big)^2$, and only term $i$ contains $W_{ij}$, so $\partial L/\partial W_{ij}=r_i\,x_j=(rx^T)_{ij}$. &#10003;</p>
 
       <h2>Two you'll meet in papers</h2>
-      <p>
-        $$
-        d(X^{-1})=-X^{-1}\,dX\,X^{-1}\ \ (\text{differentiate } XX^{-1}=I), \qquad d\log\det X=\operatorname{tr}(X^{-1}dX).
-        $$
-      </p>
+      <p class="idea">Both come from a known identity plus the toolkit: differentiate $XX^{-1}=I$ for the inverse, and factor $X$ out of the determinant for log det.</p>
+      <p><strong>Inverse.</strong> $XX^{-1}=I$ is constant, so its differential is zero. Product rule:</p>
+      <p>$$dX\,X^{-1}+X\,d(X^{-1})=0.$$</p>
+      <p>Multiply on the left by $X^{-1}$:</p>
+      <p>$$d(X^{-1})=-X^{-1}\,dX\,X^{-1}.$$</p>
+      <p>For $1\times1$ this is $d(1/x)=-dx/x^2$. &#10003;</p>
+      <p><strong>Log determinant.</strong> Factor out $X$, using $\det(PQ)=\det P\det Q$:</p>
+      <p>$$\det(X+dX)=\det X\cdot\det(I+E), \qquad E:=X^{-1}dX.$$</p>
+      <p>If $E$ has eigenvalues $\mu_1,\dots,\mu_n$ (small, since $E$ is), then $I+E$ has eigenvalues $1+\mu_i$ (same eigenvectors). The determinant is the product of the eigenvalues and the trace is their sum:</p>
+      <p>$$\det(I+E)=\prod_i(1+\mu_i)=1+\sum_i\mu_i+\underbrace{\sum_{i\lt j}\mu_i\mu_j+\cdots}_{\text{2nd order}}$$</p>
+      <p>$$\approx1+\operatorname{tr}E.$$</p>
+      <p>Take logs of the first line, and use $\log(1+\epsilon)\approx\epsilon$:</p>
+      <p>$$d\log\det X=\log\det(I+E)\approx\operatorname{tr}E=\operatorname{tr}(X^{-1}dX).$$</p>
+      <p>Reading rule: $G^T=X^{-1}$, so $\partial\log\det X/\partial X=X^{-T}$. Check on $X=\operatorname{diag}(a,b)$: $\log\det X=\log a+\log b$, whose partials $1/a$, $1/b$ are the diagonal of $X^{-1}$. &#10003;</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Least squares: $L(w)=\tfrac12\|Xw-y\|^2$. Find $\nabla L$ and set it to zero.</p>
         <details>
           <summary>Solution</summary>
-          <p>$r=Xw-y$, $dL=r^TX\,dw$, so $\nabla L=X^T(Xw-y)$. Zero gives $X^TXw=X^Ty$: the normal equations from Rank, subspaces, and projections.</p>
+          <p>Same steps as the linear layer, but now $w$ moves and $X$ is fixed. With $r=Xw-y$, $dr=X\,dw$, and</p>
+          <p>$$dL=\tfrac12(dr^Tr+r^Tdr)=r^Tdr=r^TX\,dw=(X^Tr)^Tdw.$$</p>
+          <p>Reading rule: $\nabla L=X^T(Xw-y)$. Setting it to zero gives $X^TXw=X^Ty$: the normal equations from <a href="linear-algebra-fundamentals.html">Rank, subspaces, and projections</a>.</p>
         </details>
       </section>
     </article>
@@ -108,7 +133,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

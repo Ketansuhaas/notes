@@ -56,21 +56,31 @@
 
       <h2>One layer: factor $n_{\text{in}}\sigma_W^2$</h2>
       <p class="idea">Each output sums $n_{\text{in}}$ zero-mean, uncorrelated terms, so their variances add.</p>
+      <p>Setup: $\underbrace{y}_{n_{\text{out}}\times1}=\underbrace{W}_{n_{\text{out}}\times n_{\text{in}}}\underbrace{x}_{n_{\text{in}}\times1}$, so $y_j=\sum_iW_{ji}x_i$. Assume $W_{ji}$ iid with mean $0$, variance $\sigma_W^2$, independent of $x$, and the $x_i$ identically distributed.</p>
+      <p><strong>Mean.</strong> Independence lets the expectation of a product factor:</p>
+      <p>$$\mathbb{E}[y_j]=\sum_i\mathbb{E}[W_{ji}]\,\mathbb{E}[x_i]=\sum_i0\cdot\mathbb{E}[x_i]=0.$$</p>
+      <p><strong>Variance.</strong> Mean zero, so $\operatorname{Var}(y_j)=\mathbb{E}[y_j^2]$. Expand the square as a double sum, then factor by independence of $W$ and $x$:</p>
       <p>
-        $$
-        \underbrace{y}_{n_{\text{out}}\times1}=\underbrace{W}_{n_{\text{out}}\times n_{\text{in}}}\underbrace{x}_{n_{\text{in}}\times1},\quad W_{ji}\overset{\text{iid}}{\sim}(0,\sigma_W^2) \ \Rightarrow\ \operatorname{Var}(y_j)=\sum_{i=1}^{n_{\text{in}}}\mathbb{E}[W_{ji}^2]\,\mathbb{E}[x_i^2]=n_{\text{in}}\,\sigma_W^2\,\mathbb{E}[x^2].
-        $$
+        $$\mathbb{E}[y_j^2]=\sum_{i,k}\mathbb{E}[W_{ji}W_{jk}\,x_ix_k]=\sum_{i,k}\mathbb{E}[W_{ji}W_{jk}]\,\mathbb{E}[x_ix_k].$$
       </p>
-      <p>Needs $W$ independent of $x$. For zero-mean $x$: $\mathbb{E}[x^2]=\operatorname{Var}(x)$.</p>
+      <p>For $i\ne k$ the weights are independent with mean $0$: $\mathbb{E}[W_{ji}W_{jk}]=0\cdot0$. For $i=k$ it is $\mathbb{E}[W_{ji}^2]=\sigma_W^2$. Only the diagonal survives:</p>
+      <p>$$\operatorname{Var}(y_j)=\sum_{i=1}^{n_{\text{in}}}\sigma_W^2\,\mathbb{E}[x_i^2]=n_{\text{in}}\,\sigma_W^2\,\mathbb{E}[x^2].$$</p>
+      <p>The cross terms die because of $W$, so the $x_i$ may even be correlated. For zero-mean $x$: $\mathbb{E}[x^2]=\operatorname{Var}(x)$.</p>
 
       <h2>Depth: the factor to the power $L$</h2>
       <p class="idea">As in Dynamics in the eigenbasis: repeated multiplication explodes above $1$ and dies below $1$.</p>
-      <p>$$\operatorname{Var}(h_L)=(n_{\text{in}}\sigma_W^2)^L\operatorname{Var}(x) \quad\Rightarrow\quad \text{LeCun: } \sigma_W^2=\frac1{n_{\text{in}}}.$$</p>
+      <p>Take $L$ linear layers $h_\ell=W_\ell h_{\ell-1}$, all of width $n_{\text{in}}$, with $h_0=x$ zero-mean. $W_\ell$ is drawn independently of the earlier weights, so it is independent of its input $h_{\ell-1}$, and the one-layer result applies at every layer. Each $h_\ell$ is zero-mean (shown above), so $\mathbb{E}[h_\ell^2]=\operatorname{Var}(h_\ell)$ and</p>
+      <p>
+        $$\operatorname{Var}(h_\ell)=n_{\text{in}}\sigma_W^2\operatorname{Var}(h_{\ell-1})$$
+        $$\Rightarrow\ \operatorname{Var}(h_L)=(n_{\text{in}}\sigma_W^2)^L\operatorname{Var}(x)\quad\text{(apply } L \text{ times)}.$$
+      </p>
+      <p>The only factor that neither explodes nor vanishes for every $L$ is $1$:</p>
+      <p>$$n_{\text{in}}\sigma_W^2=1 \quad\Rightarrow\quad \text{LeCun: } \sigma_W^2=\frac1{n_{\text{in}}}.$$</p>
       <p class="example-label">Example: $n_{\text{in}}=512$, $10$ linear layers</p>
       <table>
-        <tr><td>$\sigma_W=1$</td><td>factor $512$</td><td>$512^{10}\approx10^{27}$: explodes</td></tr>
-        <tr><td>$\sigma_W=0.01$</td><td>factor $0.05$</td><td>$\approx10^{-13}$: vanishes</td></tr>
-        <tr><td>$\sigma_W^2=1/512$</td><td>factor $1$</td><td>$1$: stable</td></tr>
+        <tr><td>$\sigma_W=1$</td><td>factor $512\cdot1^2=512$</td><td>$512^{10}=2^{90}\approx1.2\times10^{27}$: explodes</td></tr>
+        <tr><td>$\sigma_W=0.01$</td><td>factor $512\cdot10^{-4}=0.0512$</td><td>$0.0512^{10}=10^{10\log_{10}0.0512}=10^{-12.9}\approx1.2\times10^{-13}$: vanishes</td></tr>
+        <tr><td>$\sigma_W^2=1/512$</td><td>factor $512/512=1$</td><td>$1^{10}=1$: stable</td></tr>
       </table>
 
       <figure class="figure">
@@ -98,36 +108,58 @@
 
       <h2>Backward pass: Xavier</h2>
       <p class="idea">Gradients flow back through $W$ from the other side, summing over $n_{\text{out}}$ terms. One $\sigma_W^2$ can't fix both directions unless $n_{\text{in}}=n_{\text{out}}$, so average.</p>
+      <p>The <a href="backpropagation-via-jvps.html">backward recursion</a> for $y=Wx$ is a row times $W$, so each input-gradient entry sums over the $n_{\text{out}}$ outputs (column $i$ of $W$):</p>
       <p>
-        $$
-        \underbrace{g_x}_{1\times n_{\text{in}}}=\underbrace{g_y}_{1\times n_{\text{out}}}\underbrace{W}_{n_{\text{out}}\times n_{\text{in}}} \ \Rightarrow\ \operatorname{Var}(g_x)=n_{\text{out}}\,\sigma_W^2\operatorname{Var}(g_y).
-        $$
+        $$\underbrace{g_x}_{1\times n_{\text{in}}}=\underbrace{g_y}_{1\times n_{\text{out}}}\underbrace{W}_{n_{\text{out}}\times n_{\text{in}}} \ \Rightarrow\ g_{x,i}=\sum_{j=1}^{n_{\text{out}}}g_{y,j}\,W_{ji}.$$
       </p>
+      <p>This is the one-layer sum again, with $n_{\text{out}}$ terms instead of $n_{\text{in}}$. Assume $g_y$ is independent of $W$ (only approximately true, since $g_y$ depends on the forward pass through $W$; this is Glorot's standard assumption). Then the same double-sum argument, with $g_{y,j}$ in place of $x_i$, gives mean $0$ and</p>
+      <p>$$\operatorname{Var}(g_{x,i})=n_{\text{out}}\,\sigma_W^2\,\mathbb{E}[g_y^2].$$</p>
+      <p>Setting each factor to $1$ gives two demands. One $\sigma_W^2$ can't meet both unless $n_{\text{in}}=n_{\text{out}}$, so ask instead that the <em>average</em> of the two factors be $1$:</p>
+      <p>
+        $$\tfrac12\big(n_{\text{in}}\sigma_W^2+n_{\text{out}}\sigma_W^2\big)=1 \ \Rightarrow\ \sigma_W^2=\frac{2}{n_{\text{in}}+n_{\text{out}}}.$$
+      </p>
+      <p>Equivalently, $2/(n_{\text{in}}+n_{\text{out}})$ is the harmonic mean of $1/n_{\text{in}}$ and $1/n_{\text{out}}$, so it always lies between the two demands.</p>
       <table>
-        <tr><td>Forward stable</td><td>$\sigma_W^2=1/n_{\text{in}}$</td><td>LeCun</td></tr>
-        <tr><td>Backward stable</td><td>$\sigma_W^2=1/n_{\text{out}}$</td><td></td></tr>
-        <tr><td>Compromise</td><td>$\sigma_W^2=2/(n_{\text{in}}+n_{\text{out}})$</td><td>Xavier/Glorot</td></tr>
+        <tr><td>Forward stable</td><td>$n_{\text{in}}\sigma_W^2=1$</td><td>$\sigma_W^2=1/n_{\text{in}}$</td><td>LeCun</td></tr>
+        <tr><td>Backward stable</td><td>$n_{\text{out}}\sigma_W^2=1$</td><td>$\sigma_W^2=1/n_{\text{out}}$</td><td></td></tr>
+        <tr><td>Compromise</td><td>average factor $=1$</td><td>$\sigma_W^2=2/(n_{\text{in}}+n_{\text{out}})$</td><td>Xavier/Glorot</td></tr>
       </table>
       <p class="example-label">Example</p>
-      <p>$256\to1024$: LeCun $1/256$, Xavier $2/1280=1/640$.</p>
+      <p>$256\to1024$: LeCun $1/256$, Xavier $2/(256+1024)=2/1280=1/640$. The two factors under Xavier: forward $256/640=0.4$, backward $1024/640=1.6$, average $(0.4+1.6)/2=1$. &#10003;</p>
 
       <h2>ReLU halves the second moment: He</h2>
       <p class="idea">ReLU zeros the negative half. For a symmetric pre-activation, the kept half carries exactly half of $\mathbb{E}[z^2]$, so double $\sigma_W^2$.</p>
+      <p><strong>Why $z$ is symmetric.</strong> $z=Wx$ with $W$ zero-mean and symmetric (Gaussian or uniform), independent of $x$. Then $-W$ has the same distribution as $W$, so $-z=(-W)x$ has the same distribution as $z$.</p>
+      <p><strong>Halving, by symmetry.</strong> $\mathrm{ReLU}(z)^2=z^2\,\mathbf 1_{z\gt0}$. Swap $z\to-z$ (same distribution):</p>
       <p>
-        $$
-        \mathbb{E}[\mathrm{ReLU}(z)^2]=\mathbb{E}[z^2\,\mathbf 1_{z\gt0}]=\tfrac12\mathbb{E}[z^2] \ \Rightarrow\ \operatorname{Var}(z_{\ell+1})=n_{\text{in}}\sigma_W^2\cdot\tfrac12\operatorname{Var}(z_\ell) \ \Rightarrow\ \sigma_W^2=\frac2{n_{\text{in}}}.
-        $$
+        $$\mathbb{E}[z^2\mathbf 1_{z\gt0}]=\mathbb{E}[(-z)^2\mathbf 1_{-z\gt0}]=\mathbb{E}[z^2\mathbf 1_{z\lt0}].$$
       </p>
-      <p>ReLU outputs aren't zero-mean, which is why the layer rule uses $\mathbb{E}[x^2]$: only the second moment enters.</p>
+      <p>The two halves add to the whole ($z=0$ contributes $z^2=0$), and they are equal, so each is half:</p>
+      <p>
+        $$\mathbb{E}[z^2\mathbf 1_{z\gt0}]+\mathbb{E}[z^2\mathbf 1_{z\lt0}]=\mathbb{E}[z^2] \ \Rightarrow\ \mathbb{E}[\mathrm{ReLU}(z)^2]=\tfrac12\mathbb{E}[z^2].$$
+      </p>
+      <p><strong>One layer.</strong> Feed $x=\mathrm{ReLU}(z_\ell)$ into the one-layer rule, then use $\mathbb{E}[z_\ell^2]=\operatorname{Var}(z_\ell)$ ($z_\ell$ is zero-mean):</p>
+      <p>
+        $$\operatorname{Var}(z_{\ell+1})=n_{\text{in}}\sigma_W^2\,\mathbb{E}[\mathrm{ReLU}(z_\ell)^2]=n_{\text{in}}\sigma_W^2\cdot\tfrac12\operatorname{Var}(z_\ell).$$
+      </p>
+      <p>Set the factor $\tfrac12n_{\text{in}}\sigma_W^2=1$:</p>
+      <p>$$\text{He: } \sigma_W^2=\frac2{n_{\text{in}}}.$$</p>
+      <p>ReLU outputs aren't zero-mean, which is why the layer rule was written with $\mathbb{E}[x^2]$: only the second moment enters (the cross terms died because of $W$, not $x$).</p>
       <p class="example-label">Example</p>
-      <p>$n_{\text{in}}=512$: He $\sigma_W=\sqrt{2/512}=0.0625$, LeCun $\sigma_W\approx0.044$.</p>
+      <p>$n_{\text{in}}=512$: He $\sigma_W=\sqrt{2/512}=\sqrt{1/256}=1/16=0.0625$; LeCun $\sigma_W=\sqrt{1/512}\approx0.044$. The ratio is $\sqrt2$, from the factor $\tfrac12$.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Frameworks often sample $W_{ji}\sim\mathcal U(-a,a)$. Find the $a$ that gives the Xavier variance $2/(n_{\text{in}}+n_{\text{out}})$.</p>
         <details>
           <summary>Solution</summary>
-          <p>$\operatorname{Var}(W_{ji})=\mathbb{E}[W_{ji}^2]=\int_{-a}^a\frac{w^2}{2a}\,dw=\frac{a^2}3$. Set $\frac{a^2}3=\frac2{n_{\text{in}}+n_{\text{out}}}$: $\ a=\sqrt{\frac6{n_{\text{in}}+n_{\text{out}}}}$, the formula in the Glorot paper. He-uniform likewise gives $a=\sqrt{6/n_{\text{in}}}$.</p>
+          <p>The density of $\mathcal U(-a,a)$ is $\frac1{2a}$ on $[-a,a]$. The mean is $0$ (symmetric about $0$), so the variance is the second moment:</p>
+          <p>
+            $$\operatorname{Var}(W_{ji})=\mathbb{E}[W_{ji}^2]=\int_{-a}^a\frac{w^2}{2a}\,dw=\frac1{2a}\Big[\frac{w^3}3\Big]_{-a}^{a}=\frac1{2a}\cdot\frac{2a^3}3=\frac{a^2}3.$$
+          </p>
+          <p>Match it to Xavier and solve for $a$:</p>
+          <p>$$\frac{a^2}3=\frac2{n_{\text{in}}+n_{\text{out}}} \ \Rightarrow\ a^2=\frac6{n_{\text{in}}+n_{\text{out}}} \ \Rightarrow\ a=\sqrt{\frac6{n_{\text{in}}+n_{\text{out}}}},$$</p>
+          <p>the formula in the Glorot paper. He-uniform likewise: $\frac{a^2}3=\frac2{n_{\text{in}}}\Rightarrow a=\sqrt{6/n_{\text{in}}}$.</p>
         </details>
       </section>
     </article>
@@ -140,7 +172,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

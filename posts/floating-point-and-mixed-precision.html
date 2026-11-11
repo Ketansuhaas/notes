@@ -95,14 +95,29 @@
         </svg>
         <figcaption>Bits per field. bf16 keeps fp32's exponent and drops mantissa; fp16 trades exponent for mantissa.</figcaption>
       </figure>
+      <p>Here $s$ is the sign bit, $e$ is the exponent field read as an unsigned integer ($k$ bits), and $m$ is the $p$ mantissa bits written after a binary point. The leading $1.$ is not stored (every nonzero binary number starts with a 1, so it is free). Every row of the table below follows from this formula and the three bit counts.</p>
+      <p><strong>Step 1: the bias.</strong> All-zeros $e$ is reserved for zero and subnormals, all-ones for $\infty$/NaN, so normal numbers use $e=1,\dots,2^k-2$. The bias $2^{k-1}-1$ centres that range on $0$:</p>
+      <p>$$\text{bias}=2^{k-1}-1:\qquad k=8\Rightarrow127,\qquad k=5\Rightarrow15.$$</p>
+      <p>$$e-\text{bias}\ \in\ \big[\,1-\text{bias},\ (2^k-2)-\text{bias}\,\big]=\big[\,1-\text{bias},\ \text{bias}\,\big].$$</p>
+      <p>$$\text{fp32, bf16: }[-126,\,127],\qquad \text{fp16: }[-14,\,15].$$</p>
+      <p><strong>Step 2: largest.</strong> Top exponent $\text{bias}$, all mantissa bits 1, so $1.m=1.11\ldots1_2=2-2^{-p}$:</p>
+      <p>$$x_{\max}=(2-2^{-p})\cdot2^{\text{bias}}.$$</p>
+      <p>$$\text{fp32: }(2-2^{-23})\,2^{127}\approx3.40\times10^{38},\qquad \text{bf16: }(2-2^{-7})\,2^{127}\approx3.39\times10^{38}.$$</p>
+      <p>$$\text{fp16: }(2-2^{-10})\,2^{15}=2^{16}-2^{5}=65536-32=65504.$$</p>
+      <p><strong>Step 3: spacing.</strong> Between $2^E$ and $2^{E+1}$ the exponent is fixed and the last mantissa bit is worth $2^{-p}$, so neighbours differ by</p>
+      <p>$$\text{gap}(x)=2^{E}\cdot2^{-p}\quad\text{for }2^E\le x\lt2^{E+1}.$$</p>
+      <p>At $x=1$ ($E=0$) this is machine epsilon $\varepsilon=2^{-p}$: fp32 $2^{-23}$, bf16 $2^{-7}$, fp16 $2^{-10}$. Rounding to nearest is off by at most half a gap, a relative error of at most $\varepsilon/2$.</p>
       <table>
         <tr><td></td><td><strong>bias</strong></td><td><strong>largest</strong></td><td><strong>spacing at 1</strong></td></tr>
         <tr><td>fp32</td><td>127</td><td>$\approx3.4\times10^{38}$</td><td>$2^{-23}\approx1.2\times10^{-7}$</td></tr>
         <tr><td>bf16</td><td>127</td><td>$\approx3.4\times10^{38}$</td><td>$2^{-7}\approx7.8\times10^{-3}$</td></tr>
         <tr><td>fp16</td><td>15</td><td>$65504$</td><td>$2^{-10}\approx9.8\times10^{-4}$</td></tr>
       </table>
+      <p><strong>Step 4: why bf16 has fp32's range.</strong> fp32 is laid out [1 sign | 8 exponent | 23 mantissa]. Its top 16 bits are [1 | 8 | 7]: exactly bf16. So cutting the low 16 bits keeps $s$ and $e$ untouched and only shortens $m$. Same $k=8$, same bias, so Steps 1 and 2 give the same exponent range; only $p$ drops from 23 to 7. (Going back, bf16 $\to$ fp32 just appends 16 zero bits: exact.)</p>
       <p class="example-label">Example</p>
-      <p>bf16 keeps under 3 significant digits: $256+1=256$, because the spacing at 256 is $2^8\cdot2^{-7}=2$.</p>
+      <p>Significant digits: $p+1$ bits (with the hidden 1) is $(p+1)\log_{10}2$ decimal digits.</p>
+      <p>$$\text{bf16: }8\cdot0.301\approx2.4,\qquad \text{fp16: }11\cdot0.301\approx3.3,\qquad \text{fp32: }24\cdot0.301\approx7.2.$$</p>
+      <p>So bf16 keeps under 3 digits: $256+1=256$. By Step 3 the gap at $256=2^8$ is $2^8\cdot2^{-7}=2$, so the neighbours are $256$ and $258$. $257$ sits exactly halfway; round-to-nearest-even picks the one with last mantissa bit 0, which is $256$.</p>
 
       <h2>Why bf16 for training</h2>
       <p class="idea">Activations and gradients span many orders of magnitude. bf16 has fp32's range, so nothing overflows or flushes to zero; fp16's narrow range does both.</p>
@@ -110,7 +125,11 @@
         <tr><td>fp16</td><td>above 65504 → inf; tiny gradients → 0</td><td>needs loss scaling</td></tr>
         <tr><td>bf16</td><td>same range as fp32</td><td>no scaling; coarse precision is tolerated</td></tr>
       </table>
-      <p>Loss scaling: multiply the loss by $S$ (e.g. $2^{16}$) so every gradient is $S\times$ larger, then divide by $S$ in fp32 before the update. Lower $S$ whenever an inf appears.</p>
+      <p>How wide is each range? Smallest normal is the lowest exponent with mantissa $0$, $2^{1-\text{bias}}$; largest is from Step 2. In powers of ten:</p>
+      <p>$$\text{fp16: }\log_{10}\frac{65504}{2^{-14}}\approx9\ \text{decades},\qquad \text{bf16: }\log_{10}\frac{3.4\times10^{38}}{2^{-126}}\approx76\ \text{decades}.$$</p>
+      <p><strong>Loss scaling</strong> shifts fp16's 9 decades to where the gradients live. Multiply the loss by $S$ (e.g. $2^{16}$). Differentiation is linear and backprop is a chain of linear maps (<a href="backpropagation-via-jvps.html">backpropagation</a>), so every gradient is scaled too:</p>
+      <p>$$\nabla_w(S\cdot L)=S\cdot\nabla_wL.$$</p>
+      <p>With $S=2^j$, multiplying and later dividing only adds and subtracts $j$ in the exponent field, so both are exact unless they overflow or underflow. Divide by $S$ in fp32 before the update and you get $\nabla_wL$ back, having lifted every tiny gradient $j$ binades up out of the underflow zone. If an $\infty$ appears, $S$ was too big: skip that step and lower $S$.</p>
 
       <h2>Mixed precision: low precision where it is cheap</h2>
       <p class="idea">Do the bulk math (matmuls) in bf16 on tensor cores; keep anything that adds up many small numbers in fp32.</p>
@@ -121,7 +140,10 @@
         <tr><td>softmax, norms, loss</td><td>fp32 (autocast chooses this)</td></tr>
       </table>
       <p class="example-label">Example: why fp32 master weights</p>
-      <p>$w=1$, update $\eta g=10^{-6}$. In bf16, $1+10^{-6}=1$ (spacing $2^{-7}$): training silently stalls. In fp32 the update survives.</p>
+      <p>$w=1$, update $\eta g=10^{-6}$. By Step 3, a sum moves to the next representable number only if the update exceeds half the gap at $w$:</p>
+      <p>$$\text{bf16: }\tfrac12\cdot2^{-7}=2^{-8}\approx3.9\times10^{-3}\gt10^{-6}\ \Rightarrow\ 1+10^{-6}\text{ rounds to }1.$$</p>
+      <p>$$\text{fp32: }\tfrac12\cdot2^{-23}=2^{-24}\approx6\times10^{-8}\lt10^{-6}\ \Rightarrow\ \text{the update survives}.$$</p>
+      <p>In bf16 every such step is lost and training silently stalls; fp32 master weights keep it.</p>
       <pre><code>import torch, torch.nn.functional as F
 model = Net().cuda()                                # weights stay fp32
 opt = torch.optim.AdamW(model.parameters(), lr=1e-3)
@@ -138,9 +160,15 @@ for x, y in loader:
         <p>What is the smallest positive normal number in fp16 and in bf16? A gradient of $10^{-8}$ is cast to fp16: what happens, and how does $S=2^{16}$ rescue it?</p>
         <details>
           <summary>Solution</summary>
-          <p>Smallest normal: exponent field $1$, mantissa $0$: $2^{1-\text{bias}}$. fp16: $2^{-14}\approx6.1\times10^{-5}$. bf16: $2^{-126}\approx1.2\times10^{-38}$.</p>
-          <p>Below that, fp16 has subnormals down to $2^{-24}\approx6\times10^{-8}$. $10^{-8}$ is under half of that, so it rounds to $0$: the gradient vanishes. In bf16 it is an ordinary number.</p>
-          <p>Scaled: $10^{-8}\cdot2^{16}\approx6.6\times10^{-4}$, a normal fp16 value. Unscale in fp32 and the update is intact.</p>
+          <p>Smallest normal: exponent field $e=1$, mantissa $0$, so $1.m=1$:</p>
+          <p>$$x_{\min}=1\cdot2^{1-\text{bias}}.$$</p>
+          <p>$$\text{fp16: }2^{1-15}=2^{-14}\approx6.1\times10^{-5},\qquad \text{bf16: }2^{1-127}=2^{-126}\approx1.2\times10^{-38}.$$</p>
+          <p>Below that, $e=0$ means subnormal: $0.m\times2^{1-\text{bias}}$ (no hidden 1). The smallest has only the last mantissa bit set:</p>
+          <p>$$\text{fp16: }2^{-10}\cdot2^{-14}=2^{-24}\approx5.96\times10^{-8}.$$</p>
+          <p>$10^{-8}$ lies between $0$ and $2^{-24}$, below the midpoint $2^{-25}\approx2.98\times10^{-8}$, so it rounds to $0$: the gradient vanishes. In bf16, $10^{-8}\gg2^{-126}$, an ordinary number.</p>
+          <p>Scaled:</p>
+          <p>$$10^{-8}\cdot2^{16}=6.55\times10^{-4}\ \ge\ 2^{-14}\approx6.1\times10^{-5},$$</p>
+          <p>a normal fp16 value with full 11-bit precision. Unscale in fp32 and the update is intact.</p>
         </details>
       </section>
     </article>
@@ -153,7 +181,7 @@ for x, y in loader:
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

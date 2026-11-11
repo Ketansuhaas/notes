@@ -56,16 +56,22 @@
 
       <h2>The problem</h2>
       <p class="idea">$\theta$ lives in the distribution, not in $f$. A sampled $z$ is just a number: autodiff sees no path from it back to $\theta$.</p>
+      <p>Write the expectation as an integral. $\theta$ appears only in the density, so the gradient lands on $q_\theta$:</p>
       <p>
-        $$
-        \nabla_\theta\,\mathbb{E}_{z\sim q_\theta}[f(z)]=\int f(z)\,\nabla_\theta q_\theta(z)\,dz \quad\ne\quad \mathbb{E}_{z\sim q_\theta}[\nabla_\theta f(z)]=0.
-        $$
+        $$\nabla_\theta\,\mathbb{E}_{z\sim q_\theta}[f(z)]=\nabla_\theta\int f(z)\,q_\theta(z)\,dz=\int f(z)\,\nabla_\theta q_\theta(z)\,dz.$$
       </p>
-      <p>The left integral is not an average under $q_\theta$, so sampling $z$ and averaging doesn't estimate it.</p>
+      <p>The naive estimate (sample $z$, differentiate $f$) gives zero, since $f(z)$ has no $\theta$:</p>
+      <p>$$\mathbb{E}_{z\sim q_\theta}[\nabla_\theta f(z)]=\mathbb{E}_{z\sim q_\theta}[0]=0\ \ne\ \int f\,\nabla_\theta q_\theta\,dz.$$</p>
+      <p>And the correct integral is not an average under $q_\theta$: its weight $\nabla_\theta q_\theta$ integrates to $\nabla_\theta\int q_\theta=\nabla_\theta1=0$, so it is negative somewhere and is not a density. Sampling $z\sim q_\theta$ and averaging $f$ doesn't estimate it.</p>
 
       <h2>The trick: $z=\mu+\sigma\epsilon$</h2>
       <p class="idea">Write the sample as a deterministic function of $\theta$ and noise with no $\theta$ in it. The randomness moves to $\epsilon$; $\theta$ moves into the function.</p>
-      <p>$$z=\mu+\sigma\epsilon,\quad \epsilon\sim\mathcal N(0,1) \quad\Rightarrow\quad z\sim\mathcal N(\mu,\sigma^2), \qquad \theta=(\mu,\sigma).$$</p>
+      <p>$$z=\mu+\sigma\epsilon,\quad \epsilon\sim\mathcal N(0,1), \qquad \theta=(\mu,\sigma),\ \sigma\gt0.$$</p>
+      <p>It has the right distribution. Compute its CDF ($\Phi$ is the standard normal CDF), dividing by $\sigma\gt0$ keeps the inequality:</p>
+      <p>
+        $$P(z\le t)=P(\mu+\sigma\epsilon\le t)=P\Big(\epsilon\le\frac{t-\mu}{\sigma}\Big)=\Phi\Big(\frac{t-\mu}{\sigma}\Big),$$
+      </p>
+      <p>which is the CDF of $\mathcal N(\mu,\sigma^2)$. So $z\sim\mathcal N(\mu,\sigma^2)$. (Check: $\mathbb{E}[z]=\mu+\sigma\cdot0=\mu$, $\operatorname{Var}(z)=\sigma^2\operatorname{Var}(\epsilon)=\sigma^2$.)</p>
 
       <figure class="figure">
         <svg width="340" viewBox="0 0 400 190" role="img" aria-label="Two computation graphs. Before: theta feeds a random node z sampled from q theta, then f; the gradient from f stops at the random node. After: theta and noise epsilon feed a deterministic node z equals mu plus sigma epsilon, then f; the gradient flows from f through z back to theta.">
@@ -98,32 +104,56 @@
         </svg>
         <figcaption>Before, the gradient stops at the random node. After, it flows through $z$ back to $\theta$.</figcaption>
       </figure>
-      <p>
-        $$
-        \nabla_\theta\,\mathbb{E}_{z\sim q_\theta}[f(z)]=\nabla_\theta\,\mathbb{E}_{\epsilon}[f(\mu+\sigma\epsilon)]=\mathbb{E}_{\epsilon}\big[\nabla_\theta f(\mu+\sigma\epsilon)\big]\approx\frac1S\sum_{s=1}^S\nabla_\theta f(\mu+\sigma\epsilon_s).
-        $$
-      </p>
-      <p>Chain rule through the sample: $\ \dfrac{\partial f}{\partial\mu}=f'(z),\quad \dfrac{\partial f}{\partial\sigma}=f'(z)\,\epsilon$.</p>
-      <p>In a VAE the encoder outputs $\mu,\sigma$: $\ \underbrace{z}_{d\times1}=\underbrace{\mu_\phi(x)}_{d\times1}+\underbrace{\sigma_\phi(x)}_{d\times1}\odot\underbrace{\epsilon}_{d\times1}$.</p>
-      <p>General recipe: any $z=g_\theta(\epsilon)$ with $\epsilon\sim p(\epsilon)$ free of $\theta$.</p>
+      <p><strong>The estimator is unbiased.</strong> Step 1: $z$ and $\mu+\sigma\epsilon$ have the same distribution, so they have the same expectation of $f$, and $\theta$ has moved out of the distribution into the integrand:</p>
+      <p>$$\mathbb{E}_{z\sim q_\theta}[f(z)]=\mathbb{E}_{\epsilon}[f(\mu+\sigma\epsilon)]=\int f(\mu+\sigma\epsilon)\,p(\epsilon)\,d\epsilon.$$</p>
+      <p>Step 2: $p(\epsilon)$ has no $\theta$, so the gradient passes inside the integral (differentiation under the integral sign; fine when $f$ is smooth and $\nabla_\theta f$ is dominated by an integrable function) and lands on $f$:</p>
+      <p>$$\nabla_\theta\int f(\mu+\sigma\epsilon)\,p(\epsilon)\,d\epsilon=\int\nabla_\theta f(\mu+\sigma\epsilon)\,p(\epsilon)\,d\epsilon=\mathbb{E}_{\epsilon}\big[\nabla_\theta f(\mu+\sigma\epsilon)\big].$$</p>
+      <p>Step 3: this <em>is</em> an average under a fixed distribution, so sample it. By linearity of expectation each term has mean equal to the target, hence so does their average:</p>
+      <p>$$\mathbb{E}\Big[\frac1S\sum_{s=1}^S\nabla_\theta f(\mu+\sigma\epsilon_s)\Big]=\frac1S\sum_{s=1}^S\mathbb{E}_\epsilon\big[\nabla_\theta f(\mu+\sigma\epsilon)\big]=\nabla_\theta\,\mathbb{E}_{q_\theta}[f(z)].$$</p>
+      <p>Each sample's gradient is ordinary autodiff, the chain rule through $z=\mu+\sigma\epsilon$ with $\partial z/\partial\mu=1$, $\partial z/\partial\sigma=\epsilon$:</p>
+      <p>$$\frac{\partial f}{\partial\mu}=f'(z)\cdot1=f'(z),\qquad \frac{\partial f}{\partial\sigma}=f'(z)\cdot\epsilon.$$</p>
+      <p>In a VAE the encoder outputs $\mu,\sigma$, applied per coordinate: $\ \underbrace{z}_{d\times1}=\underbrace{\mu_\phi(x)}_{d\times1}+\underbrace{\sigma_\phi(x)}_{d\times1}\odot\underbrace{\epsilon}_{d\times1}$.</p>
+      <p>General recipe: any $z=g_\theta(\epsilon)$ with $\epsilon\sim p(\epsilon)$ free of $\theta$; Steps 1 to 3 go through unchanged.</p>
       <table>
-        <tr><td>$\mathcal N(\mu,\sigma^2)$</td><td>$z=\mu+\sigma\epsilon$, $\ \epsilon\sim\mathcal N(0,1)$</td></tr>
-        <tr><td>$\mathcal N(\mu,\Sigma)$, $\Sigma=LL^T$</td><td>$z=\mu+L\epsilon$, $\ \epsilon\sim\mathcal N(0,I)$</td></tr>
-        <tr><td>$\text{Exponential}(\lambda)$</td><td>$z=-\tfrac1\lambda\log u$, $\ u\sim\mathcal U(0,1)$</td></tr>
+        <tr><td>$\mathcal N(\mu,\sigma^2)$</td><td>$z=\mu+\sigma\epsilon$, $\ \epsilon\sim\mathcal N(0,1)$</td><td>CDF computed above</td></tr>
+        <tr><td>$\mathcal N(\mu,\Sigma)$, $\Sigma=LL^T$</td><td>$z=\mu+L\epsilon$, $\ \epsilon\sim\mathcal N(0,I)$</td><td>$\operatorname{Cov}(z)=L\operatorname{Cov}(\epsilon)L^T=LIL^T=\Sigma$</td></tr>
+        <tr><td>$\text{Exponential}(\lambda)$</td><td>$z=-\tfrac1\lambda\log u$, $\ u\sim\mathcal U(0,1)$</td><td>see below</td></tr>
       </table>
+      <p>Multivariate row: $z$ is a linear map of a Gaussian, hence Gaussian (<em>proof idea:</em> its characteristic function $\mathbb{E}[e^{is^Tz}]=e^{is^T\mu}\,\mathbb{E}[e^{i(L^Ts)^T\epsilon}]=e^{is^T\mu-\frac12s^TLL^Ts}$ is the Gaussian one), so mean $\mu$ and covariance $\Sigma$ pin it down. Exponential row, via the tail ($-\log$ is decreasing, so the inequality flips):</p>
+      <p>$$P(z\gt t)=P\big(-\log u\gt\lambda t\big)=P\big(u\lt e^{-\lambda t}\big)=e^{-\lambda t},$$</p>
+      <p>the tail of $\text{Exponential}(\lambda)$ (see <a href="common-distributions.html">Common distributions</a>).</p>
 
       <p class="example-label">Example: $f(z)=z^2$</p>
-      <p>$$\text{Exact: } \mathbb{E}[z^2]=\mu^2+\sigma^2\ \Rightarrow\ \frac{\partial}{\partial\mu}=2\mu. \qquad \text{Pathwise: } \frac{\partial}{\partial\mu}(\mu+\sigma\epsilon)^2=2(\mu+\sigma\epsilon),\ \ \text{mean } 2\mu.$$</p>
-      <p>One sample at $\mu=1,\ \sigma=0.5,\ \epsilon=0.4$: estimate $2.4$, true $2$. Noisy, but unbiased. &#10003;</p>
+      <p><strong>Exact.</strong> $\mathbb{E}[z^2]=\operatorname{Var}(z)+\mathbb{E}[z]^2=\sigma^2+\mu^2$, so $\frac{\partial}{\partial\mu}\mathbb{E}[z^2]=2\mu$.</p>
+      <p><strong>Pathwise.</strong> Differentiate one sample, then average using $\mathbb{E}[\epsilon]=0$:</p>
+      <p>$$\frac{\partial}{\partial\mu}(\mu+\sigma\epsilon)^2=2(\mu+\sigma\epsilon), \qquad \mathbb{E}\big[2(\mu+\sigma\epsilon)\big]=2\mu+2\sigma\cdot0=2\mu. \ \checkmark$$</p>
+      <p>One sample at $\mu=1,\ \sigma=0.5,\ \epsilon=0.4$: $2(1+0.5\cdot0.4)=2\cdot1.2=2.4$, versus the true $2$. Noisy, but unbiased. Its variance: $\operatorname{Var}\big(2\mu+2\sigma\epsilon\big)=4\sigma^2=1$.</p>
 
       <h2>The alternative: score function (REINFORCE)</h2>
-      <p class="idea">Without a reparameterization, differentiate the density instead, using $\nabla q=q\,\nabla\log q$.</p>
-      <p>$$\nabla_\theta\,\mathbb{E}_{q_\theta}[f(z)]=\mathbb{E}_{z\sim q_\theta}\big[f(z)\,\nabla_\theta\log q_\theta(z)\big].$$</p>
+      <p class="idea">Without a reparameterization, differentiate the density instead. The identity $\nabla q=q\,\nabla\log q$ turns the bad integral back into an average under $q$.</p>
+      <p>The derivative of a log: $\nabla_\theta\log q_\theta=\nabla_\theta q_\theta/q_\theta$, so $\nabla_\theta q_\theta=q_\theta\,\nabla_\theta\log q_\theta$. Substitute into the integral from "The problem":</p>
+      <p>
+        $$\nabla_\theta\,\mathbb{E}_{q_\theta}[f(z)]=\int f(z)\,\nabla_\theta q_\theta(z)\,dz=\int f(z)\,q_\theta(z)\,\nabla_\theta\log q_\theta(z)\,dz$$
+        $$=\mathbb{E}_{z\sim q_\theta}\big[f(z)\,\nabla_\theta\log q_\theta(z)\big].$$
+      </p>
+      <p>Now an average under $q_\theta$ again, so sampling $z$ estimates it, with no derivative of $f$ needed.</p>
+      <p class="example-label">Same example, score function</p>
+      <p>For $\mathcal N(\mu,\sigma^2)$, $\log q=-\frac{(z-\mu)^2}{2\sigma^2}+\text{const}$, so $\partial_\mu\log q=\frac{z-\mu}{\sigma^2}=\frac{\epsilon}{\sigma}$. Using $\mathbb{E}[\epsilon]=\mathbb{E}[\epsilon^3]=0$, $\mathbb{E}[\epsilon^2]=1$:</p>
+      <p>
+        $$\mathbb{E}\Big[(\mu+\sigma\epsilon)^2\frac{\epsilon}{\sigma}\Big]=\frac1\sigma\mathbb{E}\big[\mu^2\epsilon+2\mu\sigma\epsilon^2+\sigma^2\epsilon^3\big]=\frac{2\mu\sigma}{\sigma}=2\mu. \ \checkmark$$
+      </p>
+      <p>Same mean, much more noise. Square the estimator and use $\mathbb{E}[\epsilon^4]=3$, $\mathbb{E}[\epsilon^6]=15$ (odd powers vanish):</p>
+      <p>
+        $$\mathbb{E}\Big[\Big((\mu+\sigma\epsilon)^2\tfrac{\epsilon}{\sigma}\Big)^2\Big]=\frac{\mu^4+18\mu^2\sigma^2+15\sigma^4}{\sigma^2}$$
+        $$\Rightarrow\ \operatorname{Var}=\frac{\mu^4}{\sigma^2}+14\mu^2+15\sigma^2.$$
+      </p>
+      <p>At $\mu=1,\ \sigma=0.5$: $\frac{1}{0.25}+14+15\cdot0.25=4+14+3.75=21.75$, versus $1$ for pathwise.</p>
+      <p><strong>Why the score function is noisier.</strong> The score has mean zero, $\mathbb{E}_q[\nabla\log q]=\int\nabla q=\nabla1=0$. So shifting $f$ by a constant $c$ leaves the estimator's mean unchanged but adds $c\,\nabla\log q$, raising its variance by $c^2\operatorname{Var}(\nabla\log q)$. The estimator weighs $f$'s <em>value</em>, offset and all; the pathwise one uses only $f$'s slope, which ignores offsets. (This is also why baselines, subtracting a $c$ near $\mathbb{E}[f]$, help REINFORCE.)</p>
       <table>
         <tr><td></td><td><strong>Pathwise (reparam.)</strong></td><td><strong>Score function</strong></td></tr>
         <tr><td>Needs</td><td>$f$ differentiable, $z=g_\theta(\epsilon)$</td><td>only $\log q_\theta$</td></tr>
-        <tr><td>Discrete $z$</td><td>no</td><td>yes</td></tr>
-        <tr><td>Variance</td><td>low (uses $f'$)</td><td>high (uses only $f$)</td></tr>
+        <tr><td>Discrete $z$</td><td>no: $z=g_\theta(\epsilon)$ is piecewise constant in $\theta$, so $\partial z/\partial\theta=0$ wherever it exists</td><td>yes</td></tr>
+        <tr><td>Variance</td><td>low (uses $f'$): $1$ in the example</td><td>high (uses only $f$): $21.75$ in the example</td></tr>
       </table>
 
       <section class="exercise">
@@ -131,7 +161,11 @@
         <p>Same example: $f(z)=z^2$, $z=\mu+\sigma\epsilon$. Find the pathwise estimator of $\partial\,\mathbb{E}[f]/\partial\sigma$ and show it is unbiased.</p>
         <details>
           <summary>Solution</summary>
-          <p>$\frac{\partial}{\partial\sigma}(\mu+\sigma\epsilon)^2=2(\mu+\sigma\epsilon)\,\epsilon$. Mean: $2\mu\,\mathbb{E}[\epsilon]+2\sigma\,\mathbb{E}[\epsilon^2]=0+2\sigma$. Exact: $\frac{\partial}{\partial\sigma}(\mu^2+\sigma^2)=2\sigma$. &#10003;</p>
+          <p>Chain rule through the sample, with $\partial z/\partial\sigma=\epsilon$:</p>
+          <p>$$\frac{\partial}{\partial\sigma}(\mu+\sigma\epsilon)^2=2(\mu+\sigma\epsilon)\cdot\epsilon=2\mu\epsilon+2\sigma\epsilon^2.$$</p>
+          <p>Its mean, by linearity, with $\mathbb{E}[\epsilon]=0$ and $\mathbb{E}[\epsilon^2]=\operatorname{Var}(\epsilon)+0^2=1$:</p>
+          <p>$$\mathbb{E}[2\mu\epsilon+2\sigma\epsilon^2]=2\mu\cdot0+2\sigma\cdot1=2\sigma.$$</p>
+          <p>Exact: $\mathbb{E}[z^2]=\mu^2+\sigma^2$, so $\frac{\partial}{\partial\sigma}(\mu^2+\sigma^2)=2\sigma$. They agree, so the estimator is unbiased. &#10003;</p>
         </details>
       </section>
     </article>
@@ -144,7 +178,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

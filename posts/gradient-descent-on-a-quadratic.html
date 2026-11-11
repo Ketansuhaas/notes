@@ -55,19 +55,31 @@
       <p class="idea">Near a minimum every loss is a bowl (Taylor). On a bowl, gradient descent splits into independent 1-D problems, one per eigenvector of the curvature.</p>
 
       <h2>The update</h2>
-      <p>$$f(x)=\tfrac12x^TAx,\quad \nabla f=Ax \quad\Rightarrow\quad x_{k+1}=x_k-\eta Ax_k=(I-\eta A)\,x_k.$$</p>
-      <p>Running example: $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, so $f=x_1^2+x_1x_2+x_2^2$, with $\lambda_1=3$ along $q_1=\tfrac1{\sqrt2}(1,1)$ and $\lambda_2=1$ along $q_2=\tfrac1{\sqrt2}(1,-1)$.</p>
+      <p class="idea">Shift the minimum to the origin and the bowl is $\tfrac12x^TAx$. A gradient step is then multiplication by one fixed matrix.</p>
+      <p>Why a bowl: near a minimum $x^\star$, $\nabla f(x^\star)=0$, so <a href="taylor-expansion.html">Taylor</a> leaves $f(x^\star+e)\approx f(x^\star)+\tfrac12e^THe$. Rename $e\to x$, $H\to A$, drop the constant, and take the gradient as in <a href="matrix-calculus.html">matrix calculus</a> ($A$ symmetric):</p>
+      <p>$$f(x)=\tfrac12x^TAx,\qquad \nabla f=Ax.$$</p>
+      <p>$$x_{k+1}=x_k-\eta\nabla f(x_k)=x_k-\eta Ax_k=(I-\eta A)\,x_k.$$</p>
+      <p>Running example: $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, so $f=x_1^2+x_1x_2+x_2^2$. Its eigenvalues solve $\det(A-\lambda I)=(2-\lambda)^2-1=0$, so $2-\lambda=\pm1$:</p>
+      <p>$$\lambda_1=3:\ (A-3I)q=0\Rightarrow q_1=\tfrac1{\sqrt2}(1,1), \qquad \lambda_2=1:\ (A-I)q=0\Rightarrow q_2=\tfrac1{\sqrt2}(1,-1).$$</p>
 
       <h2>One factor per direction</h2>
       <p class="idea">$I-\eta A$ has the same eigenvectors as $A$. Each coordinate gets multiplied by its own factor every step.</p>
-      <p>$$x=\textstyle\sum_ic_iq_i: \qquad c_i\ \leftarrow\ (1-\eta\lambda_i)\,c_i.$$</p>
+      <p><strong>Same eigenvectors.</strong> Apply $I-\eta A$ to an eigenvector, $Aq_i=\lambda_iq_i$:</p>
+      <p>$$(I-\eta A)q_i=q_i-\eta\lambda_iq_i=(1-\eta\lambda_i)\,q_i.$$</p>
+      <p><strong>Decouple.</strong> $A$ is symmetric, so its $q_i$ form an orthonormal basis (<a href="spectral-theorem.html">spectral theorem</a>). Write $x_k=\sum_ic_i^{(k)}q_i$ and apply the update term by term (linearity):</p>
+      <p>$$x_{k+1}=\sum_ic_i^{(k)}(1-\eta\lambda_i)\,q_i \quad\Rightarrow\quad c_i^{(k+1)}=(1-\eta\lambda_i)\,c_i^{(k)}.$$</p>
+      <p>$$\Rightarrow\quad c_i^{(k)}=(1-\eta\lambda_i)^k\,c_i^{(0)}.$$</p>
+      <p>Each factor is $1-\eta\lambda_i$ with $\lambda_1=3$, $\lambda_2=1$:</p>
       <table>
         <tr><td>$\eta$</td><td>steep $q_1$: $1-3\eta$</td><td>flat $q_2$: $1-\eta$</td><td>behaviour</td></tr>
-        <tr><td>$0.2$</td><td>$0.4$</td><td>$0.8$</td><td>smooth, slow along $q_2$</td></tr>
-        <tr><td>$0.5$</td><td>$-0.5$</td><td>$0.5$</td><td>zig-zags along $q_1$</td></tr>
-        <tr><td>$0.7$</td><td>$-1.1$</td><td>$0.3$</td><td>diverges along $q_1$</td></tr>
+        <tr><td>$0.2$</td><td>$1-0.6=0.4$</td><td>$0.8$</td><td>smooth, slow along $q_2$</td></tr>
+        <tr><td>$0.5$</td><td>$1-1.5=-0.5$</td><td>$0.5$</td><td>zig-zags along $q_1$ (sign flips)</td></tr>
+        <tr><td>$0.7$</td><td>$1-2.1=-1.1$</td><td>$0.3$</td><td>diverges along $q_1$ ($|{-1.1}|^k\to\infty$)</td></tr>
       </table>
-
+      <p class="example-label">Example: the right panel below, $\eta=0.5$ from $(4,0)$</p>
+      <p>$$I-0.5A=\begin{pmatrix}1-1&-0.5\\-0.5&1-1\end{pmatrix}=\begin{pmatrix}0&-0.5\\-0.5&0\end{pmatrix}.$$</p>
+      <p>Each step swaps the coordinates and multiplies by $-0.5$:</p>
+      <p>$$(4,0)\to(0,-2)\to(1,0)\to(0,-0.5)\to\cdots$$</p>
       <figure class="figure">
         <svg width="425" viewBox="0 0 500 240" role="img" aria-label="Two panels of the same elliptical bowl. With step size 0.2 the gradient descent path from (4,0) curves smoothly into the long flat axis; with step size 0.5 it zig-zags across the steep axis: (4,0), (0,-2), (1,0), (0,-0.5).">
           <ellipse class="outline" cx="118" cy="128" rx="107.5" ry="62.1" transform="rotate(45 118 128)"/>
@@ -111,11 +123,30 @@
 
       <h2>The step-size limit</h2>
       <p class="idea">Every factor must shrink, and the steepest direction breaks first.</p>
-      <p>$$|1-\eta\lambda_i|\lt1\ \ \forall i \iff 0\lt\eta\lt\frac2{\lambda_{\max}}. \qquad \text{Here: } \eta\lt\tfrac23.$$</p>
+      <p>From $c_i^{(k)}=(1-\eta\lambda_i)^kc_i^{(0)}$, coordinate $i$ goes to $0$ from every start iff $|1-\eta\lambda_i|\lt1$. Unpack it (with $\lambda_i\gt0$):</p>
+      <p>$$-1\lt1-\eta\lambda_i\lt1 \iff 0\lt\eta\lambda_i\lt2 \iff 0\lt\eta\lt\frac2{\lambda_i}.$$</p>
+      <p>This must hold for every $i$, and $2/\lambda_i$ is smallest for the largest $\lambda$:</p>
+      <p>$$|1-\eta\lambda_i|\lt1\ \ \forall i \iff 0\lt\eta\lt\frac2{\lambda_{\max}}.$$</p>
+      <p>Here $\lambda_{\max}=3$, so $\eta\lt\tfrac23\approx0.667$: the table's $\eta=0.7$ is just past it.</p>
 
       <h2>The condition number sets the speed</h2>
       <p class="idea">$\eta$ must be small for the steep direction, which leaves the flat direction crawling. The ratio $\kappa=\lambda_{\max}/\lambda_{\min}$ decides how bad that is.</p>
-      <p>$$\text{best } \eta=\frac2{\lambda_{\max}+\lambda_{\min}}, \qquad \text{rate}=\frac{\kappa-1}{\kappa+1}.$$</p>
+      <p><strong>The overall rate.</strong> The $q_i$ are orthonormal, so lengths add like Pythagoras. Let $\rho(\eta)=\max_i|1-\eta\lambda_i|$:</p>
+      <p>$$\|x_k\|^2=\sum_i(1-\eta\lambda_i)^{2k}\big(c_i^{(0)}\big)^2\le\rho^{2k}\|x_0\|^2.$$</p>
+      <p>So $\|x_k\|\le\rho^k\|x_0\|$, with equality when $x_0$ lies along the worst direction. $1-\eta\lambda$ is a straight line in $\lambda$, so its largest $|\cdot|$ over $[\lambda_{\min},\lambda_{\max}]$ is at an end:</p>
+      <p>$$\rho(\eta)=\max\big(|1-\eta\lambda_{\min}|,\ |1-\eta\lambda_{\max}|\big).$$</p>
+      <p><strong>Best fixed step: balance the two ends.</strong> Raising $\eta$ shrinks the flat term $1-\eta\lambda_{\min}$ but, past $1/\lambda_{\max}$, grows the steep term $\eta\lambda_{\max}-1$. The max is smallest where they meet:</p>
+      <p>$$1-\eta\lambda_{\min}=-(1-\eta\lambda_{\max}) \iff 2=\eta(\lambda_{\min}+\lambda_{\max}).$$</p>
+      <p>$$\Rightarrow\quad \eta^\star=\frac2{\lambda_{\max}+\lambda_{\min}}.$$</p>
+      <p>Any other $\eta$ makes one of the two terms bigger. Plug back in, then divide top and bottom by $\lambda_{\min}$:</p>
+      <p>$$\rho^\star=1-\eta^\star\lambda_{\min}=\frac{\lambda_{\max}+\lambda_{\min}-2\lambda_{\min}}{\lambda_{\max}+\lambda_{\min}}$$</p>
+      <p>$$=\frac{\lambda_{\max}-\lambda_{\min}}{\lambda_{\max}+\lambda_{\min}}=\frac{\kappa-1}{\kappa+1}.$$</p>
+      <p>Here: $\eta^\star=\tfrac2{3+1}=0.5$ and $\rho^\star=\tfrac{3-1}{3+1}=0.5$, matching the table row $\eta=0.5$ (factors $-0.5$ and $0.5$, equal size).</p>
+      <p><strong>Steps per digit.</strong> One more correct digit means shrinking the error $10\times$: $\rho^k=0.1$, so</p>
+      <p>$$k=\frac{\ln10}{-\ln\rho}=\frac{2.303}{\ln\frac{\kappa+1}{\kappa-1}}.$$</p>
+      <p>$$\kappa=3:\ \ \rho=0.5,\ \ k=\frac{2.303}{\ln2}=\frac{2.303}{0.693}\approx3.3.$$</p>
+      <p>$$\kappa=100:\ \ \rho=\tfrac{99}{101}\approx0.980,\ \ k=\frac{2.303}{\ln\frac{101}{99}}=\frac{2.303}{0.0200}\approx115.$$</p>
+      <p>For large $\kappa$, $\ln\frac{1+1/\kappa}{1-1/\kappa}\approx\frac2\kappa$, so $k\approx1.15\,\kappa$: steps grow linearly with the condition number.</p>
       <table>
         <tr><td>$\kappa=3$ (here)</td><td>rate $0.5$</td><td>about 3 steps per digit</td></tr>
         <tr><td>$\kappa=100$</td><td>rate $0.98$</td><td>about 115 steps per digit</td></tr>
@@ -127,7 +158,10 @@
         <p>Precondition: $x_{k+1}=x_k-\eta\,PAx_k$ with $P=A^{-1}$ and $\eta=1$. What happens, and what is the new $\kappa$?</p>
         <details>
           <summary>Solution</summary>
-          <p>$x_{k+1}=(I-A^{-1}A)x_k=0$: the minimum in one step. Effectively $PA=I$, all eigenvalues $1$, so $\kappa=1$. This is Newton's method; Adam is a cheap diagonal approximation of $P$.</p>
+          <p>The update matrix is now $I-\eta PA$. With $P=A^{-1}$, $\eta=1$:</p>
+          <p>$$x_{k+1}=(I-A^{-1}A)\,x_k=(I-I)\,x_k=0.$$</p>
+          <p>The minimum in one step, from any start. The matrix playing the role of $A$ is $PA=I$: every eigenvalue is $1$, so $\kappa=1/1=1$, $\rho^\star=\tfrac{1-1}{1+1}=0$.</p>
+          <p>This is Newton's method: the step $-A^{-1}\nabla f=-A^{-1}Ax$ is exactly $-H^{-1}\nabla f$ from <a href="taylor-expansion.html">Taylor expansion</a>. Adam's per-coordinate scaling is a cheap diagonal stand-in for $P$.</p>
         </details>
       </section>
     </article>
@@ -140,7 +174,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

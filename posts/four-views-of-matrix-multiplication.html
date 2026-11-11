@@ -62,7 +62,10 @@
 
       <h2>1. Entries are dot products</h2>
       <p class="idea">Entry $(i,j)$: how well row $i$ of $A$ lines up with column $j$ of $B$.</p>
-      <p>$$(AB)_{ij}=\text{row}_i(A)\cdot\text{col}_j(B), \qquad (AB)_{22}=(1,2)\cdot(0,3)=6.$$</p>
+      <p>This is the definition; every other view is this one sum regrouped.</p>
+      <p>$$(AB)_{ij}:=\sum_{k=1}^nA_{ik}B_{kj}=\text{row}_i(A)\cdot\text{col}_j(B).$$</p>
+      <p>All four entries of the example:</p>
+      <p>$$(AB)_{11}=2\cdot1+1\cdot1=3,\quad (AB)_{12}=2\cdot0+1\cdot3=3,$$ $$(AB)_{21}=1\cdot1+2\cdot1=3,\quad (AB)_{22}=1\cdot0+2\cdot3=6.$$</p>
 
       <figure class="figure">
         <svg width="255" viewBox="0 0 300 170" role="img" aria-label="A on the left, B on top, AB in the corner between them; row 2 of A and column 2 of B are highlighted and meet at entry (2,2) of AB, which is 6.">
@@ -93,18 +96,23 @@
 
       <h2>2. Combinations of columns</h2>
       <p class="idea">Columns of $A$ are ingredients, $x$ is the recipe. $Ax$ can only make mixtures of those columns.</p>
-      <p>
-        $$
-        Ax=x_1a_1+\cdots+x_na_n, \qquad A\begin{pmatrix}0\\3\end{pmatrix}=0\begin{pmatrix}2\\1\end{pmatrix}+3\begin{pmatrix}1\\2\end{pmatrix}=\begin{pmatrix}3\\6\end{pmatrix}.
-        $$
-      </p>
+      <p>Take entry $i$ of $Ax$ and read $A_{ik}$ as entry $i$ of column $a_k$:</p>
+      <p>$$(Ax)_i=\sum_kA_{ik}x_k=\sum_kx_k\,(a_k)_i \quad\Rightarrow\quad Ax=x_1a_1+\cdots+x_na_n.$$</p>
+      <p>Column $j$ of $AB$ is $A$ times column $j$ of $B$ (fix $j$ in the definition), so each column of $AB$ is such a mix. Column 2, with $\text{col}_2(B)=(0,3)$:</p>
+      <p>$$A\begin{pmatrix}0\\3\end{pmatrix}=0\begin{pmatrix}2\\1\end{pmatrix}+3\begin{pmatrix}1\\2\end{pmatrix}=\begin{pmatrix}3\\6\end{pmatrix}=\text{col}_2(AB). \ \checkmark$$</p>
 
       <h2>3. Combinations of rows</h2>
       <p class="idea">Each output row is its own computation. In $XW$ (data as rows), each data point is transformed alone.</p>
-      <p>$$\text{row}_i(AB)=\text{row}_i(A)\,B, \qquad \text{row}_1(AB)=2\,(1,0)+1\,(1,3)=(3,3).$$</p>
+      <p>Fix $i$ and read $B_{kj}$ as entry $j$ of row $k$ of $B$:</p>
+      <p>$$(AB)_{ij}=\sum_kA_{ik}\,\big(\text{row}_k(B)\big)_j \quad\Rightarrow\quad \text{row}_i(AB)=\sum_kA_{ik}\,\text{row}_k(B)=\text{row}_i(A)\,B.$$</p>
+      <p>Row 1, with $\text{row}_1(A)=(2,1)$ as the weights:</p>
+      <p>$$\text{row}_1(AB)=2\,(1,0)+1\,(1,3)=(3,3). \ \checkmark$$</p>
 
       <h2>4. Sum of outer products</h2>
       <p class="idea">A product is a stack of rank-1 layers: column $k$ of $A$ times row $k$ of $B$.</p>
+      <p>Pull the sum over $k$ outside. Each term $A_{ik}B_{kj}$ is entry $(i,j)$ of the outer product $a_kb_k^T$ (column $a_k$ of $A$, row $b_k^T$ of $B$):</p>
+      <p>$$(AB)_{ij}=\sum_k\underbrace{A_{ik}B_{kj}}_{(a_kb_k^T)_{ij}} \quad\Rightarrow\quad AB=\sum_ka_kb_k^T.$$</p>
+      <p>Each layer has rank 1 because row $i$ of $a_kb_k^T$ is $(a_k)_i\,b_k^T$, a multiple of the single row $b_k^T$.</p>
       <p>
         $$
         AB=\sum_k\underbrace{a_k}_{m\times1}\underbrace{b_k^T}_{1\times p}:\quad
@@ -157,7 +165,10 @@
         <p>Rows of $X\in\mathbb{R}^{n\times d}$ are the data points $x_i^T$. Show $X^TX=\sum_ix_ix_i^T$.</p>
         <details>
           <summary>Solution</summary>
-          <p>View 4: column $i$ of $X^T$ is $x_i$, row $i$ of $X$ is $x_i^T$. Shapes: $(d\times1)(1\times d)=d\times d$. &#10003;</p>
+          <p>View 4 with $A=X^T$ ($d\times n$) and $B=X$ ($n\times d$). Column $i$ of $X^T$ is $x_i$ (transposing turns row $i$ into column $i$), and row $i$ of $X$ is $x_i^T$, so</p>
+          <p>$$X^TX=\sum_{i=1}^n\underbrace{x_i}_{d\times1}\underbrace{x_i^T}_{1\times d}\qquad(d\times d).$$</p>
+          <p>Entry check, from the definition: with $X_{ij}=(x_i)_j$,</p>
+          <p>$$(X^TX)_{jl}=\sum_i(X^T)_{ji}X_{il}=\sum_i(x_i)_j(x_i)_l=\Big(\sum_ix_ix_i^T\Big)_{jl}. \ \checkmark$$</p>
         </details>
       </section>
     </article>
@@ -170,7 +181,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

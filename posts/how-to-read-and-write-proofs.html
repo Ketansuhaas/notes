@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Reading and writing proofs - Deep Learning Notes</title>
+  <meta name="description" content="A proof is a chain of small checkable links: a definition, an earlier result, or an algebra step. Direct proof, if-and-only-if, contrapositive, contradiction, induction and counterexamples, each shown on a tiny proof from the notes, plus the phrases proofs use and a checklist for writing your own.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Reading and writing proofs</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Reading and writing proofs</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">proofs</span><span class="tag">logic</span><span class="tag">foundations</span><span class="tag">induction</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="notation-survival-guide.html">Notation survival guide</a> &middot; <strong>Leads to:</strong> <a href="derivation-toolkit.html">The derivation toolkit</a></p>
+      <p class="idea">A proof is a chain from what you know to what you want. Every link is a definition, an earlier result, or an algebra step, so you can check every link without being clever.</p>
+
+      <h2>What a proof is</h2>
+      <p class="idea">Reading a proof means asking of each line: which of the three kinds of link justifies it? If none does, that line is the gap.</p>
+      <table>
+        <tr><td>link</td><td>what it says</td><td>example</td></tr>
+        <tr><td>definition</td><td>unfold a word into its meaning</td><td>$A\succ0$ means $x^TAx\gt0$ for all $x\ne0$</td></tr>
+        <tr><td>earlier result</td><td>cite something already proved</td><td>spectral theorem: $A=Q\Lambda Q^T$</td></tr>
+        <tr><td>algebra</td><td>a valid manipulation</td><td>multiply both sides by $v^T$</td></tr>
+      </table>
+      <figure class="figure">
+        <svg width="459" viewBox="0 0 540 238" role="img" aria-label="A vertical chain of four boxes. Hypotheses A positive definite, Av equals lambda v, v nonzero, lead by an algebra step to v transpose A v equals lambda norm v squared, then by the definition of positive definite to lambda norm v squared greater than zero, then by an earlier result to the conclusion lambda greater than zero.">
+          <defs>
+            <marker id="prf1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+          </defs>
+          <text class="lbl muted" x="96" y="31" text-anchor="end">know</text>
+          <rect class="area-2" rx="4" x="105" y="10" width="220" height="32"/>
+          <rect class="outline" rx="4" x="105" y="10" width="220" height="32"/>
+          <text class="lbl" x="215" y="31" text-anchor="middle">A ≻ 0,  Av = λv,  v ≠ 0</text>
+          <line class="axis" x1="215" y1="42" x2="215" y2="71" marker-end="url(#prf1-arr)"/>
+          <text class="lbl" x="228" y="62"><tspan class="accent-2">algebra:</tspan><tspan class="lbl muted"> multiply by vᵀ</tspan></text>
+          <rect class="outline" rx="4" x="105" y="72" width="220" height="32"/>
+          <text class="lbl" x="215" y="93" text-anchor="middle">vᵀAv = λ vᵀv = λ‖v‖²</text>
+          <line class="axis" x1="215" y1="104" x2="215" y2="133" marker-end="url(#prf1-arr)"/>
+          <text class="lbl" x="228" y="124"><tspan class="accent-2">definition:</tspan><tspan class="lbl muted"> vᵀAv &gt; 0 as v ≠ 0</tspan></text>
+          <rect class="outline" rx="4" x="105" y="134" width="220" height="32"/>
+          <text class="lbl" x="215" y="155" text-anchor="middle">λ‖v‖² &gt; 0</text>
+          <line class="axis" x1="215" y1="166" x2="215" y2="195" marker-end="url(#prf1-arr)"/>
+          <text class="lbl" x="228" y="186"><tspan class="accent-2">earlier result:</tspan><tspan class="lbl muted"> ‖v‖² &gt; 0, divide</tspan></text>
+          <text class="lbl muted" x="96" y="217" text-anchor="end">want</text>
+          <rect class="area" rx="4" x="105" y="196" width="220" height="32"/>
+          <rect class="outline" rx="4" x="105" y="196" width="220" height="32"/>
+          <text class="lbl accent" x="215" y="217" text-anchor="middle">λ &gt; 0</text>
+        </svg>
+        <figcaption>A whole proof (eigenvalues of a positive definite matrix are positive): every arrow names its justification.</figcaption>
+      </figure>
+
+      <h2>Direct proof</h2>
+      <p class="idea">Start from what you know and walk forward until you reach what you want.</p>
+      <p><strong>Claim 1.</strong> $A^TA$ is symmetric for any $A$. <strong>Want:</strong> $(A^TA)^T=A^TA$.</p>
+      <p>$$(A^TA)^T=A^T(A^T)^T \quad(\text{transpose of a product reverses: } (BC)^T=C^TB^T)$$ $$=A^TA \quad(\text{transposing twice gives back } A).\qquad\square$$</p>
+      <p><strong>Claim 2.</strong> $\operatorname{Var}X\ge0$. <strong>Want:</strong> a nonnegative number.</p>
+      <p>$$\operatorname{Var}X=\mathbb{E}\big[(X-\mu)^2\big] \quad(\text{definition, } \mu=\mathbb{E}X)$$ $$(X-\mu)^2\ge0 \text{ for every outcome} \quad(\text{a square})$$ $$\Rightarrow\ \mathbb{E}\big[(X-\mu)^2\big]\ge0 \quad(\text{an average of nonnegative numbers}).\qquad\square$$</p>
+
+      <h2>If and only if</h2>
+      <p class="idea">"$P$ iff $Q$" is two claims glued together, $P\Rightarrow Q$ and $Q\Rightarrow P$. Prove each separately. Set equality $S=T$ works the same way: $S\subseteq T$ and $T\subseteq S$.</p>
+      <p><strong>Claim.</strong> Symmetric $A$ is positive definite iff all its eigenvalues are $\gt0$.</p>
+      <p>($\Rightarrow$) Done in the figure: $Av=\lambda v$, $v\ne0$ gives $\lambda\|v\|^2=v^TAv\gt0$, so $\lambda\gt0$.</p>
+      <p>($\Leftarrow$) Take any $x\ne0$. By <a href="spectral-theorem.html">the spectral theorem</a> $A=Q\Lambda Q^T$; set $y=Q^Tx$.</p>
+      <p>$$x^TAx=x^TQ\Lambda Q^Tx=y^T\Lambda y=\textstyle\sum_i\lambda_iy_i^2.$$</p>
+      <p>$Q$ is invertible, so $y\ne0$: some $y_i^2\gt0$. Every term is $\ge0$ and that one is $\gt0$ (as $\lambda_i\gt0$), so $x^TAx\gt0$. $\square$</p>
+
+      <h2>Contrapositive</h2>
+      <p class="idea">"$P\Rightarrow Q$" says exactly the same as "not $Q$ $\Rightarrow$ not $P$". Use it when "not $Q$" hands you something concrete to work with.</p>
+      <table>
+        <tr><td>statement</td><td>$P\Rightarrow Q$</td><td>same as the original?</td></tr>
+        <tr><td>contrapositive</td><td>not $Q\Rightarrow$ not $P$</td><td>yes, always</td></tr>
+        <tr><td>converse</td><td>$Q\Rightarrow P$</td><td>no, a different claim</td></tr>
+      </table>
+      <p><strong>Claim.</strong> If $A^TA$ is invertible, then the columns of $A$ are independent.</p>
+      <p><strong>Contrapositive:</strong> if the columns are dependent, $A^TA$ is not invertible. Dependent columns hand us an $x\ne0$ with $Ax=0$ (definition of dependence). Then</p>
+      <p>$$A^TAx=A^T(Ax)=A^T0=0, \quad x\ne0,$$</p>
+      <p>so $A^TA$ sends a nonzero vector to $0$ and cannot be invertible. $\square$</p>
+
+      <h2>Contradiction</h2>
+      <p class="idea">Assume the claim is false and follow the consequences until two of them clash. Then the assumption was impossible.</p>
+      <p><strong>Claim.</strong> Eigenvectors $v_1,v_2$ with distinct eigenvalues $\lambda_1\ne\lambda_2$ are independent.</p>
+      <p><strong>Suppose not.</strong> Then $v_2=cv_1$ for some $c$, and $c\ne0$ because eigenvectors are nonzero. Apply $A$ to both sides:</p>
+      <p>$$Av_2=cAv_1 \ \Rightarrow\ \lambda_2v_2=c\lambda_1v_1=\lambda_1(cv_1)=\lambda_1v_2$$ $$\Rightarrow\ (\lambda_2-\lambda_1)\,v_2=0.$$</p>
+      <p>$v_2\ne0$, so $\lambda_2=\lambda_1$. That contradicts $\lambda_1\ne\lambda_2$. $\square$</p>
+
+      <h2>Induction</h2>
+      <p class="idea">To prove a claim for every $k=1,2,3,\dots$: prove it for $k=1$, then show "true for $k$" forces "true for $k+1$". Like dominoes.</p>
+      <p><strong>Claim.</strong> If $Av=\lambda v$ then $A^kv=\lambda^kv$ for all $k\ge1$.</p>
+      <p><strong>Base</strong> ($k=1$): $Av=\lambda v$ is the hypothesis. <strong>Step:</strong> assume $A^kv=\lambda^kv$. Then</p>
+      <p>$$A^{k+1}v=A(A^kv)=A(\lambda^kv) \quad(\text{assumption})$$ $$=\lambda^kAv=\lambda^k\cdot\lambda v=\lambda^{k+1}v \quad(\text{linearity, then base}).\qquad\square$$</p>
+      <p class="example-label">Example</p>
+      <p>$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $v=(1,1)$, $\lambda=3$: $Av=(3,3)$, $A^2v=A(3,3)=(6+3,\,3+6)=(9,9)=3^2v$. &#10003;</p>
+
+      <h2>Counterexample</h2>
+      <p class="idea">A "for all" claim dies from a single case where it fails. No proof needed, just the case, checked.</p>
+      <p><strong>Claim (false).</strong> For every square $A$, $\operatorname{rank}A=$ number of nonzero eigenvalues.</p>
+      <p>$$A=\begin{pmatrix}0&1\\0&0\end{pmatrix}: \quad \det(A-\lambda I)=\det\begin{pmatrix}-\lambda&1\\0&-\lambda\end{pmatrix}=\lambda^2.$$</p>
+      <p>Eigenvalues $0,0$: zero nonzero eigenvalues. Columns $(0,0)$ and $(1,0)$: rank $1$. Since $1\ne0$, the claim is false. (It holds for diagonalizable $A$; see <a href="eigenvalues-and-defectiveness.html">defectiveness</a>.)</p>
+
+      <h2>Proof language</h2>
+      <p class="idea">Each stock phrase is a promise. Know what you owe when you write it.</p>
+      <table>
+        <tr><td>phrase</td><td>what it commits you to</td></tr>
+        <tr><td>"Let $x$ be arbitrary"</td><td>proving a "for all": use nothing about $x$ beyond its stated properties</td></tr>
+        <tr><td>"WLOG" (without loss of generality)</td><td>the other cases are the same up to relabeling or symmetry; you must be sure they are</td></tr>
+        <tr><td>"It suffices to show $S$"</td><td>$S$ implies the goal (that must be clear), and now you owe only $S$</td></tr>
+        <tr><td>"For all $\varepsilon\gt0$ there exists $N$"</td><td>the reader picks $\varepsilon$ first; you must produce an $N$, which may depend on $\varepsilon$</td></tr>
+        <tr><td>"Suppose not"</td><td>a contradiction proof begins; you must reach a false statement</td></tr>
+        <tr><td>"iff", $\iff$</td><td>two proofs: $\Rightarrow$ and $\Leftarrow$</td></tr>
+        <tr><td>$\square$ (or QED)</td><td>everything claimed has now been shown</td></tr>
+      </table>
+      <p class="example-label">Example: an $\varepsilon$-$N$ proof that $1/n\to0$</p>
+      <p>Given $\varepsilon\gt0$, choose $N\gt1/\varepsilon$. Then for $n\ge N$: $\ |1/n-0|=1/n\le1/N\lt\varepsilon$. $\square$ (For $\varepsilon=0.01$: $N=101$ works.)</p>
+
+      <h2>Writing your own: a checklist</h2>
+      <p class="idea">Most stuck proofs are stuck because the goal or the hypotheses were never written down in symbols.</p>
+      <table>
+        <tr><td>1. State what you want</td><td>in symbols, unfolded to definitions</td></tr>
+        <tr><td>2. List what you know</td><td>hypotheses and their definitions, also in symbols</td></tr>
+        <tr><td>3. Name the key step</td><td>the one move that connects 2 to 1</td></tr>
+        <tr><td>4. Check each line</td><td>definition, earlier result, or algebra?</td></tr>
+      </table>
+      <p class="example-label">Example: positive definite $A$ is invertible</p>
+      <p>1. Want: $Ax=0\Rightarrow x=0$. &nbsp;2. Know: $x^TAx\gt0$ for $x\ne0$. &nbsp;3. Key step: hit $Ax=0$ with $x^T$. &nbsp;4. Write it:</p>
+      <p>$$Ax=0 \ \Rightarrow\ x^TAx=x^T0=0 \ \Rightarrow\ x=0 \quad(\text{else } x^TAx\gt0).\qquad\square$$</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Prove $N(A^TA)=N(A)$, where $N(M)=\{x: Mx=0\}$. It is a set equality, so prove both inclusions. Then conclude $\operatorname{rank}(A^TA)=\operatorname{rank}A$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p><strong>Want:</strong> $N(A)\subseteq N(A^TA)$ and $N(A^TA)\subseteq N(A)$.</p>
+          <p>($\subseteq$, easy direction) Let $x\in N(A)$, so $Ax=0$. Then $A^TAx=A^T(Ax)=A^T0=0$, so $x\in N(A^TA)$.</p>
+          <p>($\supseteq$, key step: turn the vector equation into a length) Let $x\in N(A^TA)$, so $A^TAx=0$. Multiply by $x^T$:</p>
+          <p>$$0=x^TA^TAx=(Ax)^T(Ax)=\|Ax\|^2.$$</p>
+          <p>A vector of length $0$ is $0$, so $Ax=0$ and $x\in N(A)$. $\square$</p>
+          <p><strong>Rank.</strong> Both matrices have $n$ columns, so by rank-nullity $\operatorname{rank}=n-\dim N$, and the null spaces are equal. Check: $A=\begin{pmatrix}1&2\\2&4\end{pmatrix}$ has $A^TA=\begin{pmatrix}5&10\\10&20\end{pmatrix}$; both send $(2,-1)$ to $0$, both have rank $1$.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -57,27 +57,49 @@
       <h2>The best direction is the top eigenvector</h2>
       <p class="idea">Find the ruler with the widest shadows. Spread along any direction is a weighted average of eigenvalues, so put all the weight on the biggest.</p>
       <p>$$\underbrace{X}_{n\times d}\ \text{centered rows}, \quad \underbrace{C}_{d\times d}=\tfrac1nX^TX, \qquad v_1=\operatorname*{arg\,max}_{\|v\|=1}v^TCv.$$</p>
-      <table>
-        <tr><td>Eigenbasis</td><td>$v=\sum_ic_iq_i$: $\ v^TCv=\sum_i\lambda_ic_i^2\le\lambda_1\sum_ic_i^2=\lambda_1$, equality at $v=q_1$</td></tr>
-        <tr><td>Lagrangian</td><td>$\nabla_v\big[v^TCv-\lambda(v^Tv-1)\big]=0 \Rightarrow Cv=\lambda v$, objective $=v^TCv=\lambda$</td></tr>
-      </table>
-      <p>Next component: same problem with $v\perp v_1$, giving $q_2$; and so on. Components = eigenvectors of $C$, ranked by $\lambda$.</p>
+      <p>$C=\tfrac1nX^TX$ is the <a href="covariance-matrix-intuition.html">covariance</a> $\tfrac1n\sum_ix_ix_i^T$: by the outer-product view of <a href="four-views-of-matrix-multiplication.html">matrix multiplication</a>, $X^TX$ is the sum over $i$ of (column $i$ of $X^T$)(row $i$ of $X$) $=x_ix_i^T$. And $v^TCv$ is the spread of the shadows on $v$. Two ways to maximize it:</p>
+      <p><strong>Derivation 1: eigenbasis.</strong> Write $v=\sum_ic_iq_i$ in $C$'s orthonormal eigenvectors ($\lambda_1\ge\lambda_2\ge\cdots$), so $\sum_ic_i^2=\|v\|^2=1$:</p>
+      <p>$$v^TCv=\sum_i\lambda_ic_i^2\ \le\ \lambda_1\sum_ic_i^2=\lambda_1 \quad(\text{each }\lambda_i\le\lambda_1).$$</p>
+      <p>Equality needs all weight on $\lambda_1$: $c=(1,0,\dots)$, i.e. $v=q_1$, where $q_1^TCq_1=\lambda_1$.</p>
+      <p><strong>Derivation 2: Lagrangian.</strong> Maximize $v^TCv$ subject to $v^Tv=1$ (<a href="lagrangian-and-kkt.html">Lagrangian</a>). For symmetric $C$, $\nabla_v(v^TCv)=2Cv$ and $\nabla_v(v^Tv)=2v$:</p>
+      <p>$$\nabla_v\big[v^TCv-\lambda(v^Tv-1)\big]=2Cv-2\lambda v=0 \ \Rightarrow\ Cv=\lambda v.$$</p>
+      <p>So every stationary point is an eigenvector, with objective $v^TCv=v^T(\lambda v)=\lambda$. The best is the largest $\lambda$.</p>
+      <p><strong>Next component.</strong> Add $v\perp q_1$. Then $c_1=q_1^Tv=0$, and the same bound runs over $i\ge2$:</p>
+      <p>$$v^TCv=\sum_{i\ge2}\lambda_ic_i^2\le\lambda_2, \quad\text{equality at } v=q_2.$$</p>
+      <p>And so on: components = eigenvectors of $C$, ranked by $\lambda$.</p>
       <p class="example-label">Example</p>
-      <p>$C=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: stationary points $q_1=\tfrac1{\sqrt2}(1,1)$ with value $3$, $q_2=\tfrac1{\sqrt2}(1,-1)$ with value $1$. PC1 $=q_1$.</p>
+      <p>$C=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: $\det(C-\lambda I)=(2-\lambda)^2-1=0$ gives $\lambda=3,1$; solving $(C-\lambda I)v=0$ gives the stationary points $q_1=\tfrac1{\sqrt2}(1,1)$ with value $3$, $q_2=\tfrac1{\sqrt2}(1,-1)$ with value $1$. PC1 $=q_1$.</p>
 
       <h2>Compute it with the SVD</h2>
       <p class="idea">Don't form $C$ (that squares the condition number). The SVD of $X$ hands you the components directly.</p>
-      <p>$$X=U\Sigma V^T \ \Rightarrow\ C=\tfrac1nV\Sigma^2V^T: \qquad \text{components}=\text{columns of }V, \quad \lambda_i=\tfrac{\sigma_i^2}{n}.$$</p>
+      <p>Substitute $X=U\Sigma V^T$ and use $U^TU=I$:</p>
+      <p>$$C=\tfrac1nX^TX=\tfrac1nV\Sigma^TU^TU\Sigma V^T=V\Big(\tfrac1n\Sigma^T\Sigma\Big)V^T,$$</p>
+      <p>$$\Sigma^T\Sigma=\operatorname{diag}(\sigma_1^2,\dots,\sigma_d^2).$$</p>
+      <p>That is a spectral decomposition of $C$ ($V$ orthogonal, middle diagonal), so</p>
+      <p>$$\text{components}=\text{columns of }V, \qquad \lambda_i=\frac{\sigma_i^2}{n}.$$</p>
+      <p>Why not form $C$: the condition number (largest over smallest stretch) of $X^TX$ is $\sigma_1^2/\sigma_d^2=(\sigma_1/\sigma_d)^2$, the square of $X$'s, so rounding errors in the small directions get amplified that much more.</p>
+      <p class="example-label">Example</p>
+      <p>Running $X$ (below): $X^TX=nC=4C=\begin{pmatrix}8&4\\4&8\end{pmatrix}$, eigenvalues $12,4$, so $\sigma_1=2\sqrt3$, $\sigma_2=2$ and $\lambda_i=\sigma_i^2/4=3,\ 1$. &#10003;</p>
 
       <h2>Compress, then reconstruct</h2>
       <p class="idea">Compress: each point's coordinates along the top $k$ axes. Decompress: map back; the dropped directions return as zero.</p>
       <p>$$\underbrace{Z}_{n\times k}=\underbrace{X}_{n\times d}\underbrace{V_k}_{d\times k}, \qquad \underbrace{\hat X}_{n\times d}=\underbrace{Z}_{n\times k}\underbrace{V_k^T}_{k\times d}=X\underbrace{V_kV_k^T}_{\text{projection}}.$$</p>
-      <p>Rank $\le k$, stored in $nk+kd$ numbers instead of $nd$. In practice: center first; standardize if features have different units.</p>
+      <p>Row by row ($V_k$ has columns $q_1,\dots,q_k$): compress takes coordinates, reconstruct recombines them,</p>
+      <p>$$z_i=\big(q_1^Tx_i,\ \dots,\ q_k^Tx_i\big), \qquad \hat x_i=\sum_{j\le k}(q_j^Tx_i)\,q_j.$$</p>
+      <p>$\hat x_i$ is the orthogonal projection of $x_i$ onto $\operatorname{span}(q_1,\dots,q_k)$. $\hat X=ZV_k^T$ factors through a width-$k$ middle, so its rank is $\le k$, and storing $Z$ ($nk$ numbers) and $V_k$ ($kd$) replaces $nd$. In practice: center first; standardize if features have different units.</p>
 
       <h2>Kept vs. lost variance</h2>
       <p class="idea">Every unit of spread is either kept or lost. So "keep the most variance" and "reconstruct best" are the same goal.</p>
-      <p>$$\underbrace{\textstyle\sum_{i=1}^d\lambda_i}_{\text{total}}=\underbrace{\textstyle\sum_{i\le k}\lambda_i}_{\text{kept}=\text{spread of }Z}+\underbrace{\textstyle\sum_{i\gt k}\lambda_i}_{\text{lost}=\frac1n\sum_i\|x_i-\hat x_i\|^2}, \qquad \text{explained}(k)=\frac{\sum_{i\le k}\lambda_i}{\sum_i\lambda_i}.$$</p>
-      <p>Bonus: $\tfrac1nZ^TZ=\Lambda_k$, so the new features are uncorrelated.</p>
+      <p>$$\underbrace{\textstyle\sum_{i=1}^d\lambda_i}_{\text{total}}=\underbrace{\textstyle\sum_{i\le k}\lambda_i}_{\text{kept}=\text{spread of }Z}+\underbrace{\textstyle\sum_{i\gt k}\lambda_i}_{\text{lost}=\frac1n\sum_i\|x_i-\hat x_i\|^2}$$</p>
+      <p>$$\text{explained}(k)=\frac{\sum_{i\le k}\lambda_i}{\sum_i\lambda_i}.$$</p>
+      <p><strong>Split each point.</strong> In the orthonormal basis $q_1,\dots,q_d$, the squared length is the sum of squared coordinates (Pythagoras), and the coordinates split into kept and dropped:</p>
+      <p>$$\|x_i\|^2=\underbrace{\sum_{j\le k}(q_j^Tx_i)^2}_{\|z_i\|^2}+\underbrace{\sum_{j\gt k}(q_j^Tx_i)^2}_{\|x_i-\hat x_i\|^2}.$$</p>
+      <p><strong>Average over points.</strong> Each average square is a spread along an axis, $\tfrac1n\sum_i(q_j^Tx_i)^2=q_j^TCq_j=\lambda_j$, and the total is $\tfrac1n\sum_i\|x_i\|^2=\operatorname{tr}C=\sum_j\lambda_j$ (<a href="covariance-matrix-intuition.html">covariance note</a>). That is the box above. The total is fixed by the data, so maximizing kept $=$ minimizing lost.</p>
+      <p><strong>No other $k$-dimensional subspace keeps more.</strong> Take any orthonormal $W$ ($d\times k$). Its kept spread, with $C=\sum_i\lambda_iq_iq_i^T$:</p>
+      <p>$$\operatorname{tr}(W^TCW)=\sum_i\lambda_i\,\|W^Tq_i\|^2=\sum_i\lambda_iw_i, \qquad w_i:=\|W^Tq_i\|^2.$$</p>
+      <p>Each $w_i\in[0,1]$ (a projection can't lengthen the unit $q_i$) and $\sum_iw_i=\|W^TQ\|_F^2=\|W\|_F^2=k$. Weights capped at $1$ with total $k$ score highest when they sit on the $k$ largest $\lambda$'s: $\sum_i\lambda_iw_i\le\sum_{i\le k}\lambda_i$, reached by $W=V_k$.</p>
+      <p><strong>Bonus:</strong> the new features are uncorrelated. Using $C=Q\Lambda Q^T$ and $Q^TV_k=$ the first $k$ columns of $I$:</p>
+      <p>$$\tfrac1nZ^TZ=V_k^T\big(\tfrac1nX^TX\big)V_k=V_k^TQ\,\Lambda\,Q^TV_k=\Lambda_k=\operatorname{diag}(\lambda_1,\dots,\lambda_k).$$</p>
 
       <h2>Example: $2\to1$</h2>
       <p>The covariance note's four points, $k=1$, $v_1=\tfrac1{\sqrt2}(1,1)$:</p>
@@ -88,6 +110,7 @@
         \underbrace{\hat X}_{4\times2}=Zv_1^T=\begin{pmatrix}\sqrt3&\sqrt3\\-\sqrt3&-\sqrt3\\0&0\\0&0\end{pmatrix}.
         $$
       </p>
+      <p>Row 1 of $Z$: $\tfrac{\sqrt3+\sqrt3}{\sqrt2}=\tfrac{2\sqrt3}{\sqrt2}=\sqrt6$; row 3: $\tfrac{1-1}{\sqrt2}=0$. Row 1 of $\hat X$: $\sqrt6\cdot\tfrac1{\sqrt2}(1,1)=\sqrt3(1,1)$. Residuals: $x_1-\hat x_1=0$, $x_3-\hat x_3=(1,-1)$ with $\|\cdot\|^2=2$.</p>
 
       <figure class="figure">
         <svg width="476" viewBox="0 0 560 210" role="img" aria-label="Four points in the plane projected onto the first principal component. x1 and x2 lie on PC1 and keep everything; x3 and x4 lose their whole perpendicular part and land at 0. Right: the kept coordinates on a number line, minus root 6, 0, 0, root 6.">
@@ -141,7 +164,7 @@
         <p>Show the mean squared reconstruction error equals the dropped eigenvalues: $\tfrac1n\sum_i\|x_i-\hat x_i\|^2=\sum_{j\gt k}\lambda_j$.</p>
         <details>
           <summary>Solution</summary>
-          <p>Expand $x_i=\sum_j(q_j^Tx_i)\,q_j$; then $x_i-\hat x_i=\sum_{j\gt k}(q_j^Tx_i)\,q_j$. Orthonormal $q_j$: $\|x_i-\hat x_i\|^2=\sum_{j\gt k}(q_j^Tx_i)^2$. Average over $i$: $\sum_{j\gt k}q_j^TCq_j=\sum_{j\gt k}\lambda_j$. Example: $\lambda_2=1$. &#10003;</p>
+          <p>Expand $x_i=\sum_j(q_j^Tx_i)\,q_j$; then $x_i-\hat x_i=\sum_{j\gt k}(q_j^Tx_i)\,q_j$. Orthonormal $q_j$: $\|x_i-\hat x_i\|^2=\sum_{j\gt k}(q_j^Tx_i)^2$. Average over $i$ and swap the sums: $\sum_{j\gt k}\tfrac1n\sum_i(q_j^Tx_i)^2=\sum_{j\gt k}q_j^TCq_j=\sum_{j\gt k}\lambda_j$. Example: $\lambda_2=1$. &#10003;</p>
         </details>
       </section>
     </article>
@@ -154,7 +177,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -62,16 +62,28 @@
         <tr><td>Basis</td><td>independent spanning set (drop one and the span shrinks)</td></tr>
         <tr><td>Dimension</td><td>size of any basis</td></tr>
       </table>
+      <p><strong>Why "any" basis.</strong> Proof idea: if $k$ vectors span a space, any $k+1$ vectors in it are dependent ($k+1$ unknown weights, only $k$ coordinates to cancel, so a nonzero solution exists). So a basis can't be bigger than another basis, and by symmetry all bases have the same size. A full proof does the "exchange" one vector at a time.</p>
       <p class="example-label">Example</p>
-      <p>$(1,0,0),(0,1,0),(1,1,0)$ span the $xy$-plane. Any two form a basis, so $\dim=2$.</p>
+      <p>$(1,0,0),(0,1,0),(1,1,0)$ all have third entry $0$, and any $(a,b,0)=a(1,0,0)+b(0,1,0)$, so they span the $xy$-plane. They are dependent:</p>
+      <p>$$(1,1,0)=(1,0,0)+(0,1,0).$$</p>
+      <p>Any two are independent (neither is a multiple of the other) and still span, so any two form a basis and $\dim=2$.</p>
 
       <h2>Rank</h2>
       <p class="idea">How many independent directions $A$ can output. $Ax$ mixes columns (view 2), so rank counts the genuinely different columns.</p>
-      <p>$$\operatorname{rank}A=\dim C(A)=\dim C(A^T)=\#\text{pivots}, \qquad \underbrace{A}_{m\times n}=\underbrace{B}_{m\times r}\underbrace{C}_{r\times n}\ (\text{an } r\text{-dim bottleneck}).$$</p>
-      <p>Row-reduced (columns permuted if needed), the bottleneck is an identity block:</p>
+      <p>$$\operatorname{rank}A:=\dim C(A)=\dim C(A^T)=\#\text{pivots}.$$</p>
+      <p><strong>Step 1: an $r$-dim bottleneck.</strong> Let $r=\dim C(A)$ and put a basis of $C(A)$ into the columns of $B$. Each column $a_j$ lies in $C(A)$, so it is a mix of $B$'s columns, $a_j=Bc_j$. Stack the recipes $c_j$ as columns of $C$:</p>
+      <p>$$\underbrace{A}_{m\times n}=\underbrace{B}_{m\times r}\underbrace{C}_{r\times n}.$$</p>
+      <p><strong>Step 2: row rank $\le$ column rank.</strong> By view 3, each row of $A$ is a mix of the $r$ rows of $C$:</p>
+      <p>$$\text{row}_i(A)=\text{row}_i(B)\,C \ \Rightarrow\ C(A^T)\subseteq\text{span of } r \text{ rows} \ \Rightarrow\ \dim C(A^T)\le\dim C(A).$$</p>
+      <p><strong>Step 3: equality.</strong> Step 2 holds for every matrix, so apply it to $A^T$ too:</p>
+      <p>$$\dim C(A)=\dim C\big((A^T)^T\big)\le\dim C(A^T) \ \Rightarrow\ \dim C(A^T)=\dim C(A).$$</p>
+      <p><strong>Step 4: pivots.</strong> Row operations replace rows by invertible mixes of rows, so they keep the row space, and they keep the solutions of $Ax=0$. Row-reduce (permuting columns if needed):</p>
       <p>$$R=\begin{pmatrix}I_r&F\\0&0\end{pmatrix}:$$ $$I_r=\text{pivot columns},\ \ F=\text{free columns as mixes of pivots},\ \ 0=\text{dependent rows}.$$</p>
+      <p>The nonzero rows of $R$ are independent (the $I_r$ block), so $\dim C(A^T)=\dim C(R^T)=r=\#$pivots.</p>
       <p class="example-label">Example: rank 1 = one column times one row</p>
+      <p>Column 2 is $2\times$ column 1, so $C(A)$ has basis $B=(1,2,3)^T$, and the recipes are $a_1=1\cdot B$, $a_2=2\cdot B$, giving $C=(1\ \ 2)$:</p>
       <p>$$\underbrace{\begin{pmatrix}1&2\\2&4\\3&6\end{pmatrix}}_{3\times2}=\underbrace{\begin{pmatrix}1\\2\\3\end{pmatrix}}_{3\times1}\underbrace{\begin{pmatrix}1&2\end{pmatrix}}_{1\times2}.$$</p>
+      <p>Row reduction: $R_2-2R_1$ and $R_3-3R_1$ give $R=\left(\begin{smallmatrix}1&2\\0&0\\0&0\end{smallmatrix}\right)$, one pivot, $F=(2)$. Every row is a multiple of $(1,2)$, so row rank is also $1$. &#10003;</p>
 
       <h2>The four fundamental subspaces</h2>
       <p class="idea">$C(A)$: everywhere $Ax$ can reach. $N(A)$: everything $A$ crushes to $0$. Each has a perpendicular partner from $A^T$.</p>
@@ -81,9 +93,19 @@
         <tr><td>Row space $C(A^T)$</td><td>in $\mathbb{R}^n$</td><td>$\dim r$</td></tr>
         <tr><td>Left null space $N(A^T)$</td><td>in $\mathbb{R}^m$</td><td>$\dim m-r$</td></tr>
       </table>
-      <p>$$N(A)\perp C(A^T), \qquad N(A^T)\perp C(A). \qquad (Ax=0 \text{ says every row of } A \text{ is } \perp x.)$$</p>
-      <p class="example-label">Example: the rank-1 matrix above</p>
-      <p>$C(A)=\operatorname{span}(1,2,3)$, $C(A^T)=\operatorname{span}(1,2)$, $N(A)=\operatorname{span}(2,-1)$, $N(A^T)$ = the plane $x+2y+3z=0$. Check $(1,2)\cdot(2,-1)=0$. &#10003;</p>
+      <p>The two "$\dim r$" entries are the previous section. The null space count comes from $R$, which has the same null space as $A$. Split $x$ into pivot and free parts:</p>
+      <p>$$Rx=\begin{pmatrix}I_r&F\\0&0\end{pmatrix}\begin{pmatrix}x_{\text{piv}}\\x_{\text{free}}\end{pmatrix}=\begin{pmatrix}x_{\text{piv}}+Fx_{\text{free}}\\0\end{pmatrix}=0 \iff x_{\text{piv}}=-Fx_{\text{free}}.$$</p>
+      <p>The $n-r$ free entries can be anything and then fix the rest:</p>
+      <p>$$N(A)=\Big\{\begin{pmatrix}-F\\I_{n-r}\end{pmatrix}x_{\text{free}}\Big\} \ \Rightarrow\ \dim N(A)=n-r,$$</p>
+      <p>since the $I_{n-r}$ block makes those $n-r$ columns independent. This is <strong>rank-nullity</strong>, $r+\dim N(A)=n$. The same count for $A^T$ ($m$ columns, rank $r$) gives $\dim N(A^T)=m-r$.</p>
+      <p><strong>Perpendicular pairs.</strong> Take $x\in N(A)$ and any row-space vector $A^Ty$:</p>
+      <p>$$(A^Ty)^Tx=y^T(Ax)=y^T0=0 \ \Rightarrow\ N(A)\perp C(A^T).$$</p>
+      <p>Swap $A\leftrightarrow A^T$ for $N(A^T)\perp C(A)$.</p>
+      <p class="example-label">Example: the rank-1 matrix above ($m=3$, $n=2$, $r=1$)</p>
+      <p>$C(A)=\operatorname{span}(1,2,3)$ and $C(A^T)=\operatorname{span}(1,2)$ (every row is a multiple of $(1,2)$). From $R$:</p>
+      <p>$$N(A):\ x_1+2x_2=0 \ \Rightarrow\ x=x_2\begin{pmatrix}-2\\1\end{pmatrix} \ \Rightarrow\ N(A)=\operatorname{span}(2,-1),\ \dim 1=n-r.$$</p>
+      <p>$$N(A^T):\ A^Ty=\begin{pmatrix}1&2&3\\2&4&6\end{pmatrix}y=0 \iff y_1+2y_2+3y_3=0,$$</p>
+      <p>a plane, $\dim 2=m-r$. Check $(1,2)\cdot(2,-1)=0$. &#10003;</p>
 
       <h2>Solving $Ax=b$</h2>
       <p class="idea">Solvable iff $b\in C(A)$. Unique iff $N(A)=\{0\}$. Shape and rank decide which.</p>
@@ -93,17 +115,31 @@
         <tr><td>Square, $r=n$</td><td>$R=I_n$</td><td>unique $x=A^{-1}b$</td></tr>
         <tr><td>Rank-deficient</td><td>zero rows and $F$</td><td>none or infinitely many</td></tr>
       </table>
+      <p><strong>Why the table.</strong> All solutions are one solution plus the null space, by linearity:</p>
+      <p>$$Ax_p=b \ \Rightarrow\ \big(A(x_p+z)=b \iff Az=0\big) \ \Rightarrow\ \{\text{solutions}\}=x_p+N(A).$$</p>
+      <p>Then read off the dimension counts:</p>
+      <p>$$r=n \Rightarrow \dim N(A)=0 \Rightarrow \text{at most one solution};$$</p>
+      <p>$$r=m \Rightarrow \dim C(A)=m \Rightarrow C(A)=\mathbb{R}^m \Rightarrow \text{always solvable};$$</p>
+      <p>square with $r=n=m$: both, so exactly one solution, $x=A^{-1}b$. Rank-deficient ($r\lt m$ and $r\lt n$): $b$ may miss $C(A)$ (none), and if it hits, $N(A)\neq\{0\}$ adds a whole line or more (infinitely many).</p>
       <p class="example-label">Example: rank-1 $A$ above</p>
-      <p>$b=(1,2,3)\in C(A)$: $x=(1,0)+t(2,-1)$, infinitely many. $b=(1,0,0)\notin C(A)$: no solution.</p>
+      <p>Every row of $Ax=b$ is a multiple of $x_1+2x_2$:</p>
+      <p>$$Ax=\begin{pmatrix}x_1+2x_2\\2(x_1+2x_2)\\3(x_1+2x_2)\end{pmatrix}.$$</p>
+      <p>$b=(1,2,3)$: all three rows say $x_1+2x_2=1$. One solution is $x_p=(1,0)$, so $x=(1,0)+t(2,-1)$, infinitely many. $b=(1,0,0)$: row 1 says $x_1+2x_2=1$, row 2 says $2(x_1+2x_2)=0$, a contradiction, so no solution.</p>
 
       <h2>Projection</h2>
       <p class="idea">If $b$ is out of reach, take the closest reachable point: the one whose error is perpendicular to everything reachable.</p>
-      <p>$$e=b-A\hat x\perp C(A) \iff A^T(b-A\hat x)=0 \iff A^TA\,\hat x=A^Tb.$$</p>
-      <p>With independent columns ($A$ tall, rank $n$):</p>
-      <p>$$\hat x=\underbrace{(A^TA)^{-1}A^T}_{n\times m}\,\underbrace{b}_{m\times1}, \qquad P=\underbrace{A}_{m\times n}\underbrace{(A^TA)^{-1}}_{n\times n}\underbrace{A^T}_{n\times m}\ \ (m\times m,\ \text{rank } n).$$</p>
-      <p>Onto a single line $a$: $P=\dfrac{aa^T}{a^Ta}$.</p>
+      <p><strong>Step 1: perpendicular error means closest.</strong> Suppose $e=b-A\hat x\perp C(A)$. Any other reachable point is $Ax$, and $A\hat x-Ax=A(\hat x-x)\in C(A)$ is $\perp e$, so Pythagoras gives</p>
+      <p>$$\|b-Ax\|^2=\|e+A(\hat x-x)\|^2=\|e\|^2+\|A(\hat x-x)\|^2\ \ge\ \|e\|^2.$$</p>
+      <p><strong>Step 2: the normal equations.</strong> $e\perp C(A)$ means $e$ is $\perp$ every column $a_j$, i.e. $a_j^Te=0$ for all $j$. Stack those as rows:</p>
+      <p>$$A^Te=0 \iff A^T(b-A\hat x)=0 \iff A^TA\,\hat x=A^Tb.$$</p>
+      <p><strong>Step 3: solve.</strong> With independent columns ($A$ tall, rank $n$), $A^TA$ is invertible (the exercise), so</p>
+      <p>$$\hat x=\underbrace{(A^TA)^{-1}A^T}_{n\times m}\,\underbrace{b}_{m\times1}, \qquad p=A\hat x=Pb,$$</p>
+      <p>$$P=\underbrace{A}_{m\times n}\underbrace{(A^TA)^{-1}}_{n\times n}\underbrace{A^T}_{n\times m}\quad(m\times m).$$</p>
+      <p>$P$ has rank $n$: $C(P)\subseteq C(A)$ (it starts with $A$), and $PA=A(A^TA)^{-1}(A^TA)=A$ puts every column of $A$ in $C(P)$. Projecting twice changes nothing, $P^2=A(A^TA)^{-1}(A^TA)(A^TA)^{-1}A^T=P$.</p>
+      <p><strong>Onto a single line $a$</strong> ($n=1$): $A^TA=a^Ta$ is a number, so its inverse is $1/(a^Ta)$:</p>
+      <p>$$\hat x=\frac{a^Tb}{a^Ta}, \qquad P=\frac{aa^T}{a^Ta}.$$</p>
       <p class="example-label">Example</p>
-      <p>$a=(1,1)$, $b=(2,0)$: $\hat x=\tfrac{a^Tb}{a^Ta}=1$, $p=(1,1)$, $e=(1,-1)\perp a$. &#10003;</p>
+      <p>$a=(1,1)$, $b=(2,0)$: $a^Tb=2$, $a^Ta=2$, so $\hat x=\tfrac22=1$, $p=1\cdot a=(1,1)$, $e=b-p=(1,-1)$, and $e\cdot a=1-1=0$. &#10003;</p>
 
       <figure class="figure">
         <svg width="255" viewBox="0 0 300 170" role="img" aria-label="b=(2,0) projected onto the line through a=(1,1): the projection p=(1,1) lies on the line and the error e=(1,-1) runs from p to b at a right angle to the line.">
@@ -131,10 +167,16 @@
       <h2>The big picture</h2>
       <p class="idea">$A$ sees only the row-space part of its input and reaches only the column space. The null spaces are its blind spots.</p>
       <p>$$\mathbb{R}^n=C(A^T)\oplus N(A), \qquad \mathbb{R}^m=C(A)\oplus N(A^T).$$</p>
+      <p><strong>Why every $x$ splits.</strong> Project $x$ onto the row space (previous section) and call the leftover $x_{\text{null}}$:</p>
+      <p>$$x=x_{\text{row}}+x_{\text{null}}, \qquad x_{\text{null}}\perp C(A^T).$$</p>
+      <p>$x_{\text{null}}$ is $\perp$ every row of $A$, so every entry of $Ax_{\text{null}}$ is $0$: it really is in $N(A)$. The split is unique because a vector in both spaces is $\perp$ itself, $v^Tv=0\Rightarrow v=0$. Dimensions agree: $r+(n-r)=n$. The same argument in $\mathbb{R}^m$ gives the second split.</p>
       <p>$$Ax=A(x_{\text{row}}+x_{\text{null}})=Ax_{\text{row}}, \qquad b=\underbrace{b_{\text{col}}}_{\text{reachable}}+\underbrace{b_\perp}_{\text{never reached}}.$$</p>
-      <p>$A$ maps row space one-to-one onto column space; least squares solves $Ax=b_{\text{col}}$.</p>
+      <p><strong>Row space to column space is one-to-one.</strong> If $Ax_{\text{row}}=Ax'_{\text{row}}$ then $x_{\text{row}}-x'_{\text{row}}$ is in the row space and in $N(A)$, so it is $0$. <strong>Least squares</strong> lands on $p=A\hat x$, and $b-p\perp C(A)$, so $p=b_{\text{col}}$: it solves $Ax=b_{\text{col}}$.</p>
       <p class="example-label">Example: rank-1 $A$, $x=(1,0)$</p>
-      <p>$x_{\text{row}}=\tfrac15(1,2)$, $x_{\text{null}}=\tfrac25(2,-1)$. Then $Ax_{\text{row}}=\tfrac15(5,10,15)=(1,2,3)=Ax$. &#10003;</p>
+      <p>Project onto the row space $\operatorname{span}(1,2)$ with the line formula:</p>
+      <p>$$x_{\text{row}}=\frac{(1,2)\cdot(1,0)}{(1,2)\cdot(1,2)}(1,2)=\tfrac15(1,2),$$</p>
+      <p>$$x_{\text{null}}=(1,0)-\tfrac15(1,2)=\big(\tfrac45,-\tfrac25\big)=\tfrac25(2,-1)\in N(A).$$</p>
+      <p>$$Ax_{\text{row}}=\tfrac15\begin{pmatrix}1+4\\2+8\\3+12\end{pmatrix}=\begin{pmatrix}1\\2\\3\end{pmatrix}=\text{col}_1(A)=Ax. \ \checkmark$$</p>
 
       <figure class="figure">
         <svg width="442" viewBox="0 0 520 225" role="img" aria-label="Left, R2 split into the row space line and the perpendicular null space line, with x=(1,0) decomposed into a row part and a null part. Right, R3 with the column space line piercing the left null space plane. A sends the row part to Ax on the column space line and the null part to 0.">
@@ -179,7 +221,10 @@
         <p>Prove $N(A^TA)=N(A)$. Conclude that $A^TA$ is invertible exactly when $A$ has independent columns.</p>
         <details>
           <summary>Solution</summary>
-          <p>$Ax=0\Rightarrow A^TAx=0$. Conversely, $A^TAx=0\Rightarrow x^TA^TAx=\|Ax\|^2=0\Rightarrow Ax=0$. Same null space, so the $n\times n$ matrix $A^TA$ is invertible $\iff N(A)=\{0\}\iff\operatorname{rank}A=n$.</p>
+          <p>($\subseteq$) $Ax=0\Rightarrow A^TAx=A^T0=0$. ($\supseteq$) Multiply $A^TAx=0$ on the left by $x^T$:</p>
+          <p>$$0=x^TA^TAx=(Ax)^T(Ax)=\|Ax\|^2 \ \Rightarrow\ Ax=0.$$</p>
+          <p>Same null space. A square matrix is invertible iff its null space is $\{0\}$ (rank-nullity: $\dim N=0\iff$ rank $n$), so</p>
+          <p>$$A^TA \text{ invertible} \iff N(A^TA)=\{0\} \iff N(A)=\{0\} \iff \operatorname{rank}A=n.$$</p>
         </details>
       </section>
     </article>
@@ -192,7 +237,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

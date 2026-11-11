@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Smoothness and strong convexity - Deep Learning Notes</title>
+  <meta name="description" content="L-smooth and mu-strongly convex functions sit between two quadratic bowls; derive both bounds, the Hessian version, the descent lemma and the PL inequality.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Smoothness and strong convexity</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Smoothness and strong convexity</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">convexity</span><span class="tag">smoothness</span><span class="tag">proofs</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="convergence-rates.html">Convergence rates</a>, <a href="convexity-and-jensen.html">Convexity and Jensen</a>, <a href="taylor-expansion.html">Taylor expansion</a> &middot; <strong>Leads to:</strong> <a href="gd-convergence-convex.html">Gradient descent on smooth convex functions</a></p>
+
+      <p class="idea">Two numbers drive every convergence proof: $L$ caps the curvature, $\mu$ floors it. At every point $x$, $f$ is squeezed between a narrow bowl and a wide bowl.</p>
+
+      <h2>Two bowls</h2>
+      <p class="idea">Take the tangent at $x$. Bend it up with curvature $L$: $f$ stays below. Bend it up with curvature $\mu$: $f$ stays above.</p>
+      <p>$$f(y)\le f(x)+\nabla f(x)^T(y-x)+\tfrac L2\|y-x\|^2 \qquad \text{(upper bowl)}$$</p>
+      <p>$$f(y)\ge f(x)+\nabla f(x)^T(y-x)+\tfrac\mu2\|y-x\|^2 \qquad \text{(lower bowl)}$$</p>
+
+      <figure class="figure">
+        <svg width="374" viewBox="0 0 440 236" role="img" aria-label="A convex curve f with curvature between 1 and 3, touched at the point x by two parabolas with the same tangent: a narrow upper bowl of curvature L = 3 lying above f and a wide lower bowl of curvature mu = 1 lying below f. The bottom of the upper bowl sits at x minus f prime over L, and f there is lower still.">
+          <line class="faint" x1="20" y1="151.2" x2="420" y2="151.2"/>
+          <polyline class="axis" fill="none" points="49.1,14.5 52.7,19.5 56.4,24.4 60,29.2 63.6,34 67.3,38.7 70.9,43.3 74.5,47.9 78.2,52.4 81.8,56.8 85.5,61.2 89.1,65.5 92.7,69.7 96.4,73.8 100,77.9 103.6,81.9 107.3,85.8 110.9,89.6 114.5,93.4 118.2,97 121.8,100.6 125.5,104.1 129.1,107.5 132.7,110.8 136.4,114 140,117.1 143.6,120.1 147.3,123 150.9,125.8 154.5,128.5 158.2,131 161.8,133.5 165.5,135.7 169.1,137.9 172.7,139.9 176.4,141.8 180,143.5 183.6,145 187.3,146.4 190.9,147.6 194.5,148.7 198.2,149.5 201.8,150.2 205.5,150.7 209.1,151.1 212.7,151.2 216.4,151.1 220,150.9 223.6,150.5 227.3,149.9 230.9,149.1 234.5,148.1 238.2,147 241.8,145.7 245.5,144.2 249.1,142.6 252.7,140.8 256.4,138.8 260,136.7 263.6,134.5 267.3,132.1 270.9,129.7 274.5,127 278.2,124.3 281.8,121.5 285.5,118.5 289.1,115.4 292.7,112.3 296.4,109 300,105.6 303.6,102.2 307.3,98.7 310.9,95 314.5,91.3 318.2,87.5 321.8,83.6 325.5,79.7 329.1,75.7 332.7,71.6 336.4,67.4 340,63.1 343.6,58.8 347.3,54.4 350.9,49.9 354.5,45.4 358.2,40.8 361.8,36.1 365.5,31.4 369.1,26.6 372.7,21.7 376.4,16.8"/>
+          <polyline class="accent" points="110.9,15.3 114.5,21.8 118.2,28.1 121.8,34.2 125.5,40.1 129.1,45.9 132.7,51.4 136.4,56.8 140,62 143.6,67 147.3,71.8 150.9,76.4 154.5,80.9 158.2,85.1 161.8,89.2 165.5,93.1 169.1,96.8 172.7,100.3 176.4,103.6 180,106.7 183.6,109.7 187.3,112.4 190.9,115 194.5,117.4 198.2,119.6 201.8,121.6 205.5,123.4 209.1,125 212.7,126.5 216.4,127.8 220,128.8 223.6,129.7 227.3,130.4 230.9,130.9 234.5,131.3 238.2,131.4 241.8,131.4 245.5,131.1 249.1,130.7 252.7,130.1 256.4,129.3 260,128.3 263.6,127.2 267.3,125.8 270.9,124.3 274.5,122.6 278.2,120.6 281.8,118.5 285.5,116.3 289.1,113.8 292.7,111.1 296.4,108.3 300,105.2 303.6,102 307.3,98.6 310.9,95 314.5,91.2 318.2,87.3 321.8,83.1 325.5,78.8 329.1,74.3 332.7,69.5 336.4,64.6 340,59.6 343.6,54.3 347.3,48.8 350.9,43.2 354.5,37.3 358.2,31.3 361.8,25.1 365.5,18.7"/>
+          <polyline class="accent-2" points="20,189.1 23.6,190.4 27.3,191.6 30.9,192.8 34.5,193.9 38.2,194.9 41.8,195.9 45.5,196.8 49.1,197.7 52.7,198.4 56.4,199.2 60,199.8 63.6,200.4 67.3,201 70.9,201.4 74.5,201.8 78.2,202.2 81.8,202.5 85.5,202.7 89.1,202.9 92.7,203 96.4,203 100,203 103.6,202.9 107.3,202.7 110.9,202.5 114.5,202.3 118.2,201.9 121.8,201.5 125.5,201.1 129.1,200.5 132.7,200 136.4,199.3 140,198.6 143.6,197.8 147.3,197 150.9,196.1 154.5,195.1 158.2,194.1 161.8,193 165.5,191.9 169.1,190.7 172.7,189.4 176.4,188.1 180,186.7 183.6,185.2 187.3,183.7 190.9,182.1 194.5,180.5 198.2,178.8 201.8,177 205.5,175.2 209.1,173.3 212.7,171.3 216.4,169.3 220,167.2 223.6,165.1 227.3,162.9 230.9,160.6 234.5,158.3 238.2,155.9 241.8,153.5 245.5,150.9 249.1,148.4 252.7,145.7 256.4,143 260,140.3 263.6,137.4 267.3,134.5 270.9,131.6 274.5,128.6 278.2,125.5 281.8,122.4 285.5,119.2 289.1,115.9 292.7,112.6 296.4,109.2 300,105.7 303.6,102.2 307.3,98.7 310.9,95 314.5,91.3 318.2,87.6 321.8,83.7 325.5,79.9 329.1,75.9 332.7,71.9 336.4,67.8 340,63.7 343.6,59.5 347.3,55.2 350.9,50.9 354.5,46.5 358.2,42.1 361.8,37.6 365.5,33 369.1,28.4 372.7,23.7 376.4,18.9 380,14.1"/>
+          <circle class="pt" cx="310.3" cy="95.6" r="4"/>
+          <line class="faint" x1="310.3" y1="95.6" x2="310.3" y2="210"/>
+          <text class="lbl" x="310.3" y="226" text-anchor="middle">x</text>
+          <circle class="accent-fill" cx="239.1" cy="131.4" r="3.5"/>
+          <circle class="pt" cx="239.1" cy="146.7" r="3"/>
+          <line class="faint" x1="239.1" y1="131.4" x2="239.1" y2="210"/>
+          <text class="lbl accent" x="235.1" y="226" text-anchor="end">x − f′(x)/L</text>
+          <text class="lbl accent" x="145.8" y="53.2">L = 3 bowl</text>
+          <text class="lbl" x="65.2" y="53.2" text-anchor="end">f</text>
+          <text class="lbl accent-2" x="23.2" y="174.7">μ = 1 bowl</text>
+        </svg>
+        <figcaption>$f(y)=\tfrac12y^2+2\ln\cosh y$, touched at $x=1.5$. The bottom of the $L$ bowl, $x-f'(x)/L$, is where gradient descent steps.</figcaption>
+      </figure>
+      <p>Why this $f$ fits $L=3$, $\mu=1$: $(\ln\cosh y)'=\tanh y$ and $(\tanh y)'=1/\cosh^2y\in(0,1]$, so $f''(y)=1+2/\cosh^2y\in(1,3]$.</p>
+
+      <h2>The definitions, via gradients</h2>
+      <p class="idea">$L$-smooth: the gradient never changes faster than $L$ times the distance moved. $\mu$-strongly convex: along any move, the gradient grows at least $\mu$ times the distance.</p>
+      <p>$$L\text{-smooth:}\quad \|\nabla f(x)-\nabla f(y)\|\le L\|x-y\|.$$</p>
+      <p>$$\mu\text{-strongly convex:}\quad \big(\nabla f(x)-\nabla f(y)\big)^T(x-y)\ge\mu\|x-y\|^2.$$</p>
+
+      <h2>Deriving the two bowls</h2>
+      <p class="idea">Walk the straight line from $x$ to $y$ and add up the slope (fundamental theorem of calculus). The bowls bound how far the gradient can drift from $\nabla f(x)$ along the way.</p>
+      <p><strong>Step 1: one variable.</strong> Let $d=y-x$ and $g(t)=f(x+td)$. By the chain rule $g'(t)=\nabla f(x+td)^Td$, so</p>
+      <p>$$f(y)-f(x)=g(1)-g(0)=\int_0^1\nabla f(x+td)^Td\,dt.$$</p>
+      <p>Subtract $\nabla f(x)^Td=\int_0^1\nabla f(x)^Td\,dt$ from both sides:</p>
+      <p>$$f(y)-f(x)-\nabla f(x)^Td=\int_0^1\big(\nabla f(x+td)-\nabla f(x)\big)^Td\,dt. \qquad (\ast)$$</p>
+      <p><strong>Step 2: upper bowl.</strong> Cauchy-Schwarz, then smoothness for the points $x+td$ and $x$, which are $t\|d\|$ apart:</p>
+      <p>$$\big(\nabla f(x+td)-\nabla f(x)\big)^Td\le\|\nabla f(x+td)-\nabla f(x)\|\,\|d\|\le Lt\|d\|^2.$$</p>
+      <p>Put it in $(\ast)$: $\int_0^1Lt\,dt=\tfrac L2$, so the right side of $(\ast)$ is $\le\tfrac L2\|d\|^2$. That is the upper bowl.</p>
+      <p><strong>Step 3: lower bowl.</strong> Strong convexity for the same two points (their difference is $td$), then divide by $t\gt0$:</p>
+      <p>$$\big(\nabla f(x+td)-\nabla f(x)\big)^T(td)\ge\mu t^2\|d\|^2$$</p>
+      <p>$$\Rightarrow\quad \big(\nabla f(x+td)-\nabla f(x)\big)^Td\ge\mu t\|d\|^2.$$</p>
+      <p>Put it in $(\ast)$: $\int_0^1\mu t\,dt=\tfrac\mu2$, so the right side is $\ge\tfrac\mu2\|d\|^2$. That is the lower bowl.</p>
+
+      <h2>Hessian version: $\mu I\preceq H\preceq LI$</h2>
+      <p class="idea">For twice-differentiable $f$, $L$ and $\mu$ are just the largest and smallest curvature anywhere: bounds on the Hessian's eigenvalues.</p>
+      <p>Suppose $\mu\|d\|^2\le d^TH(z)d\le L\|d\|^2$ for all $z,d$ (eigenvalues of $H$ in $[\mu,L]$, by the <a href="quadratic-forms-and-positive-definiteness.html">Rayleigh quotient</a>). <a href="taylor-expansion.html">Taylor with exact remainder</a>, $z$ on the segment from $x$ to $y$:</p>
+      <p>$$f(y)=f(x)+\nabla f(x)^Td+\tfrac12\underbrace{d^TH(z)d}_{\in[\mu\|d\|^2,\ L\|d\|^2]},$$</p>
+      <p>which is both bowls at once. Conversely, put $y=x+\epsilon d$. The bowls squeeze the Taylor gap:</p>
+      <p>$$\tfrac\mu2\epsilon^2\|d\|^2\le\underbrace{f(y)-f(x)-\epsilon\nabla f(x)^Td}_{\frac{\epsilon^2}2d^TH(x)d+o(\epsilon^2)}\le\tfrac L2\epsilon^2\|d\|^2.$$</p>
+      <p>Divide by $\epsilon^2/2$ and let $\epsilon\to0$: $\mu\|d\|^2\le d^TH(x)d\le L\|d\|^2$.</p>
+      <p class="example-label">Running example</p>
+      <p>$f=x_1^2+x_1x_2+x_2^2=\tfrac12x^TAx$, $H=A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$. $\det(A-\lambda I)=(2-\lambda)^2-1=0$ gives $\lambda=3,1$, so</p>
+      <p>$$L=3, \qquad \mu=1, \qquad \kappa=\frac L\mu=3.$$</p>
+      <p>Each bowl is tight in one direction: $d=(1,1)$ gives $d^TAd=2+1+1+2=6=3\|d\|^2$; $d=(1,-1)$ gives $2-1-1+2=2=1\cdot\|d\|^2$.</p>
+
+      <h2>Consequence 1: the descent lemma</h2>
+      <p class="idea">$f$ lies under the upper bowl, so jumping to the bowl's bottom must lower $f$ by at least the bowl's depth.</p>
+      <p>Completing the square (expand the right side to check), for any $c\gt0$:</p>
+      <p>$$g^Td+\tfrac c2\|d\|^2=\tfrac c2\Big\|d+\tfrac gc\Big\|^2-\frac{\|g\|^2}{2c}.$$</p>
+      <p>Upper bowl with $c=L$, $g=\nabla f(x)$:</p>
+      <p>$$f(y)\le f(x)+\tfrac L2\Big\|y-x+\tfrac{\nabla f(x)}L\Big\|^2-\frac{\|\nabla f(x)\|^2}{2L}.$$</p>
+      <p>The square is $0$ at $y=x-\nabla f(x)/L$, the bowl's bottom. There:</p>
+      <p>$$\boxed{\ f\Big(x-\tfrac1L\nabla f(x)\Big)\le f(x)-\frac{\|\nabla f(x)\|^2}{2L}\ }$$</p>
+      <p>This is where the step size $\eta=1/L$ comes from.</p>
+      <p class="example-label">Example</p>
+      <p>$x=(1,0)$: $f(x)=1$, $\nabla f=Ax=(2,1)$, $\|\nabla f\|^2=5$. Promise: $f\le1-\tfrac5{6}=\tfrac16$. Actual: $x-\tfrac13(2,1)=(\tfrac13,-\tfrac13)$, $f=\tfrac19-\tfrac19+\tfrac19=\tfrac19\le\tfrac16$. &#10003;</p>
+
+      <h2>Consequence 2: the PL inequality</h2>
+      <p class="idea">$f$ lies above the lower bowl, so $f^*$ is at least the bowl's bottom. If $f(x)$ is far above $f^*$, the gradient at $x$ cannot be small.</p>
+      <p>Lower bowl with $c=\mu$, same square; then drop the square ($\ge0$):</p>
+      <p>$$f(y)\ge f(x)+\tfrac\mu2\Big\|y-x+\tfrac{\nabla f(x)}\mu\Big\|^2-\frac{\|\nabla f(x)\|^2}{2\mu}$$</p>
+      <p>$$\ge f(x)-\frac{\|\nabla f(x)\|^2}{2\mu}.$$</p>
+      <p>This holds for every $y$, so also for $y=x^*$. Rearrange:</p>
+      <p>$$f^*\ge f(x)-\frac{\|\nabla f(x)\|^2}{2\mu} \quad\iff\quad \boxed{\ \|\nabla f(x)\|^2\ge2\mu\big(f(x)-f^*\big)\ }$$</p>
+      <p class="example-label">Example</p>
+      <p>Here $f^*=0$ at $x^*=0$. At $x=(1,0)$: $5\ge2\cdot1\cdot1=2$. &#10003; At $x=(1,-1)$: $\nabla f=(1,-1)$, $f=1-1+1=1$, and $2=2\cdot1\cdot1$: tight along the flat direction.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Prove the descent lemma directly from the upper bowl by putting in $y=x-\eta\nabla f(x)$. (a) Show $f(y)\le f(x)-\eta\big(1-\tfrac{L\eta}2\big)\|\nabla f(x)\|^2$. (b) Which $\eta$ guarantees the largest decrease? (c) Which $\eta$ guarantee any decrease at all? Compare with the step-size limit in <a href="gradient-descent-on-a-quadratic.html">gradient descent on a quadratic</a>.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>(a) Write $g=\nabla f(x)$ and $d=y-x=-\eta g$. Then $g^Td=-\eta\|g\|^2$ and $\tfrac L2\|d\|^2=\tfrac{L\eta^2}2\|g\|^2$. Add them in the upper bowl:</p>
+          <p>$$f(y)\le f(x)-\eta\|g\|^2+\tfrac{L\eta^2}2\|g\|^2=f(x)-\eta\big(1-\tfrac{L\eta}2\big)\|g\|^2.$$</p>
+          <p>(b) Maximize $h(\eta)=\eta-\tfrac L2\eta^2$: $h'(\eta)=1-L\eta=0$ at $\eta=\tfrac1L$, where $h=\tfrac1L-\tfrac1{2L}=\tfrac1{2L}$. That is the boxed lemma.</p>
+          <p>(c) The decrease is positive iff $\eta\big(1-\tfrac{L\eta}2\big)\gt0$ iff $0\lt\eta\lt\tfrac2L$. On a quadratic $L=\lambda_{\max}$, so this is exactly the limit $\eta\lt2/\lambda_{\max}$, now for any $L$-smooth $f$.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

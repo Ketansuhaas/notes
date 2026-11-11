@@ -139,6 +139,22 @@
       <button type="button" data-tag="softmax">softmax</button>
       <button type="button" data-tag="attention">attention</button>
       <button type="button" data-tag="flash-attention">flash-attention</button>
+      <button type="button" data-tag="proofs">proofs</button>
+      <button type="button" data-tag="logic">logic</button>
+      <button type="button" data-tag="induction">induction</button>
+      <button type="button" data-tag="inequalities">inequalities</button>
+      <button type="button" data-tag="convergence">convergence</button>
+      <button type="button" data-tag="rates">rates</button>
+      <button type="button" data-tag="smoothness">smoothness</button>
+      <button type="button" data-tag="momentum">momentum</button>
+      <button type="button" data-tag="nesterov">nesterov</button>
+      <button type="button" data-tag="newton">newton</button>
+      <button type="button" data-tag="second-order">second-order</button>
+      <button type="button" data-tag="sgd">sgd</button>
+      <button type="button" data-tag="noise">noise</button>
+      <button type="button" data-tag="step-size">step-size</button>
+      <button type="button" data-tag="rmsprop">rmsprop</button>
+      <button type="button" data-tag="preconditioning">preconditioning</button>
     </div>
 
     <ul class="post-list" id="notes-list">
@@ -342,6 +358,46 @@
         <div class="title-row"><a href="posts/flash-attention.html">FlashAttention: tiling plus online softmax</a></div>
         <div class="tags"><span class="tag">gpu</span><span class="tag">attention</span><span class="tag">flash-attention</span><span class="tag">softmax</span><span class="tag">kernel-fusion</span></div>
       </li>
+      <li data-tags="proofs logic foundations induction">
+        <div class="title-row"><a href="posts/how-to-read-and-write-proofs.html">Reading and writing proofs</a></div>
+        <div class="tags"><span class="tag">proofs</span><span class="tag">logic</span><span class="tag">foundations</span><span class="tag">induction</span></div>
+      </li>
+      <li data-tags="proofs inequalities foundations optimization">
+        <div class="title-row"><a href="posts/derivation-toolkit.html">The derivation toolkit</a></div>
+        <div class="tags"><span class="tag">proofs</span><span class="tag">inequalities</span><span class="tag">foundations</span><span class="tag">optimization</span></div>
+      </li>
+      <li data-tags="optimization convergence rates proofs">
+        <div class="title-row"><a href="posts/convergence-rates.html">Convergence rates: what "fast" means</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">convergence</span><span class="tag">rates</span><span class="tag">proofs</span></div>
+      </li>
+      <li data-tags="optimization convexity smoothness proofs">
+        <div class="title-row"><a href="posts/smoothness-and-strong-convexity.html">Smoothness and strong convexity</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">convexity</span><span class="tag">smoothness</span><span class="tag">proofs</span></div>
+      </li>
+      <li data-tags="optimization gradient-descent convergence proofs">
+        <div class="title-row"><a href="posts/gd-convergence-convex.html">Gradient descent on smooth convex functions</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">gradient-descent</span><span class="tag">convergence</span><span class="tag">proofs</span></div>
+      </li>
+      <li data-tags="optimization gradient-descent convergence proofs condition-number">
+        <div class="title-row"><a href="posts/gd-convergence-strongly-convex.html">Gradient descent on strongly convex functions</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">gradient-descent</span><span class="tag">convergence</span><span class="tag">proofs</span><span class="tag">condition-number</span></div>
+      </li>
+      <li data-tags="optimization momentum nesterov convergence condition-number">
+        <div class="title-row"><a href="posts/momentum-and-nesterov.html">Momentum and Nesterov acceleration</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">momentum</span><span class="tag">nesterov</span><span class="tag">convergence</span><span class="tag">condition-number</span></div>
+      </li>
+      <li data-tags="optimization newton hessian convergence second-order">
+        <div class="title-row"><a href="posts/newtons-method.html">Newton's method</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">newton</span><span class="tag">hessian</span><span class="tag">convergence</span><span class="tag">second-order</span></div>
+      </li>
+      <li data-tags="optimization sgd convergence noise step-size">
+        <div class="title-row"><a href="posts/sgd-convergence.html">Stochastic gradient descent: noise and step sizes</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">sgd</span><span class="tag">convergence</span><span class="tag">noise</span><span class="tag">step-size</span></div>
+      </li>
+      <li data-tags="optimization adam rmsprop preconditioning momentum">
+        <div class="title-row"><a href="posts/adaptive-methods-adam.html">Adaptive methods: RMSProp and Adam</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">adam</span><span class="tag">rmsprop</span><span class="tag">preconditioning</span><span class="tag">momentum</span></div>
+      </li>
     </ul>
     <script>
       (function () {
@@ -416,7 +472,7 @@
   </footer>
   <script src="assets/cite.js?v=2"></script>
   <script src="assets/theme.js?v=2"></script>
-  <script src="assets/sidebar.js?v=5"></script>
+  <script src="assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

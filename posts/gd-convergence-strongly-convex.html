@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Gradient descent on strongly convex functions - Deep Learning Notes</title>
+  <meta name="description" content="Proof that gradient descent with step 1/L converges linearly, f(x_k) - f* at most (1 - mu/L)^k times the starting gap, checked against the exact quadratic analysis on the running example.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Gradient descent on strongly convex functions</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Gradient descent on strongly convex functions</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">gradient-descent</span><span class="tag">convergence</span><span class="tag">proofs</span><span class="tag">condition-number</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="gd-convergence-convex.html">Gradient descent on smooth convex functions</a>, <a href="smoothness-and-strong-convexity.html">Smoothness and strong convexity</a>, <a href="gradient-descent-on-a-quadratic.html">Gradient descent on a quadratic</a> &middot; <strong>Leads to:</strong> <a href="momentum-and-nesterov.html">Momentum and Nesterov acceleration</a></p>
+
+      <p class="idea">Add a floor on the curvature ($\mu\gt0$) and the $1/k$ rate becomes geometric: every step removes at least the fraction $1/\kappa$ of the remaining gap. The proof is two inequalities, one line each.</p>
+
+      <h2>The claim</h2>
+      <p class="idea">$f$ is $\mu$-strongly convex and $L$-smooth, $\kappa=L/\mu$, step size $1/L$.</p>
+      <p>$$x_{k+1}=x_k-\tfrac1L\nabla f(x_k) \quad\Longrightarrow\quad f(x_k)-f^*\le\Big(1-\frac1\kappa\Big)^k\big(f(x_0)-f^*\big).$$</p>
+      <p>Shorthand as before: $g_k=\nabla f(x_k)$, $\ \text{gap}_k=f(x_k)-f^*$.</p>
+
+      <h2>The proof</h2>
+      <p class="idea">The descent lemma says a step removes $\|g\|^2/2L$. PL says $\|g\|^2$ is at least $2\mu$ times the gap. Chain them.</p>
+      <p><strong>Step 1: descent lemma</strong> (<a href="smoothness-and-strong-convexity.html">previous note</a>), minus $f^*$ on both sides:</p>
+      <p>$$\text{gap}_{k+1}\le\text{gap}_k-\frac{\|g_k\|^2}{2L}.$$</p>
+      <p><strong>Step 2: PL</strong>, $\|g_k\|^2\ge2\mu\,\text{gap}_k$, makes the subtracted term at least $\tfrac\mu L\text{gap}_k$:</p>
+      <p>$$\text{gap}_{k+1}\le\text{gap}_k-\frac{2\mu\,\text{gap}_k}{2L}=\Big(1-\frac\mu L\Big)\text{gap}_k.$$</p>
+      <p><strong>Step 3: induction.</strong> True at $k=0$. If $\text{gap}_k\le(1-\tfrac\mu L)^k\text{gap}_0$, then by Step 2</p>
+      <p>$$\text{gap}_{k+1}\le\Big(1-\frac\mu L\Big)\text{gap}_k\le\Big(1-\frac\mu L\Big)^{k+1}\text{gap}_0. \qquad\blacksquare$$</p>
+      <p>Strong convexity entered only through PL, so any $L$-smooth $f$ satisfying PL gets the same rate, convex or not.</p>
+      <table>
+        <tr><td></td><td><a href="gd-convergence-convex.html">convex</a></td><td>strongly convex</td></tr>
+        <tr><td>per-step inequality</td><td>$\text{gap}_{k+1}\le\tfrac L2(D_k-D_{k+1})$</td><td>$\text{gap}_{k+1}\le(1-\tfrac1\kappa)\,\text{gap}_k$</td></tr>
+        <tr><td>combine steps by</td><td>summing (telescope)</td><td>multiplying (induction)</td></tr>
+        <tr><td>result</td><td>$\tfrac{L D_0}{2k}$, sublinear</td><td>$(1-\tfrac1\kappa)^k\text{gap}_0$, linear</td></tr>
+      </table>
+
+      <h2>How many iterations</h2>
+      <p class="idea">A linear rate with $\rho=1-1/\kappa$: the steps grow in proportion to $\kappa$, and only logarithmically in the accuracy.</p>
+      <p>From <a href="convergence-rates.html">convergence rates</a>, $\ln(1/\rho)\ge1/\kappa$, so</p>
+      <p>$$k\ \ge\ \kappa\,\ln\frac{\text{gap}_0}{\varepsilon} \quad\text{steps suffice.}$$</p>
+
+      <h2>Compare with the exact quadratic answer</h2>
+      <p class="idea">On a quadratic we know the exact per-direction factors $1-\eta\lambda_i$. With $\eta=1/L$ they give $(1-1/\kappa)^2$ per step on $f$, so the general proof is valid but loses a square.</p>
+      <p>From <a href="gradient-descent-on-a-quadratic.html">gradient descent on a quadratic</a>, $x-x^*=\sum_ic_iq_i$ with $c_i\leftarrow(1-\eta\lambda_i)c_i$. With $x^*=0$ and orthonormal $q_i$:</p>
+      <p>$$\text{gap}=\tfrac12x^TAx=\tfrac12\sum_i\lambda_ic_i^2 \quad\Rightarrow\quad \text{each term is multiplied by } (1-\eta\lambda_i)^2.$$</p>
+      <p>With $\eta=\tfrac1L$ and $\lambda_i\in[\mu,L]$, each factor $1-\lambda_i/L\in[0,\,1-\tfrac1\kappa]$, so each step multiplies $\text{gap}$ by at most $(1-\tfrac1\kappa)^2\le1-\tfrac1\kappa$.</p>
+      <p><strong>Where the square goes.</strong> One direction, curvature $\lambda$, $t=\lambda/L$: $\text{gap}=\tfrac12\lambda c^2$ and $g=\lambda c$. The descent lemma promises a drop of</p>
+      <p>$$\frac{g^2}{2L}=\frac{\lambda^2c^2}{2L}=t\cdot\text{gap},$$</p>
+      <p>but the actual new gap is $(1-t)^2\,\text{gap}$, so the actual drop is</p>
+      <p>$$\big(1-(1-t)^2\big)\text{gap}=(2t-t^2)\,\text{gap}\ \ge\ t\cdot\text{gap} \qquad (t\le1).$$</p>
+      <p>The lemma charges the step for curvature $L$ when the true curvature is $\lambda$, so it under-promises.</p>
+      <p class="example-label">Running example ($L=3$, $\mu=1$, $\kappa=3$)</p>
+      <table>
+        <tr><td>step size</td><td>factors $1-\eta\lambda_i$ for $\lambda=3,1$</td><td>per step on $\|x-x^*\|$</td><td>per step on $\text{gap}$</td></tr>
+        <tr><td>$\eta=\tfrac1L=\tfrac13$</td><td>$0,\ \tfrac23$</td><td>$\tfrac23$</td><td>$(\tfrac23)^2=\tfrac49$</td></tr>
+        <tr><td>$\eta=\tfrac2{L+\mu}=\tfrac12$ (best)</td><td>$-\tfrac12,\ \tfrac12$</td><td>$\tfrac{\kappa-1}{\kappa+1}=\tfrac12$</td><td>$\tfrac14$</td></tr>
+        <tr><td>general bound, $\eta=\tfrac13$</td><td></td><td></td><td>$1-\tfrac1\kappa=\tfrac23$</td></tr>
+      </table>
+      <p>Measured from $x_0=(1,0)$: $g_0=(2,1)$, $x_1=(\tfrac13,-\tfrac13)$, which lies along $q_2$ (the $q_1$ part was killed by factor $0$). After that each step multiplies $x$ by $\tfrac23$, so $\text{gap}_k=\tfrac19(\tfrac49)^{k-1}$:</p>
+      <table>
+        <tr><td>$k$</td><td>$1$</td><td>$2$</td><td>$5$</td><td>$10$</td></tr>
+        <tr><td>bound $(\tfrac23)^k$</td><td>$0.667$</td><td>$0.444$</td><td>$0.132$</td><td>$0.0173$</td></tr>
+        <tr><td>measured $\text{gap}_k$</td><td>$0.111$</td><td>$0.0494$</td><td>$0.0043$</td><td>$0.000075$</td></tr>
+      </table>
+
+      <figure class="figure">
+        <svg width="408" viewBox="0 0 480 226" role="img" aria-label="Log of f minus f star against step k for gradient descent with step 1 over L on the running example, starting at (1, 0). Both the measured errors and the bound (2/3) to the k are straight lines; the measured line falls twice as steeply, reaching about 2e-8 at step 20 while the bound is about 3e-4.">
+          <line class="axis" x1="60" y1="184" x2="340" y2="184"/>
+          <line class="axis" x1="60" y1="184" x2="60" y2="18"/>
+          <text class="lbl muted" x="54" y="29" text-anchor="end">1</text>
+          <text class="lbl muted" x="54" y="109" text-anchor="end">10⁻⁴</text>
+          <line class="faint" x1="60" y1="104" x2="340" y2="104"/>
+          <text class="lbl muted" x="54" y="189" text-anchor="end">10⁻⁸</text>
+          <text class="lbl muted" x="60" y="201" text-anchor="middle">0</text>
+          <text class="lbl muted" x="200" y="201" text-anchor="middle">10</text>
+          <text class="lbl muted" x="340" y="201" text-anchor="middle">20</text>
+          <text class="lbl muted" x="200" y="218" text-anchor="middle">step k</text>
+          <text class="lbl muted" x="66" y="16">f(xₖ) − f*, log scale</text>
+          <line class="accent-2" x1="60" y1="24" x2="340" y2="94.4"/>
+          <text class="lbl accent-2" x="346" y="99.4">bound (2/3)ᵏ</text>
+          <polyline class="accent" points="60,24 74,43.1 88,50.1 102,57.2 116,64.2 130,71.3 144,78.3 158,85.3 172,92.4 186,99.4 200,106.5 214,113.5 228,120.6 242,127.6 256,134.7 270,141.7 284,148.7 298,155.8 312,162.8 326,169.9 340,176.9"/>
+          <circle class="accent-fill" cx="60" cy="24" r="2.5"/>
+          <circle class="accent-fill" cx="74" cy="43.1" r="2.5"/>
+          <circle class="accent-fill" cx="88" cy="50.1" r="2.5"/>
+          <circle class="accent-fill" cx="102" cy="57.2" r="2.5"/>
+          <circle class="accent-fill" cx="116" cy="64.2" r="2.5"/>
+          <circle class="accent-fill" cx="130" cy="71.3" r="2.5"/>
+          <circle class="accent-fill" cx="144" cy="78.3" r="2.5"/>
+          <circle class="accent-fill" cx="158" cy="85.3" r="2.5"/>
+          <circle class="accent-fill" cx="172" cy="92.4" r="2.5"/>
+          <circle class="accent-fill" cx="186" cy="99.4" r="2.5"/>
+          <circle class="accent-fill" cx="200" cy="106.5" r="2.5"/>
+          <circle class="accent-fill" cx="214" cy="113.5" r="2.5"/>
+          <circle class="accent-fill" cx="228" cy="120.6" r="2.5"/>
+          <circle class="accent-fill" cx="242" cy="127.6" r="2.5"/>
+          <circle class="accent-fill" cx="256" cy="134.7" r="2.5"/>
+          <circle class="accent-fill" cx="270" cy="141.7" r="2.5"/>
+          <circle class="accent-fill" cx="284" cy="148.7" r="2.5"/>
+          <circle class="accent-fill" cx="298" cy="155.8" r="2.5"/>
+          <circle class="accent-fill" cx="312" cy="162.8" r="2.5"/>
+          <circle class="accent-fill" cx="326" cy="169.9" r="2.5"/>
+          <circle class="accent-fill" cx="340" cy="176.9" r="2.5"/>
+          <text class="lbl accent" x="346" y="181.9">measured (4/9)ᵏ/4</text>
+        </svg>
+        <figcaption>Both are straight lines (linear rate). The measured slope $\ln\tfrac49=2\ln\tfrac23$ is exactly twice the bound's: the lost square.</figcaption>
+      </figure>
+
+      <h2>Bonus: the iterates contract too</h2>
+      <p class="idea">For twice continuously differentiable $f$, one step is "multiply the error by an average of $I-H/L$", and every such matrix shrinks vectors by at least $1-1/\kappa$.</p>
+      <p><strong>Step 1.</strong> $\nabla f(x^*)=0$, so with $e=x_k-x^*$:</p>
+      <p>$$x_{k+1}-x^*=e-\tfrac1L\big(\nabla f(x_k)-\nabla f(x^*)\big).$$</p>
+      <p><strong>Step 2.</strong> Fundamental theorem of calculus on the gradient along the segment; by the chain rule $\tfrac{d}{dt}\nabla f(x^*+te)=H_te$ with $H_t=H(x^*+te)$:</p>
+      <p>$$\nabla f(x_k)-\nabla f(x^*)=\int_0^1H_te\,dt,$$</p>
+      <p>$$x_{k+1}-x^*=\int_0^1\big(I-\tfrac1LH_t\big)e\,dt.$$</p>
+      <p><strong>Step 3.</strong> $I-H_t/L$ is symmetric with eigenvalues $s_i=1-\lambda_i/L\in[0,1-\tfrac1\kappa]$. In its eigenbasis, $\|(I-H_t/L)v\|^2=\sum_is_i^2c_i^2\le(1-\tfrac1\kappa)^2\|v\|^2$. The norm of an integral is at most the integral of the norm:</p>
+      <p>$$\|x_{k+1}-x^*\|\le\int_0^1\big\|(I-\tfrac1LH_t)e\big\|\,dt\le\Big(1-\frac1\kappa\Big)\|x_k-x^*\|. \qquad\blacksquare$$</p>
+      <p>Check: $\|x_1\|=\tfrac{\sqrt2}3=0.471\le\tfrac23\|x_0\|=0.667$, and from then on the factor is exactly $\tfrac23$: tight here.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>With $\kappa=100$, how many iterations of gradient descent with step $1/L$ does the bound need to reduce $f-f^*$ by a factor $10^{-6}$? Compare with $\kappa=3$, and with the exact quadratic factor $(1-1/\kappa)^2$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$\rho=1-\tfrac1{100}=0.99$. Need $0.99^k\le10^{-6}$; take logs, divide by $\ln0.99\lt0$ (flip), with $\ln10^6=13.82$:</p>
+          <p>$$k\ge\frac{13.82}{\ln(1/0.99)}=\frac{13.82}{0.01005}=1374.6\ \Rightarrow\ 1375.$$</p>
+          <p>The shortcut $\kappa\ln10^6=100\times13.82=1382$ agrees. About $2.303/0.01005=229$ steps per digit.</p>
+          <p>$\kappa=3$: $13.82/\ln1.5=13.82/0.405=34.1\Rightarrow35$ steps. On a quadratic with $\kappa=100$ the true factor is $0.99^2$, so $\ln(1/0.99^2)=0.0201$ and $13.82/0.0201=687.3\Rightarrow688$ steps, half the bound.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

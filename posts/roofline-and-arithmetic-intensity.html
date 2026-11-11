@@ -57,21 +57,35 @@
       <p class="idea">How much math you do per byte fetched from HBM. Low intensity: the lanes starve, waiting for data.</p>
       <p>$$I=\frac{\text{FLOPs}}{\text{bytes moved to and from HBM}}.$$</p>
       <p class="example-label">Example: ReLU in bf16</p>
-      <p>Per element: 1 FLOP (a max), read 2 B, write 2 B. $I=1/4=0.25$ FLOP/B. In fp32 it halves to $0.125$.</p>
+      <p>Per element: 1 FLOP (a max), read 2 B, write 2 B.</p>
+      <p>$$I_{\text{bf16}}=\frac{1}{2+2}=0.25\ \text{FLOP/B},\qquad I_{\text{fp32}}=\frac{1}{4+4}=0.125\ \text{FLOP/B}.$$</p>
       <table>
         <tr><td><strong>op</strong></td><td><strong>FLOPs</strong></td><td><strong>values moved</strong></td><td><strong>$I$</strong></td></tr>
         <tr><td>elementwise on $N$ values</td><td>$\sim N$</td><td>$\sim2N$</td><td>constant, below 1</td></tr>
         <tr><td>matmul $(n\times n)(n\times n)$</td><td>$2n^3$</td><td>$3n^2$ (read $A,B$, write $C$)</td><td>grows like $n$</td></tr>
       </table>
+      <p><strong>Elementwise.</strong> A fixed $c$ FLOPs per element, one read and one write of $s$ bytes each:</p>
+      <p>$$I=\frac{cN}{2N\cdot s}=\frac{c}{2s}\quad\text{(no }N\text{: bigger tensors never help).}$$</p>
+      <p><strong>Matmul.</strong> $C=AB$ has $n^2$ entries, each a dot product $C_{ij}=\sum_{k=1}^nA_{ik}B_{kj}$ of $n$ multiplies and $n$ adds:</p>
+      <p>$$\text{FLOPs}=\underbrace{n^2}_{\text{outputs}}\times\underbrace{2n}_{\text{per output}}=2n^3.$$</p>
+      <p>$$\text{bytes (each matrix touched once)}=\underbrace{3n^2}_{A,\,B,\,C}\cdot s \quad\Rightarrow\quad I=\frac{2n^3}{3n^2s}=\frac{2n}{3s}.$$</p>
+      <p>The FLOPs grow one power of $n$ faster than the data, because each value is used $n$ times.</p>
 
       <h2>The roofline</h2>
       <p class="idea">Two pipes, and the narrower one wins. Below some intensity, bandwidth caps you; above it, peak math does.</p>
-      <p>$$\text{attainable FLOP/s}=\min\big(P_{\text{peak}},\ B\cdot I\big), \qquad I^\ast=\frac{P_{\text{peak}}}{B}\ \ \text{(ridge point)}.$$</p>
+      <p><strong>Step 1: time for each pipe.</strong> A kernel does $F$ FLOPs and moves $Q$ bytes. The lanes alone need $F/P_{\text{peak}}$; the memory alone needs $Q/B$ ($B$ = HBM bandwidth). The GPU overlaps them (other warps compute while some wait, see <a href="why-gpus.html">latency hiding</a>), so the slower one sets the time:</p>
+      <p>$$t=\max\!\Big(\frac{F}{P_{\text{peak}}},\ \frac{Q}{B}\Big).$$</p>
+      <p><strong>Step 2: divide.</strong> Attained rate is $F/t$. Dividing $F$ by a max is the min of the quotients, and $F/Q=I$:</p>
+      <p>$$\frac{F}{t}=\min\!\Big(\frac{F}{F/P_{\text{peak}}},\ \frac{F}{Q/B}\Big)=\min\big(P_{\text{peak}},\ B\cdot I\big).$$</p>
+      <p><strong>Step 3: the ridge.</strong> The two terms are equal where $B\cdot I^\ast=P_{\text{peak}}$:</p>
+      <p>$$\boxed{\ \text{attainable FLOP/s}=\min\big(P_{\text{peak}},\ B\cdot I\big)\ }\qquad \boxed{\ I^\ast=\frac{P_{\text{peak}}}{B}\ }\ \text{(ridge)}$$</p>
+      <p>On log-log axes $\log(B\cdot I)=\log B+\log I$ is a line of slope 1, and $P_{\text{peak}}$ is flat: the roof shape.</p>
       <table>
         <tr><td></td><td><strong>peak (bf16 dense)</strong></td><td><strong>HBM</strong></td><td><strong>ridge $I^\ast$</strong></td></tr>
-        <tr><td>A100</td><td>~312 TFLOP/s</td><td>~2 TB/s</td><td>~156 FLOP/B</td></tr>
-        <tr><td>H100 SXM</td><td>~990 TFLOP/s</td><td>~3.35 TB/s</td><td>~300 FLOP/B</td></tr>
+        <tr><td>A100</td><td>~312 TFLOP/s</td><td>~2 TB/s</td><td>$312/2=156$ FLOP/B</td></tr>
+        <tr><td>H100 SXM</td><td>~990 TFLOP/s</td><td>~3.35 TB/s</td><td>$990/3.35\approx296$ FLOP/B</td></tr>
       </table>
+      <p>Peak and HBM columns are approximate specs; the ridge column is computed from them.</p>
       <figure class="figure">
         <svg width="459" viewBox="0 0 540 240" role="img" aria-label="Log-log roofline for an A100 in bf16: attainable TFLOP/s rises along a bandwidth slope of 2 TB/s until the ridge at about 156 FLOP per byte, then stays flat at the 312 TFLOP/s peak. ReLU sits far down the slope, a small matmul higher on the slope, a big matmul on the flat roof.">
           <line class="axis" x1="60" y1="190" x2="510" y2="190"/>
@@ -116,9 +130,14 @@
         <figcaption>A100 bf16 roofline (log-log). Left of the ridge, bandwidth sets the speed; right of it, compute does.</figcaption>
       </figure>
       <p class="example-label">Example: ReLU on an A100</p>
-      <p>$0.25\times2\text{ TB/s}=0.5$ TFLOP/s, about $0.2\%$ of peak. Its runtime is just bytes ÷ bandwidth; the math is free.</p>
+      <p>$I=0.25\lt156$, so the bandwidth term wins the min:</p>
+      <p>$$B\cdot I=2\times10^{12}\times0.25=5\times10^{11}=0.5\ \text{TFLOP/s},\qquad \frac{0.5}{312}\approx0.16\%\text{ of peak}.$$</p>
+      <p>Its runtime is the $Q/B$ term of Step 1: for $N$ elements, $t=4N/B$. The math is free.</p>
 
       <h2>What to do about it</h2>
+      <p class="idea">Read the fix off the formula: each side of the min has its own knobs.</p>
+      <p>$$I\lt I^\ast:\quad \text{rate}=B\cdot\frac{F}{Q}\ \Rightarrow\ \text{lower }Q\text{ (or raise }B).$$</p>
+      <p>$$I\gt I^\ast:\quad \text{rate}=P_{\text{peak}}\ \Rightarrow\ \text{raise }P_{\text{peak}}.$$</p>
       <table>
         <tr><td>memory-bound ($I\lt I^\ast$)</td><td>move fewer bytes: fuse ops, use smaller dtypes, reuse data from shared memory</td></tr>
         <tr><td>compute-bound ($I\gt I^\ast$)</td><td>do math faster: tensor cores, lower-precision math</td></tr>
@@ -129,9 +148,14 @@
         <p>An $(n\times n)(n\times n)$ fp16 matmul reads $A$ and $B$ once and writes $C$ once. Find $I(n)$. At what $n$ does it cross the A100 ridge? The H100 ridge? And a matrix-vector product?</p>
         <details>
           <summary>Solution</summary>
-          <p>FLOPs $2n^3$; bytes $3n^2\cdot2=6n^2$; so $I=n/3$ FLOP/B.</p>
-          <p>A100: $n/3=156\Rightarrow n\approx470$. H100: $n/3\approx300\Rightarrow n\approx900$. LLM layers ($n$ in the thousands) are compute-bound.</p>
-          <p>Matrix-vector: $2n^2$ FLOPs over $\approx2n^2$ bytes (the matrix), so $I\approx1$: deeply memory-bound. This is why generating one token at a time is limited by bandwidth.</p>
+          <p>FLOPs: $n^2$ outputs $\times$ $2n$ each. Bytes: three $n\times n$ matrices at $2$ B per value.</p>
+          <p>$$I(n)=\frac{2n^3}{3n^2\cdot2}=\frac{2n^3}{6n^2}=\frac n3\ \text{FLOP/B}.$$</p>
+          <p>Set $I(n)=I^\ast$ and solve:</p>
+          <p>$$\text{A100: }\frac n3=156\Rightarrow n=468\approx470,\qquad \text{H100: }\frac n3=296\Rightarrow n\approx890.$$</p>
+          <p>LLM layers ($n$ in the thousands) are compute-bound.</p>
+          <p>Matrix-vector $y=Ax$: $n$ outputs $\times$ $2n$ FLOPs; bytes are dominated by the matrix ($n^2$ values) since $x,y$ are only $2n$ values:</p>
+          <p>$$I=\frac{2n^2}{(n^2+2n)\cdot2}\approx\frac{2n^2}{2n^2}=1\ \text{FLOP/B}\ \ll156.$$</p>
+          <p>Deeply memory-bound. Each matrix entry is used once, not $n$ times. This is why generating one token at a time is limited by bandwidth.</p>
         </details>
       </section>
     </article>
@@ -144,7 +168,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

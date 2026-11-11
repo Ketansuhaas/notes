@@ -57,22 +57,33 @@
       <h2>Markov</h2>
       <p class="idea">A non-negative variable can't put much mass far out without dragging its mean up. Needs only $X\ge0$ and a mean.</p>
       <p>$$X\ge0,\ a\gt0: \qquad P(X\ge a)\le\frac{\mathbb{E}X}{a}.$$</p>
-      <p>Proof: $a\,\mathbb{1}[X\ge a]\le X$ pointwise. Take $\mathbb{E}$: $a\,P(X\ge a)\le\mathbb{E}X$.</p>
+      <p><strong>Proof.</strong> Compare two variables at every outcome. If $X\ge a$: left side $a\le X$. If $X\lt a$: left side $0\le X$ (since $X\ge0$). So pointwise</p>
+      <p>$$a\,\mathbb{1}[X\ge a]\le X \ \overset{\mathbb{E}}{\Longrightarrow}\ a\,\underbrace{\mathbb{E}\,\mathbb{1}[X\ge a]}_{P(X\ge a)}\le\mathbb{E}X,$$</p>
+      <p>and divide by $a$. (Taking $\mathbb{E}$ keeps $\le$: it is a weighted average with non-negative weights.)</p>
       <p class="example-label">Example</p>
       <p>Mean wait $2$ min: $P(\text{wait}\ge10)\le\tfrac2{10}=0.2$, whatever the distribution.</p>
 
       <h2>Chebyshev</h2>
       <p class="idea">Apply Markov to the squared distance from the mean. Knowing the spread bounds both tails.</p>
-      <p>$$P(|X-\mu|\ge k)=P\big((X-\mu)^2\ge k^2\big)\le\frac{\sigma^2}{k^2}.$$</p>
-      <p>Sample mean, $\operatorname{Var}\bar x_n=\sigma^2/n$: $\ P(|\bar x_n-\mu|\ge k)\le\dfrac{\sigma^2}{nk^2}\to0$. That is the law of large numbers.</p>
+      <p>$Y=(X-\mu)^2$ is non-negative with $\mathbb{E}Y=\sigma^2$. Squaring is increasing on non-negatives, so $|X-\mu|\ge k$ is the same event as $Y\ge k^2$. Markov on $Y$ with $a=k^2$:</p>
+      <p>$$P(|X-\mu|\ge k)=P\big((X-\mu)^2\ge k^2\big)\le\frac{\mathbb{E}Y}{k^2}=\frac{\sigma^2}{k^2}.$$</p>
+      <p>Sample mean, $\operatorname{Var}\bar x_n=\sigma^2/n$ (<a href="expectation-and-variance-algebra.html">variance algebra</a>): substitute $\sigma^2\to\sigma^2/n$,</p>
+      <p>$$P(|\bar x_n-\mu|\ge k)\le\dfrac{\sigma^2}{nk^2}\to0.$$</p>
+      <p>That is the law of large numbers.</p>
       <p class="example-label">Example</p>
-      <p>$k=2\sigma$: at most $\tfrac14$. For a Gaussian the truth is $0.046$, so the bound is loose but universal.</p>
+      <p>$k=2\sigma$: $\tfrac{\sigma^2}{4\sigma^2}=\tfrac14$. For a Gaussian the truth is $P(|X-\mu|\ge2\sigma)=2(1-\Phi(2))\approx2\cdot0.0228=0.046$ ($\Phi$ the standard normal CDF, from a table), so the bound is loose but universal.</p>
 
       <h2>Chernoff</h2>
       <p class="idea">Apply Markov to $e^{tX}$. The exponential magnifies the tail, so the bound decays exponentially.</p>
-      <p>$$P(X\ge a)=P\big(e^{tX}\ge e^{ta}\big)\le\min_{t\gt0}\ e^{-ta}\,\underbrace{\mathbb{E}[e^{tX}]}_{M_X(t)}.$$</p>
-      <p class="example-label">Example</p>
-      <p>$X\sim\mathcal{N}(0,1)$: $M_X(t)=e^{t^2/2}$. Minimize $e^{t^2/2-ta}$ at $t=a$: $P(X\ge a)\le e^{-a^2/2}$. At $a=2$: $0.14$, against Chebyshev's $0.25$.</p>
+      <p>For $t\gt0$, $x\mapsto e^{tx}$ is increasing, so $X\ge a$ is the same event as $e^{tX}\ge e^{ta}$. Markov on the non-negative $e^{tX}$:</p>
+      <p>$$P(X\ge a)=P\big(e^{tX}\ge e^{ta}\big)\le e^{-ta}\,\underbrace{\mathbb{E}[e^{tX}]}_{M_X(t)}.$$</p>
+      <p>This holds for every $t\gt0$, so keep the best one: $P(X\ge a)\le\min_{t\gt0}e^{-ta}M_X(t)$.</p>
+      <p class="example-label">Example: $X\sim\mathcal{N}(0,1)$</p>
+      <p><strong>The MGF.</strong> Complete the square in the exponent, $tx-\tfrac{x^2}2=-\tfrac{(x-t)^2}2+\tfrac{t^2}2$; the shifted bell still integrates to $\sqrt{2\pi}$ (<a href="common-distributions.html">distributions note</a>):</p>
+      <p>$$M_X(t)=\frac1{\sqrt{2\pi}}\int e^{tx-x^2/2}\,dx=e^{t^2/2}\cdot\frac1{\sqrt{2\pi}}\int e^{-(x-t)^2/2}\,dx=e^{t^2/2}.$$</p>
+      <p><strong>Optimize $t$.</strong> Minimize the exponent $g(t)=\tfrac{t^2}2-ta$: $g'(t)=t-a=0$ at $t=a$, where $g(a)=\tfrac{a^2}2-a^2=-\tfrac{a^2}2$. So</p>
+      <p>$$P(X\ge a)\le e^{-a^2/2}.$$</p>
+      <p>At $a=2$: $e^{-2}\approx0.135$, against Chebyshev's $0.25$ (valid here since $P(X\ge2)\le P(|X|\ge2)$). Further out the gap explodes: at $a=4$, $e^{-8}\approx3\times10^{-4}$ versus $\tfrac1{16}\approx0.06$.</p>
 
       <figure class="figure">
         <svg width="391" viewBox="0 0 460 226" role="img" aria-label="Log-scale plot of upper bounds on P(|X| at least t) for a standard Gaussian X, for t from 1 to 4.5. Markov and Chebyshev bounds decay slowly like powers of t; the Chernoff bound drops like the true tail.">
@@ -102,8 +113,21 @@
       <h2>Hoeffding</h2>
       <p class="idea">Bounded, independent samples: the sample mean's error probability shrinks exponentially in $n$.</p>
       <p>$$x_i\in[a_i,b_i] \text{ indep.}: \quad P(|\bar x_n-\mu|\ge t)\le2\exp\!\Big(-\frac{2n^2t^2}{\sum_i(b_i-a_i)^2}\Big)$$ $$\overset{a_i=a,\,b_i=b}{\Longrightarrow}\ P(|\bar x_n-\mu|\ge t)\le2\exp\!\Big(-\frac{2nt^2}{(b-a)^2}\Big).$$</p>
+      <p>Here $\mu=\tfrac1n\sum_i\mathbb{E}x_i$. It is Chernoff applied to the sum, with one ingredient taken as given.</p>
+      <p><strong>Hoeffding's lemma (Proof idea).</strong> If $Y\in[a,b]$ and $\mathbb{E}Y=0$, then</p>
+      <p>$$\mathbb{E}[e^{sY}]\le e^{s^2(b-a)^2/8}.$$</p>
+      <p>Why: $e^{sy}$ is convex, so on $[a,b]$ it lies below its chord; taking $\mathbb{E}$ bounds $\mathbb{E}e^{sY}$ by the chord's value, a function of $s$ alone. Its log starts at $0$ with slope $0$ (mean zero) and second derivative a variance of a $[a,b]$-valued variable, at most $\tfrac{(b-a)^2}4$; Taylor gives $\le\tfrac{s^2}2\cdot\tfrac{(b-a)^2}4$. A full proof writes out the chord function and checks that bound.</p>
+      <p><strong>Step 1: Chernoff on the sum.</strong> Let $Y_i=x_i-\mathbb{E}x_i\in[a_i-\mathbb{E}x_i,\ b_i-\mathbb{E}x_i]$, an interval of the same width $b_i-a_i$. The event $\bar x_n-\mu\ge t$ is $\sum_iY_i\ge nt$. For any $s\gt0$:</p>
+      <p>$$P\Big(\sum_iY_i\ge nt\Big)\le e^{-snt}\,\mathbb{E}\big[e^{s\sum_iY_i}\big]=e^{-snt}\prod_i\mathbb{E}\big[e^{sY_i}\big],$$</p>
+      <p>since $e^{s\sum Y_i}=\prod_ie^{sY_i}$ and $\mathbb{E}$ of a product of independent factors is the product of $\mathbb{E}$'s.</p>
+      <p><strong>Step 2: the lemma on each factor.</strong> With $D=\sum_i(b_i-a_i)^2$:</p>
+      <p>$$P\Big(\sum_iY_i\ge nt\Big)\le\exp\!\Big(-snt+\frac{s^2D}8\Big).$$</p>
+      <p><strong>Step 3: optimize $s$.</strong> The exponent's derivative $-nt+\tfrac{sD}4=0$ gives $s=\tfrac{4nt}D$, and the exponent becomes</p>
+      <p>$$-\frac{4n^2t^2}D+\frac{16n^2t^2}{8D}=-\frac{2n^2t^2}D.$$</p>
+      <p><strong>Step 4: both tails.</strong> $-Y_i$ satisfies the same conditions, so $P(\bar x_n-\mu\le-t)$ has the same bound; adding the two tails gives the factor $2$. Equal ranges: $D=n(b-a)^2$, so $\tfrac{2n^2t^2}D=\tfrac{2nt^2}{(b-a)^2}$.</p>
       <p class="example-label">Example</p>
-      <p>Coin flips in $[0,1]$, $t=0.1$, $n=1000$. Hoeffding: $2e^{-20}\approx4\times10^{-9}$. Chebyshev ($\sigma^2\le\tfrac14$): $\tfrac{0.25}{1000\cdot0.01}=0.025$.</p>
+      <p>Coin flips in $[0,1]$, $t=0.1$, $n=1000$. Hoeffding: $\tfrac{2nt^2}{(b-a)^2}=2\cdot1000\cdot0.01=20$, so the bound is $2e^{-20}\approx4\times10^{-9}$.</p>
+      <p>Chebyshev needs $\sigma^2$. Any $X\in[0,1]$ has $X^2\le X$, so $\sigma^2=\mathbb{E}X^2-\mu^2\le\mu-\mu^2=\mu(1-\mu)\le\tfrac14$. Then $\tfrac{\sigma^2}{nt^2}\le\tfrac{0.25}{1000\cdot0.01}=0.025$.</p>
 
       <h2>The pattern</h2>
       <table>
@@ -119,7 +143,9 @@
         <p>From Hoeffding, how many samples $n$ guarantee $P(|\bar x_n-\mu|\ge t)\le\delta$ for $x_i\in[0,1]$? Evaluate at $t=0.1$, $\delta=0.05$.</p>
         <details>
           <summary>Solution</summary>
-          <p>Need $2e^{-2nt^2}\le\delta \iff 2nt^2\ge\log\tfrac2\delta \iff n\ge\dfrac{\log(2/\delta)}{2t^2}$. Here $\dfrac{\log40}{0.02}\approx184.4$, so $n=185$. Note $n\propto1/t^2$: halving the error costs $4\times$ the data.</p>
+          <p>Hoeffding with $b-a=1$. Set the bound $\le\delta$, take logs ($\log$ is increasing), and solve for $n$:</p>
+          <p>$$2e^{-2nt^2}\le\delta \iff -2nt^2\le\log\tfrac\delta2 \iff 2nt^2\ge\log\tfrac2\delta \iff n\ge\dfrac{\log(2/\delta)}{2t^2}.$$</p>
+          <p>Here $\tfrac2\delta=\tfrac2{0.05}=40$ and $2t^2=0.02$: $\dfrac{\log40}{0.02}\approx\dfrac{3.689}{0.02}\approx184.4$, so $n=185$. Note $n\propto1/t^2$: halving the error costs $4\times$ the data.</p>
         </details>
       </section>
     </article>
@@ -132,7 +158,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

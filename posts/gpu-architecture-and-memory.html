@@ -61,14 +61,20 @@
         <tr><td>FP32 lanes per SM</td><td>64</td><td>128</td></tr>
         <tr><td>max resident threads per SM</td><td>2048</td><td>2048</td></tr>
       </table>
+      <p>These three rows are vendor specs. Everything else follows by multiplying:</p>
+      <p>$$\text{FP32 lanes: } \ \text{A100 } 108\times64=6912,\qquad \text{H100 } 132\times128=16{,}896.$$</p>
+      <p>$$\text{resident warps per SM: } \frac{2048\ \text{threads}}{32\ \text{threads/warp}}=64.$$</p>
 
       <h2>Warps: 32 threads, one instruction</h2>
       <p class="idea">Threads run in warps of 32 that execute the same instruction at the same time on different data (SIMT). If they disagree on a branch, the warp runs both sides, masking off the threads that did not take each one.</p>
       <pre><code>if (threadIdx.x % 2 == 0) y = a(x);   // odd threads masked, wait
 else                      y = b(x);   // even threads masked, wait</code></pre>
+      <p>The warp has one instruction stream, so it cannot run <code>a</code> and <code>b</code> at the same time. It runs one path with the other half masked, then the other path:</p>
       <p>$$\text{divergent warp: } t=t_a+t_b, \qquad \text{uniform warp: } t=t_a \text{ or } t_b.$$</p>
+      <p>For the even/odd split, 16 lanes do useful work in each phase, so the lane utilisation is</p>
+      <p>$$\frac{16\,t_a+16\,t_b}{32\,(t_a+t_b)}=\frac12.$$</p>
       <p class="example-label">Example</p>
-      <p><code>if (threadIdx.x &lt; 32)</code> keeps whole warps together: no divergence. <code>if (threadIdx.x % 2)</code> splits every warp in half.</p>
+      <p>Warp $w$ holds threads $32w,\dots,32w+31$ (consecutive <code>threadIdx.x</code>). So <code>if (threadIdx.x &lt; 32)</code> is true for all of warp 0 and false for all of every other warp: each warp agrees, no divergence. <code>if (threadIdx.x % 2)</code> is true for the 16 odd threads of every warp: every warp splits in half.</p>
 
       <h2>The memory hierarchy</h2>
       <p class="idea">Fast memory is small and close to the lanes; big memory is far and slow. Good kernels fetch from HBM once and reuse the data from higher up.</p>
@@ -95,10 +101,20 @@ else                      y = b(x);   // even threads masked, wait</code></pre>
         </svg>
         <figcaption>A100, roughly. Up the pyramid: smaller, faster, more private. HBM is big but is the bottleneck.</figcaption>
       </figure>
+      <p>Sizes and HBM bandwidth are approximate specs. Two of the labels are computed from them:</p>
+      <p>$$\text{registers per SM: } \frac{256\ \text{KB}}{4\ \text{B each}}=65{,}536.$$</p>
+      <p>$$\text{per thread at full occupancy: } \frac{65{,}536}{2048}=32 \text{ registers}.$$</p>
+      <p>$$\text{shared memory: } \underbrace{108}_{\text{SMs}}\times\underbrace{128\ \tfrac{\text{B}}{\text{cycle}}}_{\text{per SM (spec)}}\times1.41\times10^{9}\ \tfrac{\text{cycles}}{\text{s}}\approx19.5\ \tfrac{\text{TB}}{\text{s}}.$$</p>
+      <p>$$\frac{19.5\ \text{TB/s}}{2\ \text{TB/s}}\approx10:$$</p>
+      <p>a value reused from shared memory costs about a tenth of re-reading it from HBM.</p>
 
       <h2>Coalescing: read whole sectors</h2>
       <p class="idea">HBM delivers 32-byte sectors, never single values. If a warp's threads read consecutive addresses, their loads merge into a few full sectors; scattered reads each drag in a sector for a few useful bytes.</p>
-      <p>$$\text{thread } t \text{ reads } x[t]:\quad 32\times4\text{ B}=128\text{ B}=4\text{ sectors, every byte used}.$$</p>
+      <p>$$\text{thread } t \text{ reads } x[t]:\quad 32\times4\text{ B}=128\text{ B}=\frac{128}{32}=4\text{ sectors, every byte used}.$$</p>
+      <p><strong>Stride $s$.</strong> If thread $t$ reads $x[s\,t]$, the warp's 32 floats are spread over $32\cdot4s=128s$ bytes. Each sector is 32 B, but a warp can touch at most one sector per thread:</p>
+      <p>$$\#\text{sectors}=\min\!\Big(\frac{128s}{32},\ 32\Big)=\min(4s,\ 32).$$</p>
+      <p>$$\text{efficiency}=\frac{\text{useful}}{\text{fetched}}=\frac{128\ \text{B}}{32\cdot\min(4s,32)\ \text{B}}=\begin{cases}1/s & s\le8\\ 1/8 & s\ge8.\end{cases}$$</p>
+      <p>The figure is $s=2$ (drawn for 8 threads): 2 sectors, efficiency $1/2$.</p>
       <figure class="figure">
         <svg width="476" viewBox="0 0 560 160" role="img" aria-label="Two panels of eight threads reading floats. Coalesced: threads read eight consecutive floats, filling one 32-byte sector. Stride 2: threads read every other float, touching two sectors and using only half of each.">
           <defs>
@@ -207,7 +223,10 @@ else                      y = b(x);   // even threads masked, wait</code></pre>
         <p>A warp reads one column of a row-major $1024\times1024$ fp32 matrix: thread $t$ reads <code>A[t*1024 + j]</code>. Coalesced? How many sectors, and what fraction of the fetched bytes is used?</p>
         <details>
           <summary>Solution</summary>
-          <p>No. Neighbouring threads are $1024\cdot4=4096$ B apart, so each lands in its own sector: $32$ sectors ($1024$ B) for $128$ useful bytes. Efficiency $1/8$, i.e. $8\times$ the traffic of reading a row.</p>
+          <p>No. This is stride $s=1024$ floats. Neighbouring threads are $1024\cdot4=4096$ B apart, far more than one 32 B sector, so each thread lands in its own sector:</p>
+          <p>$$\#\text{sectors}=\min(4\cdot1024,\ 32)=32,\qquad 32\cdot32\ \text{B}=1024\ \text{B fetched}.$$</p>
+          <p>$$\text{efficiency}=\frac{32\cdot4\ \text{B}}{1024\ \text{B}}=\frac{128}{1024}=\frac18,$$</p>
+          <p>i.e. $8\times$ the traffic of reading a row (which needs $4$ sectors, $128$ B).</p>
           <p>Fix: let consecutive threads walk along a row (<code>A[i*1024 + t]</code>), or stage the tile through shared memory and transpose it there.</p>
         </details>
       </section>
@@ -221,7 +240,7 @@ else                      y = b(x);   // even threads masked, wait</code></pre>
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

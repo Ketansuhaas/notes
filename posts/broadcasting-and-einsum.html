@@ -156,39 +156,78 @@
         <figcaption>Dashed copies are never stored: the stretched axis gets stride $0$. Only the result is new memory.</figcaption>
       </figure>
 
+      <h2>Step 1: a size-1 axis can take stride 0</h2>
+      <p class="idea">Stretching is not copying. A stride-0 axis reads the same element for every index along it, so the "copies" cost nothing.</p>
+      <p><code>a = arange(3).view(3, 1)</code> has strides $(1,1)$ by the <a href="pytorch-tensors-and-strides.html">address rule</a> ($s_0=n_1s_1=1$). Its only legal index on axis 1 is $0$, so $s_1$ is never used. Set $s_1=0$ and allow $j=0,\dots,3$:</p>
+      <p>$$\text{offset}(i,j)=i\cdot1+j\cdot0=i\quad\Rightarrow\quad a_{\text{exp}}[i,j]=a[i]\ \text{ for every } j.$$</p>
+      <p>Likewise <code>b = arange(4).view(1, 4)</code> has strides $(4,1)$; zero the size-1 axis to get $(0,1)$, offset $=j$, so $b_{\text{exp}}[i,j]=b[j]$. Then</p>
+      <p>$$c[i,j]=a[i]+b[j]=i+j,$$</p>
+      <p>e.g. row 2 is $2,3,4,5$, as in the figure. Memory: inputs $3+4$ floats, only the $3\cdot4=12$ outputs are new.</p>
+
+      <h2>Step 2: the rules are the conditions for Step 1</h2>
+      <p class="idea">Each broadcasting rule is exactly what is needed for a stride-0 view to pair every output index with one input element.</p>
+      <p><strong>Missing axes go on the left.</strong> A new size-1 axis always has index $0$, so it adds $0\cdot s$ to every offset: shape $(n,)$ and $(1,n)$ read the same elements. PyTorch adds the missing axes on the left, which is why shapes are aligned from the right.</p>
+      <p><strong>Per axis</strong>, with sizes $n_a,n_b$ after padding:</p>
+      <p>$$n_a=n_b:\ \text{pair index } i \text{ with } i;\qquad n_a=1:\ s_a\leftarrow0,\ \text{size}\leftarrow n_b.$$</p>
+      <p>If $n_a\ne n_b$ and neither is $1$, index $n_a$ of the longer one has no partner: error. The output size per axis is $\max(n_a,n_b)$. Applying this to the table:</p>
+      <p>$$(64,)\to(1,1,64),\ \text{strides }(0,0,1):\quad \text{out}[b,t,d]=x[b,t,d]+\text{bias}[d].$$</p>
+      <p>$$(B,1,D)\text{ and }(1,N,D):\quad \text{out}[b,n,d]=x[b,0,d]-y[0,n,d].$$</p>
+      <p>The last one allocates $B\cdot N\cdot D$ new elements even though the inputs hold only $(B+N)D$: the stretch is free, the output is not.</p>
 <pre><code>a = torch.arange(3.).view(3, 1)    # column
 b = torch.arange(4.).view(1, 4)    # row
 (a + b).shape                      # (3, 4)
 a.expand(3, 4).stride()            # (1, 0): stride 0, no copy
 x = torch.randn(32, 128)
 (x - x.mean(0)).shape              # (32, 128): center every column</code></pre>
+      <p><code>x.mean(0)</code> has shape $(128,)$, padded to $(1,128)$, stretched with stride $0$ down the rows:</p>
+      <p>$$\text{out}[i,j]=x[i,j]-\mu_j,\qquad \mu_j=\tfrac1{32}\textstyle\sum_{i}x[i,j].$$</p>
 
-      <h2>einsum: name the axes</h2>
-      <p class="idea">Give every axis a letter. Letters in the output survive; letters that appear in the inputs but not the output are multiplied and summed.</p>
+      <h2>Step 3: einsum is a loop nest</h2>
+      <p class="idea">Give every axis a letter. The string is shorthand for loops over all letters: multiply the inputs, add into the output entry named by the output letters. Letters missing from the output get summed, because many loop iterations land on the same output entry.</p>
+      <p>For <code>'ik,kj-&gt;ij'</code> the letters are $i,k,j$ and the loop body is</p>
+<pre><code>for i, k, j in all index triples:
+    C[i, j] += A[i, k] * B[k, j]     # k not in output: summed</code></pre>
+      <p>The iterations with the same $(i,j)$ and different $k$ add into one entry, so</p>
+      <p>$$C_{ij}=\sum_kA_{ik}B_{kj}.$$</p>
+      <p>The same expansion in general:</p>
+      <p>$$\text{out}[\text{output letters}]=\sum_{\text{other letters}}\ \prod_{\text{inputs}}\text{input}[\text{its letters}].$$</p>
       <table>
-        <tr><td><strong>Operation</strong></td><td><strong>einsum</strong></td><td><strong>Math</strong></td></tr>
-        <tr><td>dot product</td><td><code>'i,i-&gt;'</code></td><td>$\sum_i x_iy_i$</td></tr>
-        <tr><td>outer product</td><td><code>'i,j-&gt;ij'</code></td><td>$x_iy_j$</td></tr>
-        <tr><td>matmul</td><td><code>'ik,kj-&gt;ij'</code></td><td>$\sum_k A_{ik}B_{kj}$</td></tr>
-        <tr><td>batch matmul</td><td><code>'bik,bkj-&gt;bij'</code></td><td>one matmul per $b$</td></tr>
-        <tr><td>row sums</td><td><code>'ij-&gt;i'</code></td><td>$\sum_j A_{ij}$</td></tr>
-        <tr><td>attention scores</td><td><code>'bhqd,bhkd-&gt;bhqk'</code></td><td>$\sum_d Q_{qd}K_{kd}$ per batch, head</td></tr>
+        <tr><td><strong>Operation</strong></td><td><strong>einsum</strong></td><td><strong>Expanded</strong></td></tr>
+        <tr><td>dot product</td><td><code>'i,i-&gt;'</code></td><td>$s=\sum_i x_iy_i$</td></tr>
+        <tr><td>outer product</td><td><code>'i,j-&gt;ij'</code></td><td>$P_{ij}=x_iy_j$ (nothing summed)</td></tr>
+        <tr><td>matmul</td><td><code>'ik,kj-&gt;ij'</code></td><td>$C_{ij}=\sum_k A_{ik}B_{kj}$</td></tr>
+        <tr><td>batch matmul</td><td><code>'bik,bkj-&gt;bij'</code></td><td>$C_{bij}=\sum_k A_{bik}B_{bkj}$</td></tr>
+        <tr><td>row sums</td><td><code>'ij-&gt;i'</code></td><td>$r_i=\sum_j A_{ij}$</td></tr>
+        <tr><td>attention scores</td><td><code>'bhqd,bhkd-&gt;bhqk'</code></td><td>$S_{bhqk}=\sum_d Q_{bhqd}K_{bhkd}$</td></tr>
       </table>
-      <p>Matmul's string is the "entry = row &middot; column" view from <a href="four-views-of-matrix-multiplication.html">Four views</a>: the shared $k$ is the dot product. The outer product has no shared letter, so nothing is summed.</p>
+      <p>Matmul's string is the "entry = row &middot; column" view from <a href="four-views-of-matrix-multiplication.html">Four views</a>: the shared $k$ is the dot product. A letter kept in the output, like $b$, is a loop that is never summed: one matmul per $b$.</p>
+      <p><strong>Cost.</strong> The body runs once per combination of all letters; with two inputs that is one multiply-add each:</p>
+      <p>$$\#\text{multiply-adds}=\prod_{\text{all letters}}(\text{size of that letter}).$$</p>
+      <p>Matmul: $n_i\,n_k\,n_j$. The attention example below: $B\,H\,T\,T\,D=2\cdot4\cdot16\cdot16\cdot32=65{,}536$.</p>
       <p class="example-label">Example: attention scores</p>
 <pre><code>B, H, T, D = 2, 4, 16, 32
 q, k = torch.randn(B, H, T, D), torch.randn(B, H, T, D)
 s = torch.einsum('bhqd,bhkd-&gt;bhqk', q, k) / D**0.5    # (2, 4, 16, 16)
 torch.allclose(s, q @ k.transpose(-2, -1) / D**0.5, atol=1e-5)   # True</code></pre>
-      <p>$d$ is missing from the output, so it is summed: every query dotted with every key, per batch and head.</p>
+      <p><strong>Shape.</strong> Read the sizes off the inputs: $b=2$, $h=4$, $q=16$ (axis 2 of <code>q</code>), $k=16$ (axis 2 of <code>k</code>), $d=32$. The output keeps $bhqk$: $(2,4,16,16)$. $d$ is missing, so it is summed: every query dotted with every key, per batch and head.</p>
+      <p><strong>Same as <code>@</code>.</strong> <code>k.transpose(-2, -1)</code> has entries $K^T_{bhdk}=K_{bhkd}$, and <code>@</code> sums the last axis of the left operand against the second-to-last of the right:</p>
+      <p>$$(QK^T)_{bhqk}=\sum_dQ_{bhqd}K^T_{bhdk}=\sum_dQ_{bhqd}K_{bhkd}=S_{bhqk}.$$</p>
+      <p><strong>Why divide by $\sqrt D$.</strong> For independent entries with mean $0$ and variance $1$ (what <code>randn</code> gives), each product has $\operatorname{Var}(Q_dK_d)=\mathbb E[Q_d^2]\,\mathbb E[K_d^2]=1$, and variances of independent terms add (<a href="expectation-and-variance-algebra.html">variance algebra</a>):</p>
+      <p>$$\operatorname{Var}\Big(\sum_{d=1}^{D}Q_dK_d\Big)=D\quad\Rightarrow\quad\operatorname{Var}\Big(\frac{S}{\sqrt D}\Big)=\frac{D}{D}=1.$$</p>
+      <p>Unscaled, these scores would have standard deviation $\sqrt{32}\approx5.7$, enough to saturate a softmax.</p>
 
       <section class="exercise">
         <h2>Work it out yourself</h2>
         <p>Batched bilinear form: $s_b=x_b^TA\,y_b$ with $x$ of shape <code>(B, n)</code>, $A$ of shape <code>(n, m)</code>, $y$ of shape <code>(B, m)</code>. Write it with einsum. Then let $A$ have $K$ matrices, shape <code>(K, n, m)</code>: what is the string and the output shape?</p>
         <details>
           <summary>Solution</summary>
-          <p><code>torch.einsum('bi,ij,bj-&gt;b', x, A, y)</code>, shape <code>(B,)</code>: $s_b=\sum_{i,j}x_{bi}A_{ij}y_{bj}$. Same as <code>((x @ A) * y).sum(-1)</code>.</p>
-          <p>With $K$ matrices: <code>'bi,kij,bj-&gt;bk'</code>, shape <code>(B, K)</code>, one score per example per matrix (what <code>nn.Bilinear</code> computes, plus a bias).</p>
+          <p>Write it with indices first: $x_b^TAy_b$ sums over both inner indices,</p>
+          <p>$$s_b=\sum_i\sum_jx_{bi}\,A_{ij}\,y_{bj}.$$</p>
+          <p>Letters $b,i,j$; only $b$ survives. So <code>torch.einsum('bi,ij,bj-&gt;b', x, A, y)</code>, shape <code>(B,)</code>. It equals <code>((x @ A) * y).sum(-1)</code>; do the sums one at a time:</p>
+          <p>$$(xA)_{bj}=\sum_ix_{bi}A_{ij},\qquad \sum_j(xA)_{bj}\,y_{bj}=s_b.\ \checkmark$$</p>
+          <p>With $K$ matrices, $A_{ij}$ becomes $A_{kij}$ and $k$ is kept:</p>
+          <p>$$s_{bk}=\sum_{i,j}x_{bi}\,A_{kij}\,y_{bj}.$$</p>
+          <p>String <code>'bi,kij,bj-&gt;bk'</code>, shape <code>(B, K)</code>: one score per example per matrix. That is what <code>nn.Bilinear</code> computes (weight shape <code>(K, n, m)</code>), plus a bias.</p>
         </details>
       </section>
     </article>
@@ -201,7 +240,7 @@ torch.allclose(s, q @ k.transpose(-2, -1) / D**0.5, atol=1e-5)   # True</code></
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

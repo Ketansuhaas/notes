@@ -3,7 +3,9 @@
     {
       title: "Foundations",
       posts: [
-        ["posts/notation-survival-guide.html", "Reading the notation in papers"]
+        ["posts/notation-survival-guide.html", "Reading the notation in papers"],
+        ["posts/how-to-read-and-write-proofs.html", "Reading and writing proofs"],
+        ["posts/derivation-toolkit.html", "The derivation toolkit"]
       ]
     },
     {
@@ -25,8 +27,21 @@
         ["posts/gradients-jacobians-and-hessians.html", "Gradients, Jacobians, and Hessians"],
         ["posts/taylor-expansion.html", "Taylor expansion in many variables"],
         ["posts/matrix-calculus.html", "Matrix calculus with differentials"],
-        ["posts/convexity-and-jensen.html", "Convexity and Jensen's inequality"],
+        ["posts/convexity-and-jensen.html", "Convexity and Jensen's inequality"]
+      ]
+    },
+    {
+      title: "Optimization",
+      posts: [
         ["posts/gradient-descent-on-a-quadratic.html", "Gradient descent on a quadratic"],
+        ["posts/convergence-rates.html", "Convergence rates: what \"fast\" means"],
+        ["posts/smoothness-and-strong-convexity.html", "Smoothness and strong convexity"],
+        ["posts/gd-convergence-convex.html", "Gradient descent on smooth convex functions"],
+        ["posts/gd-convergence-strongly-convex.html", "Gradient descent on strongly convex functions"],
+        ["posts/momentum-and-nesterov.html", "Momentum and Nesterov acceleration"],
+        ["posts/newtons-method.html", "Newton's method"],
+        ["posts/sgd-convergence.html", "Stochastic gradient descent: noise and step sizes"],
+        ["posts/adaptive-methods-adam.html", "Adaptive methods: RMSProp and Adam"],
         ["posts/lagrangian-and-kkt.html", "The Lagrangian and KKT conditions"],
         ["posts/primal-and-dual-problems.html", "Primal and dual problems"]
       ]

@@ -56,14 +56,24 @@
 
       <h2>Gradients are normal to level sets</h2>
       <p class="idea">Walking along a contour doesn't change $f$, so the slope along it is zero: $\nabla f$ is perpendicular to the contour.</p>
+      <p>Let $\gamma(t)$ be a path inside $\{f=c\}$ with $\gamma(0)=x$ and velocity $\gamma'(0)=v$. Differentiate $f(\gamma(t))=c$ by the <a href="gradients-jacobians-and-hessians.html">chain rule</a>:</p>
+      <p>$$\frac{d}{dt}f(\gamma(t))\Big|_0=\nabla f(x)^T\gamma'(0)=\frac{d}{dt}c=0.$$</p>
       <p>$$v \text{ tangent to } \{f=c\} \ \Rightarrow\ \nabla f(x)^Tv=0.$$</p>
       <p class="example-label">Example</p>
-      <p>$f=x^2+y^2$, contour $f=4$ (a circle). At $(2,0)$: $\nabla f=(4,0)$, tangent $(0,1)$, dot product $0$. &#10003;</p>
+      <p>$f=x^2+y^2$, so $\nabla f=(2x,2y)$. Contour $f=4$ is the circle of radius $2$. At $(2,0)$: $\nabla f=(4,0)$; the circle there runs vertically, tangent $(0,1)$; dot product $4\cdot0+0\cdot1=0$. &#10003;</p>
 
       <h2>One equality constraint: tangency</h2>
       <p class="idea">At the optimum, sliding along the constraint can't change $f$ to first order. So $\nabla f$ and $\nabla g$ are normal to the same surface: they are parallel.</p>
-      <p>$$\min_x f(x)\ \text{ s.t. } g(x)=0: \qquad \nabla f(x^*)+\lambda\,\nabla g(x^*)=0 \ \text{ for some } \lambda\in\mathbb{R} \qquad (\text{if } \nabla g(x^*)\ne0).$$</p>
+      <p>$$\min_x f(x)\ \text{ s.t. } g(x)=0.$$</p>
+      <p><strong>Step 1: no first-order gain along the constraint.</strong> Let $v$ be tangent to $\{g=0\}$ at $x^*$, so $\nabla g^Tv=0$ (previous section). Walk along a path in the constraint with velocity $v$, or with $-v$. Since $x^*$ is a minimum, neither direction lowers $f$:</p>
+      <p>$$\nabla f^Tv\ge0 \ \text{ and }\ \nabla f^T(-v)\ge0 \quad\Rightarrow\quad \nabla f^Tv=0.$$</p>
+      <p><strong>Step 2: so $\nabla f$ is parallel to $\nabla g$.</strong> Split $\nabla f=\alpha\nabla g+w$ with $w\perp\nabla g$. Then $w$ itself is a tangent direction, so by Step 1:</p>
+      <p>$$0=\nabla f^Tw=\alpha\,\underbrace{\nabla g^Tw}_{0}+w^Tw=\|w\|^2 \quad\Rightarrow\quad w=0.$$</p>
+      <p>Name $\lambda=-\alpha$:</p>
+      <p>$$\boxed{\ \nabla f(x^*)+\lambda\,\nabla g(x^*)=0 \ \text{ for some } \lambda\in\mathbb{R}\ } \qquad (\text{if } \nabla g(x^*)\ne0).$$</p>
+      <p>The condition $\nabla g\ne0$ is what guarantees that every $v\perp\nabla g$ really is the velocity of some path inside $\{g=0\}$ (the implicit function theorem); without it the constraint set can have a corner and Step 1 fails.</p>
       <p class="example-label">Example</p>
+      <p>$\min x^2+y^2$ s.t. $g=x+y-1=0$. At $(\tfrac12,\tfrac12)$: $\nabla f=(2\cdot\tfrac12,\ 2\cdot\tfrac12)=(1,1)$ and $\nabla g=(1,1)$. They are parallel, and $(1,1)+\lambda(1,1)=0$ gives $\lambda=-1$.</p>
       <figure class="figure">
         <svg width="255" viewBox="0 0 300 270" role="img" aria-label="Circular level curves of f = x squared plus y squared and the constraint line x + y = 1; the circle f = 1/2 touches the line at (1/2, 1/2), where the gradients of f and g point in the same direction.">
           <defs><marker id="lag1-f" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker><marker id="lag1-g" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-2-fill"/></marker></defs>
@@ -87,10 +97,19 @@
 
       <h2>The Lagrangian</h2>
       <p class="idea">Fold each constraint into the objective with its own multiplier. Asking $L$ to be flat in every variable gives tangency and feasibility at once.</p>
-      <p>$$L(x,\lambda)=f(x)+\lambda^Tg(x), \qquad \nabla_xL=\underbrace{\nabla f}_{n\times1}+\underbrace{J_g^T}_{n\times m}\underbrace{\lambda}_{m\times1}=0, \qquad \nabla_\lambda L=g(x)=0.$$</p>
-      <p>$J_g^T\lambda=\sum_i\lambda_i\nabla g_i$: with $m$ constraints, $\nabla f$ must lie in the span of the constraint normals.</p>
+      <p>$$L(x,\lambda)=f(x)+\lambda^Tg(x)=f(x)+\sum_{i=1}^m\lambda_ig_i(x).$$</p>
+      <p>Differentiate in $x$ (each $\lambda_i$ is a constant) and in $\lambda$ ($L$ is linear in $\lambda$):</p>
+      <p>$$\nabla_xL=\nabla f+\sum_i\lambda_i\nabla g_i=\underbrace{\nabla f}_{n\times1}+\underbrace{J_g^T}_{n\times m}\underbrace{\lambda}_{m\times1}, \qquad \nabla_\lambda L=g(x).$$</p>
+      <p>The rows of $J_g$ are $\nabla g_i^T$, so its columns-of-the-transpose view gives $J_g^T\lambda=\sum_i\lambda_i\nabla g_i$. Setting both to zero:</p>
+      <p>$$\nabla_xL=0\ \ \text{(tangency)}, \qquad \nabla_\lambda L=0\iff g(x)=0\ \ \text{(feasibility)}.$$</p>
+      <p><strong>Why the span, for $m$ constraints.</strong> Same Step 1 as above, now with tangent directions $J_gv=0$, i.e. $v\in N(J_g)$. So $\nabla f\perp N(J_g)$, and the vectors perpendicular to the null space form the row space (<a href="linear-algebra-fundamentals.html">four subspaces</a>):</p>
+      <p>$$\nabla f\in C(J_g^T) \quad\Rightarrow\quad \nabla f=-J_g^T\lambda\ \text{ for some }\lambda.$$</p>
+      <p>This needs the $\nabla g_i$ to be independent at $x^*$ (the many-constraint version of $\nabla g\ne0$).</p>
       <p class="example-label">Example</p>
-      <p>$$L=x^2+y^2+\lambda(x+y-1):$$ $$2x+\lambda=0,\ \ 2y+\lambda=0,\ \ x+y=1 \ \Rightarrow\ x=y=\tfrac12,\ \lambda=-1.$$</p>
+      <p>$$L=x^2+y^2+\lambda(x+y-1).$$</p>
+      <p>Set each partial to zero:</p>
+      <p>$$\partial_x:\ 2x+\lambda=0,\qquad \partial_y:\ 2y+\lambda=0,\qquad \partial_\lambda:\ x+y=1.$$</p>
+      <p>The first two give $x=y=-\lambda/2$. Substitute into the third: $-\lambda=1$, so $\lambda=-1$ and $x=y=\tfrac12$.</p>
 
       <h2>Inequalities: the KKT conditions</h2>
       <p class="idea">An inequality is either slack (ignore it) or tight (treat it as an equality). A wall can only push you back toward the feasible side, so its multiplier is $\mu\ge0$.</p>
@@ -101,17 +120,36 @@
         <tr><td>Dual feasibility</td><td>$\mu_j\ge0$</td></tr>
         <tr><td>Complementary slackness</td><td>$\mu_j\,h_j(x^*)=0$: a slack constraint gets $\mu_j=0$</td></tr>
       </table>
-      <p>Necessary at a minimum (under mild regularity). For convex $f,h_j$ and affine $g_i$ they are also sufficient: any KKT point is a global minimum.</p>
+      <p><strong>Complementary slackness.</strong> If $h_j(x^*)\lt0$, by continuity $h_j\lt0$ in a whole neighbourhood of $x^*$: the wall is not there locally, so $x^*$ solves the problem without it and it gets $\mu_j=0$. Otherwise $h_j(x^*)=0$. Either way the product is zero:</p>
+      <p>$$h_j(x^*)\lt0\Rightarrow\mu_j=0, \qquad \mu_j\gt0\Rightarrow h_j(x^*)=0 \qquad\Longrightarrow\qquad \mu_jh_j(x^*)=0.$$</p>
+      <p><strong>Sign of $\mu$</strong> (one tight wall $h$, no other constraints). Moving by $v$ keeps you feasible to first order iff $h$ doesn't increase: $\nabla h^Tv\le0$. At a minimum no feasible $v$ goes downhill: $\nabla f^Tv\ge0$. As in Step 2, split $\nabla f=\alpha\nabla h+w$, $w\perp\nabla h$:</p>
+      <p>$$v=-w:\ \ \nabla h^Tv=0\ (\text{feasible}),\ \ \nabla f^Tv=-\|w\|^2\ge0\ \Rightarrow\ w=0.$$</p>
+      <p>$$v=-\nabla h:\ \ \nabla h^Tv=-\|\nabla h\|^2\le0\ (\text{feasible}),\ \ \nabla f^Tv=-\alpha\|\nabla h\|^2\ge0\ \Rightarrow\ \alpha\le0.$$</p>
+      <p>So $\nabla f+\mu\nabla h=0$ with $\mu=-\alpha\ge0$: $-\nabla f$ (downhill) points straight into the wall, and the wall pushes back. With several tight walls the same argument gives $-\nabla f$ as a nonnegative mix of the $\nabla h_j$; <em>Proof idea:</em> if it were not, a separating hyperplane between $-\nabla f$ and that cone of mixes would supply a feasible downhill $v$ (Farkas' lemma).</p>
+      <p><strong>Necessary</strong>, under a regularity condition on the constraints at $x^*$ (e.g. gradients of the tight constraints independent), which is what makes "feasible to first order" match "feasible".</p>
+      <p><strong>Sufficient when convex</strong> ($f,h_j$ convex, $g_i$ affine). Take a KKT point $(x^*,\mu,\lambda)$ and any feasible $y$. Since $\mu_j\ge0$, $h_j(y)\le0$, $g_i(y)=0$:</p>
+      <p>$$f(y)\ \ge\ f(y)+\sum_j\mu_jh_j(y)+\sum_i\lambda_ig_i(y)=L(y,\mu,\lambda).$$</p>
+      <p>$L(\cdot,\mu,\lambda)$ is convex (nonnegative mix of convex functions plus affine ones) and stationary at $x^*$, so $x^*$ is its global minimum (<a href="convexity-and-jensen.html">local is global</a>):</p>
+      <p>$$L(y,\mu,\lambda)\ge L(x^*,\mu,\lambda)=f(x^*)+\underbrace{\textstyle\sum_j\mu_jh_j(x^*)}_{0\text{ (comp. slack.)}}+\underbrace{\textstyle\sum_i\lambda_ig_i(x^*)}_{0\text{ (feasible)}}=f(x^*).$$</p>
+      <p>So $f(y)\ge f(x^*)$: any KKT point is a global minimum.</p>
       <p class="example-label">Example</p>
-      <p>$\min x^2+y^2$ s.t. $h=1-x-y\le0$. The unconstrained minimum $(0,0)$ has $h=1\gt0$: infeasible, so the wall is tight. At $x^*=(\tfrac12,\tfrac12)$:</p>
-      <p>$$\underbrace{(1,1)}_{\nabla f}+\mu\,\underbrace{(-1,-1)}_{\nabla h}=0 \ \Rightarrow\ \mu=1\ge0, \qquad \mu\,h(x^*)=1\cdot0=0. \ \checkmark$$</p>
+      <p>$\min x^2+y^2$ s.t. $h=1-x-y\le0$. Complementary slackness leaves two cases.</p>
+      <p>Case $\mu=0$: stationarity is $\nabla f=(2x,2y)=0$, so $(0,0)$, but $h(0,0)=1\gt0$: infeasible. Rejected.</p>
+      <p>Case $h=0$: the wall is tight, $x+y=1$, which is the equality problem above, giving $x^*=(\tfrac12,\tfrac12)$. With $\nabla h=(-1,-1)$:</p>
+      <p>$$\underbrace{(1,1)}_{\nabla f(x^*)}+\mu\,\underbrace{(-1,-1)}_{\nabla h}=0 \ \Rightarrow\ \mu=1\ge0, \qquad \mu\,h(x^*)=1\cdot0=0. \ \checkmark$$</p>
+      <p>All four conditions hold and the problem is convex, so this is the global minimum, $f^*=\tfrac14+\tfrac14=\tfrac12$.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Project the origin onto a half-space: minimize $\tfrac12\|x\|^2$ s.t. $a^Tx\ge b$, with $b\gt0$, $a\ne0$. Use KKT to find $x^*$ and $\mu$.</p>
         <details>
           <summary>Solution</summary>
-          <p>$h=b-a^Tx\le0$. At $x=0$, $h=b\gt0$: infeasible, so the constraint is tight. Stationarity: $x-\mu a=0$, so $x=\mu a$. Tight: $a^Tx=\mu\|a\|^2=b$, so $\mu=b/\|a\|^2\ge0$ &#10003; and $x^*=\dfrac{b}{\|a\|^2}\,a$. With $a=(1,1)$, $b=1$: $x^*=(\tfrac12,\tfrac12)$, matching the example ($\mu=\tfrac12$ because $f$ is halved).</p>
+          <p>Write the constraint as $h=b-a^Tx\le0$, so $\nabla h=-a$; and $\nabla(\tfrac12\|x\|^2)=x$. Stationarity:</p>
+          <p>$$x+\mu(-a)=0\quad\Rightarrow\quad x=\mu a.$$</p>
+          <p>Case $\mu=0$: $x=0$, but $h(0)=b\gt0$: infeasible. So $\mu\gt0$, and complementary slackness makes the wall tight:</p>
+          <p>$$a^Tx=\mu\,a^Ta=\mu\|a\|^2=b\quad\Rightarrow\quad\mu=\frac{b}{\|a\|^2}\gt0\ \checkmark$$</p>
+          <p>$$x^*=\mu a=\frac{b}{\|a\|^2}\,a.$$</p>
+          <p>With $a=(1,1)$, $b=1$: $\|a\|^2=2$, $\mu=\tfrac12$, $x^*=\tfrac12(1,1)=(\tfrac12,\tfrac12)$, matching the example. $\mu$ is $\tfrac12$ instead of $1$ because halving $f$ halves $\nabla f$, and stationarity $\nabla f=\mu a$ then needs half the push.</p>
         </details>
       </section>
     </article>
@@ -124,7 +162,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

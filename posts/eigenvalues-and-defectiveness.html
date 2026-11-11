@@ -54,9 +54,15 @@
 
       <h2>Eigenvalues and eigenvectors</h2>
       <p class="idea">Most vectors get turned by $A$. Eigenvectors are the special directions it only stretches; $\lambda$ is the stretch factor.</p>
-      <p>$$\underbrace{A}_{n\times n}\underbrace{v}_{n\times1}=\lambda\underbrace{v}_{n\times1},\ v\neq0 \iff N(A-\lambda I)\neq\{0\} \iff \det(A-\lambda I)=0.$$</p>
+      <p>Move $\lambda v$ to the left ($\lambda v=\lambda Iv$):</p>
+      <p>$$\underbrace{A}_{n\times n}\underbrace{v}_{n\times1}=\lambda\underbrace{v}_{n\times1},\ v\neq0 \iff (A-\lambda I)v=0,\ v\neq0 \iff N(A-\lambda I)\neq\{0\}.$$</p>
+      <p>A square matrix has a nonzero null vector exactly when it is not invertible, and that is exactly when its determinant is $0$:</p>
+      <p>$$N(A-\lambda I)\neq\{0\} \iff \det(A-\lambda I)=0 \quad\text{(the characteristic equation).}$$</p>
       <p class="example-label">Example</p>
-      <p>$$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}: \ \lambda^2-4\lambda+3=0 \Rightarrow \lambda=3,1. \qquad \lambda=3: v=\begin{pmatrix}1\\1\end{pmatrix}, \quad \lambda=1: v=\begin{pmatrix}1\\-1\end{pmatrix}.$$</p>
+      <p>$$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}: \ \det\begin{pmatrix}2-\lambda&1\\1&2-\lambda\end{pmatrix}=(2-\lambda)^2-1=\lambda^2-4\lambda+3=(\lambda-3)(\lambda-1),$$</p>
+      <p>so $\lambda=3,1$. Each eigenvector is a null vector of $A-\lambda I$:</p>
+      <p>$$\lambda=3:\ \begin{pmatrix}-1&1\\1&-1\end{pmatrix}v=0\ \Rightarrow\ v_1=v_2\ \Rightarrow\ v=\begin{pmatrix}1\\1\end{pmatrix},$$</p>
+      <p>$$\lambda=1:\ \begin{pmatrix}1&1\\1&1\end{pmatrix}v=0\ \Rightarrow\ v_1=-v_2\ \Rightarrow\ v=\begin{pmatrix}1\\-1\end{pmatrix}.$$</p>
 
       <figure class="figure">
         <svg width="221" viewBox="0 0 260 180" role="img" aria-label="For A, the eigenvector v=(1,1) maps to Av=3v on the same line through the origin, while u=(1,0) maps to Au=(2,1), off its own line.">
@@ -81,24 +87,109 @@
 
       <h2>Diagonalization</h2>
       <p class="idea">With $n$ independent eigenvectors, use them as coordinates. In those coordinates $A$ is a pure scaling.</p>
+      <p>Column $i$ of $AV$ is $Av_i=\lambda_iv_i$ (view 2 of <a href="four-views-of-matrix-multiplication.html">matrix multiplication</a>). Column $i$ of $V\Lambda$ mixes $V$'s columns with weights $\text{col}_i(\Lambda)=\lambda_ie_i$, which is also $\lambda_iv_i$. So</p>
       <p>$$A\underbrace{\begin{pmatrix}v_1&\cdots&v_n\end{pmatrix}}_{V,\ n\times n}=\begin{pmatrix}\lambda_1v_1&\cdots&\lambda_nv_n\end{pmatrix}=V\underbrace{\Lambda}_{\operatorname{diag}(\lambda_i)}\quad(\text{always}).$$</p>
+      <p>If $V$ is invertible, multiply on the right by $V^{-1}$. A square $V$ is invertible exactly when its columns are independent (rank $n$):</p>
       <p>$$A=V\Lambda V^{-1} \iff V \text{ invertible} \iff \text{the eigenvectors are independent}.$$</p>
       <p class="example-label">Example</p>
-      <p>$V=\begin{pmatrix}1&1\\1&-1\end{pmatrix}$, $\det V=-2\neq0$, so $A=V\Lambda V^{-1}$ with $\Lambda=\operatorname{diag}(3,1)$.</p>
+      <p>$V=\begin{pmatrix}1&1\\1&-1\end{pmatrix}$, $\det V=(1)(-1)-(1)(1)=-2\neq0$. The $2\times2$ inverse swaps the diagonal, negates the off-diagonal, and divides by $\det$:</p>
+      <p>$$V^{-1}=\tfrac{1}{-2}\begin{pmatrix}-1&-1\\-1&1\end{pmatrix}=\tfrac12\begin{pmatrix}1&1\\1&-1\end{pmatrix}, \qquad V\Lambda=\begin{pmatrix}3&1\\3&-1\end{pmatrix},$$</p>
+      <p>$$V\Lambda V^{-1}=\tfrac12\begin{pmatrix}3+1&3-1\\3-1&3+1\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A. \ \checkmark$$</p>
+
+      <h2>Reading $A=V\Lambda V^{-1}$: scale the eigen-components</h2>
+      <p class="idea">Split $x$ into pieces along the eigenvectors. $A$ just multiplies each piece by its own eigenvalue. The pieces never mix.</p>
+      <p><strong>Step 1: the components.</strong> Write $x$ as a mix of eigenvectors (view 2: $Vc$ is that mix), and solve for the weights:</p>
+      <p>$$x=c_1v_1+\cdots+c_nv_n=Vc \quad\Rightarrow\quad c=V^{-1}x.$$</p>
+      <p><strong>Step 2: apply $A$.</strong> Use linearity, then $Av_i=\lambda_iv_i$:</p>
+      <p>$$Ax=\sum_ic_i\,Av_i=\sum_i(\lambda_ic_i)\,v_i.$$</p>
+      <p>Each eigen-component $c_i$ is rescaled to $\lambda_ic_i$ and stays on its own axis. So $V\Lambda V^{-1}$, read right to left, is three steps:</p>
+      <table>
+        <tr><td>$V^{-1}x$</td><td>find the eigen-components $c_i$</td></tr>
+        <tr><td>$\Lambda\,(\cdot)$</td><td>scale each one: $c_i\to\lambda_ic_i$ (no mixing)</td></tr>
+        <tr><td>$V\,(\cdot)$</td><td>rebuild the vector from the scaled pieces</td></tr>
+      </table>
+      <p>Repeating is free: applying Step 2 $k$ times gives $A^kx=\sum_i\lambda_i^kc_i\,v_i$ (see <a href="dynamics-in-the-eigenbasis.html">Dynamics in the eigenbasis</a>).</p>
+
+      <h2>The catch: components are parallel slides, not shadows</h2>
+      <p class="idea">If the eigenvectors aren't perpendicular, you find $c_i$ by sliding $x$ <em>parallel to the other eigenvectors</em> until it hits axis $i$. That is what $V^{-1}x$ computes. Dropping a perpendicular shadow (a dot product) gives the wrong answer.</p>
+      <p class="example-label">Example: a non-symmetric $A$</p>
+      <p>$$A=\begin{pmatrix}2&1\\0&3\end{pmatrix}: \quad \det(A-\lambda I)=(2-\lambda)(3-\lambda)\ \Rightarrow\ \lambda=2,3.$$</p>
+      <p>$$\lambda=2:\ \begin{pmatrix}0&1\\0&1\end{pmatrix}v=0\Rightarrow v_1=\begin{pmatrix}1\\0\end{pmatrix}; \qquad \lambda=3:\ \begin{pmatrix}-1&1\\0&0\end{pmatrix}v=0\Rightarrow v_2=\begin{pmatrix}1\\1\end{pmatrix}.$$</p>
+      <p>They are not perpendicular: $v_1\cdot v_2=1$. Take $x=(3,2)$.</p>
+      <p><strong>Parallel slides ($V^{-1}x$).</strong></p>
+      <p>$$V=\begin{pmatrix}1&1\\0&1\end{pmatrix},\ \ V^{-1}=\begin{pmatrix}1&-1\\0&1\end{pmatrix} \ \Rightarrow\ c=V^{-1}x=\begin{pmatrix}3-2\\2\end{pmatrix}=\begin{pmatrix}1\\2\end{pmatrix}.$$</p>
+      <p>Rebuild: $1\cdot(1,0)+2\cdot(1,1)=(3,2)=x$. &#10003; Then scale: $Ax=2\cdot1\cdot(1,0)+3\cdot2\cdot(1,1)=(8,6)$, and directly $Ax=(2\cdot3+1\cdot2,\ 3\cdot2)=(8,6)$. &#10003;</p>
+      <p><strong>Perpendicular shadows (dot products).</strong> The shadow coefficient of $x$ on $v$ is $x\cdot v/\|v\|^2$:</p>
+      <p>$$\frac{x\cdot v_1}{\|v_1\|^2}=\frac{3}{1}=3, \qquad \frac{x\cdot v_2}{\|v_2\|^2}=\frac{5}{2}=2.5 \quad\Rightarrow\quad 3\,v_1+2.5\,v_2=(5.5,\ 2.5)\neq x. \ \ \text{✗}$$</p>
+      <p>The shadows double-count: $v_1$ and $v_2$ overlap ($v_1\cdot v_2\neq0$), so part of $x$ is credited to both.</p>
+
+      <figure class="figure">
+        <svg width="476" viewBox="0 0 560 204" role="img" aria-label="Left: x = (3,2) split by sliding parallel to the other eigenvector, giving 1 times v1 plus 2 times v2, which rebuilds x. Right: perpendicular shadows of x on the two eigen-axes, 3 and 2.5, which do not rebuild x.">
+          <defs>
+            <marker id="eigc-a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker>
+            <marker id="eigc-o" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-2-fill"/></marker>
+          </defs>
+          <line class="axis" x1="40" y1="150" x2="240" y2="150"/>
+          <line class="axis" x1="40" y1="150" x2="168" y2="22"/>
+          <text class="lbl" x="244" y="154">v&#8321;</text>
+          <text class="lbl" x="172" y="22">v&#8322;</text>
+          <line class="faint" x1="160" y1="70" x2="80" y2="150"/>
+          <line class="faint" x1="160" y1="70" x2="120" y2="70"/>
+          <line class="accent" x1="40" y1="150" x2="78" y2="150" marker-end="url(#eigc-a)"/>
+          <line class="accent" x1="40" y1="150" x2="118" y2="72" marker-end="url(#eigc-a)"/>
+          <circle class="pt" cx="160" cy="70" r="4"/>
+          <circle class="origin" cx="40" cy="150" r="3"/>
+          <text class="lbl" x="167" y="66">x</text>
+          <text class="lbl accent" x="48" y="168">1&#183;v&#8321;</text>
+          <text class="lbl accent" x="74" y="98" text-anchor="end">2&#183;v&#8322;</text>
+          <text class="lbl" x="20" y="198">parallel slides: c = (1, 2) &#10003;</text>
+          <line class="axis" x1="330" y1="150" x2="540" y2="150"/>
+          <line class="axis" x1="330" y1="150" x2="458" y2="22"/>
+          <text class="lbl" x="544" y="154">v&#8321;</text>
+          <text class="lbl" x="462" y="22">v&#8322;</text>
+          <line class="faint" x1="450" y1="70" x2="450" y2="150"/>
+          <line class="faint" x1="450" y1="70" x2="430" y2="50"/>
+          <line class="accent-2" x1="330" y1="150" x2="448" y2="150" marker-end="url(#eigc-o)"/>
+          <line class="accent-2" x1="330" y1="150" x2="428.6" y2="51.4" marker-end="url(#eigc-o)"/>
+          <circle class="pt" cx="450" cy="70" r="4"/>
+          <circle class="origin" cx="330" cy="150" r="3"/>
+          <text class="lbl" x="457" y="74">x</text>
+          <text class="lbl accent-2" x="414" y="168">3&#183;v&#8321;</text>
+          <text class="lbl accent-2" x="392" y="44" text-anchor="end">2.5&#183;v&#8322;</text>
+          <text class="lbl" x="300" y="198">perpendicular shadows: (3, 2.5) &#10007;</text>
+        </svg>
+        <figcaption>Left: slide along the other axis and the pieces rebuild $x$. Right: perpendicular shadows overshoot, $3v_1+2.5v_2\neq x$.</figcaption>
+      </figure>
+
+      <p class="idea">When the eigenvectors <em>are</em> orthonormal (every symmetric $A$, by <a href="spectral-theorem.html">the spectral theorem</a>), the two methods agree: $V^{-1}=V^T$, so the slide becomes a shadow.</p>
+      <p>$$V^TV=I\ \Rightarrow\ V^{-1}=V^T\ \Rightarrow\ c=V^Tx,\ \ c_i=q_i^Tx.$$</p>
+      <p>This is why the SVD and PCA can use plain dot products: their axes are perpendicular by construction.</p>
 
       <h2>Algebraic vs. geometric multiplicity</h2>
       <p class="idea">AM counts how often $\lambda$ appears as a root on paper. GM counts how many independent directions actually get it. GM can fall short.</p>
       <p>$$\operatorname{AM}(\lambda)=\text{root multiplicity in }\det(A-\lambda I), \qquad \operatorname{GM}(\lambda)=\dim N(A-\lambda I),$$ $$1\le\operatorname{GM}\le\operatorname{AM}.$$</p>
+      <p><strong>Why $\operatorname{GM}\ge1$.</strong> $\lambda$ is a root, so $\det(A-\lambda I)=0$, so $N(A-\lambda I)$ has a nonzero vector.</p>
+      <p><strong>Why $\operatorname{GM}\le\operatorname{AM}$.</strong> Let $g=\operatorname{GM}(\lambda_0)$. Put $g$ independent eigenvectors first in a basis $S=(v_1,\dots,v_g,\dots)$. Column $i\le g$ of $AS$ is $\lambda_0v_i$, so</p>
+      <p>$$S^{-1}AS=\begin{pmatrix}\lambda_0I_g&\ast\\0&C\end{pmatrix}.$$</p>
+      <p>Changing basis does not change the characteristic polynomial, since $\det(S^{-1})\det(S)=1$:</p>
+      <p>$$\det(S^{-1}AS-tI)=\det\big(S^{-1}(A-tI)S\big)=\det(A-tI).$$</p>
+      <p>The block-triangular determinant is the product of the diagonal blocks' determinants:</p>
+      <p>$$\det(A-tI)=(\lambda_0-t)^g\det(C-tI) \ \Rightarrow\ \operatorname{AM}(\lambda_0)\ge g.$$</p>
       <p class="example-label">Example</p>
-      <p>$$\begin{pmatrix}2&1\\0&2\end{pmatrix}: (2-\lambda)^2 \Rightarrow \operatorname{AM}(2)=2. \quad A-2I=\begin{pmatrix}0&1\\0&0\end{pmatrix} \Rightarrow N=\operatorname{span}\begin{pmatrix}1\\0\end{pmatrix},\ \operatorname{GM}(2)=1.$$</p>
+      <p>$$\begin{pmatrix}2&1\\0&2\end{pmatrix}: \ \det\begin{pmatrix}2-\lambda&1\\0&2-\lambda\end{pmatrix}=(2-\lambda)^2-1\cdot0=(2-\lambda)^2 \ \Rightarrow\ \operatorname{AM}(2)=2.$$</p>
+      <p>$$A-2I=\begin{pmatrix}0&1\\0&0\end{pmatrix}:\ (A-2I)v=\begin{pmatrix}v_2\\0\end{pmatrix}=0 \iff v_2=0 \ \Rightarrow\ N=\operatorname{span}\begin{pmatrix}1\\0\end{pmatrix},\ \operatorname{GM}(2)=1.$$</p>
 
       <h2>Defectiveness</h2>
       <p class="idea">A repeated eigenvalue does not hand you extra eigenvectors for free. If one comes up short, there are too few eigenvectors for a basis.</p>
       <p>$$\text{defective}\iff\operatorname{GM}(\lambda)\lt\operatorname{AM}(\lambda) \text{ for some } \lambda; \qquad \text{diagonalizable}\iff\operatorname{GM}=\operatorname{AM}\ \ \forall\lambda.$$</p>
+      <p><strong>Why.</strong> Count over all distinct eigenvalues (complex ones included). The characteristic polynomial has degree $n$, so its roots fill $n$ slots, and each $\operatorname{GM}\le\operatorname{AM}$:</p>
+      <p>$$\sum_\lambda\operatorname{GM}(\lambda)\ \le\ \sum_\lambda\operatorname{AM}(\lambda)=n,$$</p>
+      <p>with equality iff $\operatorname{GM}=\operatorname{AM}$ for every $\lambda$. Gather a basis of each eigenspace. The combined list is independent: if $\sum_\lambda w_\lambda=0$ with $w_\lambda$ in eigenspace $\lambda$, the nonzero $w_\lambda$ would be eigenvectors with distinct eigenvalues summing to $0$, impossible by the exercise. So we hold exactly $\sum_\lambda\operatorname{GM}(\lambda)$ independent eigenvectors, and that is $n$ (a full $V$) iff $\operatorname{GM}=\operatorname{AM}$ everywhere.</p>
       <table>
         <tr><td>$\begin{pmatrix}2&1\\0&2\end{pmatrix}$</td><td>$\operatorname{AM}(2)=2$, $\operatorname{GM}(2)=1$</td><td>defective</td></tr>
         <tr><td>$\begin{pmatrix}2&0\\0&2\end{pmatrix}$</td><td>$\operatorname{AM}(2)=2$, $\operatorname{GM}(2)=2$</td><td>fine (already diagonal)</td></tr>
       </table>
+      <p>For $2I$: $\det(2I-\lambda I)=(2-\lambda)^2$, and $2I-2I=0$ kills every vector, so $N=\mathbb{R}^2$ and $\operatorname{GM}(2)=2$.</p>
 
       <figure class="figure">
         <svg width="323" viewBox="0 0 380 160" role="img" aria-label="Left, the defective matrix with eigenvalue 2 twice has only one eigen-line, the x-axis. Right, 2I with the same repeated eigenvalue has every direction in the plane as an eigenvector.">
@@ -121,16 +212,25 @@
       <h2>Eigenvalues and rank</h2>
       <p class="idea">$\lambda=0$ marks the directions $A$ collapses. Everything else survives and counts toward rank.</p>
       <p>$$N(A)=N(A-0I) \ \Rightarrow\ \operatorname{rank}A=n-\operatorname{GM}(0) \quad(\text{rank-nullity}).$$</p>
-      <p>If $A$ is diagonalizable, rank $=$ number of nonzero eigenvalues (with multiplicity). Not otherwise: $\begin{pmatrix}0&1\\0&0\end{pmatrix}$ has rank 1, eigenvalues $0,0$.</p>
+      <p>If $A$ is diagonalizable, $\operatorname{GM}(0)=\operatorname{AM}(0)$ (previous section), so</p>
+      <p>$$\operatorname{rank}A=n-\operatorname{AM}(0)=\#\{\text{nonzero eigenvalues, with multiplicity}\}.$$</p>
+      <p>Not otherwise: $\begin{pmatrix}0&1\\0&0\end{pmatrix}$ has $\det=\lambda^2$, so eigenvalues $0,0$ ($\operatorname{AM}(0)=2$), yet its null space is only $\operatorname{span}(1,0)$ ($\operatorname{GM}(0)=1$), so rank $=2-1=1$, not $0$.</p>
       <p class="example-label">Example</p>
-      <p>$$\begin{pmatrix}1&2\\2&4\end{pmatrix}: \ \lambda^2-5\lambda=0 \Rightarrow \lambda=0,5. \quad N(A)=\operatorname{span}\begin{pmatrix}2\\-1\end{pmatrix}, \ \operatorname{rank}=2-1=1 = \#\{\lambda\neq0\}.$$</p>
+      <p>$$\begin{pmatrix}1&2\\2&4\end{pmatrix}: \ (1-\lambda)(4-\lambda)-2\cdot2=\lambda^2-5\lambda+4-4=\lambda(\lambda-5) \ \Rightarrow\ \lambda=0,5.$$</p>
+      <p>$$N(A):\ x_1+2x_2=0\ \Rightarrow\ N(A)=\operatorname{span}\begin{pmatrix}2\\-1\end{pmatrix}, \quad \operatorname{rank}=2-1=1=\#\{\lambda\neq0\}.$$</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Show that eigenvectors $v_1,v_2$ with $\lambda_1\neq\lambda_2$ are independent. Why does this mean only a <em>repeated</em> eigenvalue can make $A$ defective?</p>
         <details>
           <summary>Solution</summary>
-          <p>Suppose $c_1v_1+c_2v_2=0$. Apply $A$: $c_1\lambda_1v_1+c_2\lambda_2v_2=0$. Subtract $\lambda_2$ times the first: $c_1(\lambda_1-\lambda_2)v_1=0\Rightarrow c_1=0$, then $c_2=0$. The same trick (by induction) gives $n$ independent eigenvectors when all $n$ eigenvalues differ, so $V$ is invertible.</p>
+          <p>Suppose $c_1v_1+c_2v_2=0$. Apply $A$, and separately multiply by $\lambda_2$:</p>
+          <p>$$c_1\lambda_1v_1+c_2\lambda_2v_2=0, \qquad c_1\lambda_2v_1+c_2\lambda_2v_2=0.$$</p>
+          <p>Subtract: $c_1(\lambda_1-\lambda_2)v_1=0$. Both $\lambda_1-\lambda_2\neq0$ and $v_1\neq0$, so $c_1=0$; then $c_2v_2=0$ gives $c_2=0$.</p>
+          <p><strong>Any number, by induction.</strong> Say $v_1,\dots,v_k$ (distinct $\lambda$'s) are independent, and $\sum_{i\le k+1}c_iv_i=0$. Apply $A-\lambda_{k+1}I$, which sends $v_i\mapsto(\lambda_i-\lambda_{k+1})v_i$ and kills $v_{k+1}$:</p>
+          <p>$$\sum_{i\le k}c_i(\lambda_i-\lambda_{k+1})v_i=0 \ \Rightarrow\ c_i(\lambda_i-\lambda_{k+1})=0 \ \Rightarrow\ c_i=0\ \ (i\le k),$$</p>
+          <p>and then $c_{k+1}v_{k+1}=0$ gives $c_{k+1}=0$.</p>
+          <p><strong>Why only repeats.</strong> If every eigenvalue is a simple root, $\operatorname{AM}=1$, and $1\le\operatorname{GM}\le\operatorname{AM}=1$ forces $\operatorname{GM}=\operatorname{AM}$: never defective. Equivalently, $n$ distinct eigenvalues give $n$ independent eigenvectors, so $V$ is invertible.</p>
         </details>
       </section>
     </article>
@@ -143,7 +243,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

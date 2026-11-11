@@ -61,6 +61,9 @@
         \underbrace{X}_{n\times d}=\begin{pmatrix}-\,x_1^T-\\\vdots\\-\,x_n^T-\end{pmatrix}, \quad \underbrace{x_i}_{d\times1}\ (\text{a column}), \quad X_{ij}=\text{point } i,\ \text{feature } j.
         $$
       </p>
+      <p>Shapes are checked by one rule. Entry $(i,j)$ of a product is $\sum_k A_{ik}B_{kj}$, so the index $k$ must run over the same range in both factors:</p>
+      <p>$$\underbrace{A}_{m\times n}\underbrace{B}_{n\times p}=\underbrace{AB}_{m\times p} \qquad \text{(inner sizes cancel, outer sizes survive).}$$</p>
+      <p>So $\underbrace{x_i^T}_{1\times d}\underbrace{x_i}_{d\times1}$ is $1\times1$ (a number, the squared length) while $\underbrace{x_i}_{d\times1}\underbrace{x_i^T}_{1\times d}$ is $d\times d$ (a matrix).</p>
 
       <h2>Symbols</h2>
       <table>
@@ -84,13 +87,19 @@
         $$
       </p>
       <p>"Find the weights that give the correct labels high probability, keeping weights small."</p>
+      <p>In code the expectation is a plain average. With $n$ training pairs, $p_{\text{data}}$ puts mass $\tfrac1n$ on each pair, and an expectation is a probability-weighted sum:</p>
+      <p>$$\mathbb{E}_{(x,y)\sim p_{\text{data}}}[g(x,y)]=\sum_{i=1}^n\tfrac1n\,g(x_i,y_i)=\frac1n\sum_{i=1}^ng(x_i,y_i).$$</p>
+      <p>The surprise is large when the probability is small: $-\log 1=0$ (no surprise at a sure thing), $-\log\tfrac12\approx0.69$, $-\log0.01\approx4.6$.</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Give every shape, then say it in words ($x_i\in\mathbb{R}^d$, $y_i\in\mathbb{R}^k$): $\ \mathcal{L}(W)=\frac1n\sum_i\|Wx_i-y_i\|_2^2$.</p>
         <details>
           <summary>Solution</summary>
-          <p>$W$ is $k\times d$, $Wx_i-y_i$ is $k\times1$, $\mathcal{L}$ is a scalar. "Mean squared error of a linear map $\mathbb{R}^d\to\mathbb{R}^k$."</p>
+          <p>Work out $W$ from the shape rule. $Wx_i$ is subtracted from $y_i$, so it must be $k\times1$:</p>
+          <p>$$\underbrace{W}_{?\times?}\underbrace{x_i}_{d\times1}=\underbrace{Wx_i}_{k\times1} \ \Rightarrow\ \text{inner size } d,\ \text{outer size } k \ \Rightarrow\ W \text{ is } k\times d.$$</p>
+          <p>$$\|\underbrace{Wx_i-y_i}_{k\times1}\|_2^2=\underbrace{(Wx_i-y_i)^T}_{1\times k}\underbrace{(Wx_i-y_i)}_{k\times1}\ \text{ is } 1\times1,$$</p>
+          <p>and an average of $n$ numbers is a number, so $\mathcal{L}$ is a scalar. "Mean squared error of a linear map $\mathbb{R}^d\to\mathbb{R}^k$."</p>
         </details>
       </section>
     </article>
@@ -103,7 +112,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

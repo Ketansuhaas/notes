@@ -83,30 +83,69 @@
       </figure>
 
       <table>
-        <tr><td>Chord</td><td>$f(\lambda x+(1-\lambda)y)\le\lambda f(x)+(1-\lambda)f(y)$</td></tr>
+        <tr><td>Chord</td><td>$f(\lambda x+(1-\lambda)y)\le\lambda f(x)+(1-\lambda)f(y)$, $\ \lambda\in[0,1]$</td></tr>
         <tr><td>Tangent</td><td>$f(y)\ge f(x)+\nabla f(x)^T(y-x)$</td></tr>
         <tr><td>Curvature</td><td>$H(x)\succeq0$ everywhere (every direction curves up)</td></tr>
       </table>
+      <p>The chord test is the definition. For smooth $f$ the three are equivalent; each arrow is a few lines.</p>
+
+      <h2>Why the three tests agree</h2>
+      <p class="idea">A chord above the graph, squeezed to zero length, becomes a tangent below it. Tangents below the graph average into a chord above it. And the tangent's error is exactly the curvature term of Taylor.</p>
+      <p><strong>Chord $\Rightarrow$ tangent.</strong> Write the chord point as $x+\lambda(y-x)$ and rearrange the chord inequality:</p>
+      <p>$$f(x+\lambda(y-x))\le f(x)+\lambda\big(f(y)-f(x)\big)$$</p>
+      <p>$$\Rightarrow\quad \frac{f(x+\lambda(y-x))-f(x)}{\lambda}\le f(y)-f(x).$$</p>
+      <p>Let $\lambda\to0$: the left side is the slope of $f$ along $y-x$, which is $\nabla f(x)^T(y-x)$ (<a href="gradients-jacobians-and-hessians.html">gradient note</a>). That is the tangent test.</p>
+      <p><strong>Tangent $\Rightarrow$ chord.</strong> Let $z=\lambda x+(1-\lambda)y$ and use the tangent at $z$ twice:</p>
+      <p>$$f(x)\ge f(z)+\nabla f(z)^T(x-z), \qquad f(y)\ge f(z)+\nabla f(z)^T(y-z).$$</p>
+      <p>Multiply by $\lambda$ and $1-\lambda$ and add. The gradient terms cancel because</p>
+      <p>$$\lambda(x-z)+(1-\lambda)(y-z)=\underbrace{\lambda x+(1-\lambda)y}_{z}-z=0,$$</p>
+      <p>leaving $\lambda f(x)+(1-\lambda)f(y)\ge f(z)$: the chord test.</p>
+      <p><strong>Curvature $\Rightarrow$ tangent.</strong> <a href="taylor-expansion.html">Taylor with exact remainder</a>, for some $z$ on the segment from $x$ to $y$:</p>
+      <p>$$f(y)=f(x)+\nabla f(x)^T(y-x)+\tfrac12\underbrace{(y-x)^TH(z)(y-x)}_{\ge0\text{ since }H(z)\succeq0}$$</p>
+      <p>$$\ge f(x)+\nabla f(x)^T(y-x).$$</p>
+      <p><strong>Tangent $\Rightarrow$ curvature.</strong> Put $y=x+\epsilon v$ into the tangent test, and expand $f(y)$ to second order:</p>
+      <p>$$0\le f(x+\epsilon v)-f(x)-\epsilon\nabla f^Tv=\tfrac12\epsilon^2\,v^TH(x)v+O(\epsilon^3).$$</p>
+      <p>Divide by $\epsilon^2$ and let $\epsilon\to0$: $v^TH(x)v\ge0$ for every $v$.</p>
+
       <p class="example-label">Examples</p>
-      <p>Convex: $x^2$, $e^x$, $-\log x$, $\|x\|$, $x_1^2+x_1x_2+x_2^2$ ($H$ has eigenvalues $3,1$). Not convex: $\sin x$, almost every neural-network loss.</p>
+      <p>Convex, by the curvature test in 1-D ($f''\ge0$):</p>
+      <p>$$(x^2)''=2, \qquad (e^x)''=e^x\gt0, \qquad (-\log x)''=\Big(-\frac1x\Big)'=\frac1{x^2}\gt0.$$</p>
+      <p>$\|x\|$ has a kink at $0$, so use the chord test directly (triangle inequality, then $\|cx\|=|c|\|x\|$):</p>
+      <p>$$\|\lambda x+(1-\lambda)y\|\le\lambda\|x\|+(1-\lambda)\|y\|.$$</p>
+      <p>$x_1^2+x_1x_2+x_2^2$: $H=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, and $\det(H-\mu I)=(2-\mu)^2-1=0$ gives eigenvalues $3,1\ge0$.</p>
+      <p>Not convex: $(\sin x)''=-\sin x\lt0$ on $(0,\pi)$. A neural-network loss: swapping two hidden units (and their weights) gives the same loss, so a minimum $w$ has a twin $w'$ with equal loss; the midpoint $\tfrac12(w+w')$ averages the two units into identical copies and is typically worse, breaking the chord test.</p>
 
       <h2>Local is global</h2>
       <p class="idea">The tangent is a floor under the whole function. A flat tangent means nothing anywhere is lower.</p>
-      <p>$$\nabla f(x)=0 \ \Rightarrow\ f(y)\ge f(x)+0 \ \ \text{for every } y.$$</p>
+      <p>Put $\nabla f(x)=0$ into the tangent test:</p>
+      <p>$$f(y)\ge f(x)+0^T(y-x)=f(x) \ \ \text{for every } y.$$</p>
+      <p>So any stationary point of a convex function is a global minimum.</p>
 
       <h2>Jensen's inequality</h2>
       <p class="idea">For a bowl, the average of outputs beats the output of the average.</p>
-      <p>$$f \text{ convex}: \quad f(\mathbb{E}X)\le\mathbb{E}f(X). \qquad \log \text{ concave}: \quad \log\mathbb{E}X\ge\mathbb{E}\log X.$$</p>
-      <p>Proof: tangent at $\mu=\mathbb{E}X$ gives $f(X)\ge f(\mu)+f'(\mu)(X-\mu)$. Take $\mathbb{E}$; the last term averages to $0$.</p>
+      <p>$$f \text{ convex}: \quad f(\mathbb{E}X)\le\mathbb{E}f(X).$$</p>
+      <p><strong>Proof.</strong> Tangent at $\mu=\mathbb{E}X$, holding for every value of $X$:</p>
+      <p>$$f(X)\ge f(\mu)+f'(\mu)(X-\mu).$$</p>
+      <p>Take $\mathbb{E}$ of both sides; by linearity $\mathbb{E}[X-\mu]=\mathbb{E}X-\mu=0$:</p>
+      <p>$$\mathbb{E}f(X)\ge f(\mu)+f'(\mu)\cdot0=f(\mathbb{E}X).$$</p>
+      <p><strong>Concave version.</strong> $\log$ is concave because $-\log$ is convex (above). Jensen for $-\log$, then multiply by $-1$:</p>
+      <p>$$-\log\mathbb{E}X\le\mathbb{E}[-\log X] \quad\Rightarrow\quad \log\mathbb{E}X\ge\mathbb{E}\log X.$$</p>
       <p class="example-label">Example</p>
-      <p>$f(x)=x^2$: $(\mathbb{E}X)^2\le\mathbb{E}X^2$, i.e. $\operatorname{Var}X\ge0$.</p>
+      <p>$f(x)=x^2$: Jensen says $(\mathbb{E}X)^2\le\mathbb{E}X^2$, i.e. $\operatorname{Var}X=\mathbb{E}X^2-(\mathbb{E}X)^2\ge0$. In the figure, $X=-1$ or $2$ with probability $\tfrac12$ each:</p>
+      <p>$$\mathbb{E}X=\tfrac12(-1+2)=0.5, \qquad f(\mathbb{E}X)=0.25,$$</p>
+      <p>$$\mathbb{E}f(X)=\tfrac12(1+4)=2.5, \qquad \text{gap}=2.5-0.25=2.25.$$</p>
+      <p>And directly $\operatorname{Var}X=\tfrac12\big((-1.5)^2+1.5^2\big)=2.25$. &#10003;</p>
 
       <section class="exercise">
         <h2>Derive it yourself</h2>
         <p>Prove $\mathrm{KL}(p\|q)=\sum_xp(x)\log\frac{p(x)}{q(x)}\ge0$.</p>
         <details>
           <summary>Solution</summary>
-          <p>$-\mathrm{KL}=\mathbb{E}_p\big[\log\tfrac{q}{p}\big]\le\log\mathbb{E}_p\big[\tfrac qp\big]=\log\sum_xq(x)=\log1=0$. Jensen, with $\log$ concave.</p>
+          <p>Flip the fraction to put $-\mathrm{KL}$ in the form $\mathbb{E}\log(\cdot)$, with $X=q(x)/p(x)$ and $x\sim p$:</p>
+          <p>$$-\mathrm{KL}=\sum_xp(x)\log\frac{q(x)}{p(x)}=\mathbb{E}_p\Big[\log\frac qp\Big].$$</p>
+          <p>Concave Jensen, $\mathbb{E}\log X\le\log\mathbb{E}X$:</p>
+          <p>$$\le\log\mathbb{E}_p\Big[\frac qp\Big]=\log\sum_{x:\,p(x)\gt0}p(x)\frac{q(x)}{p(x)}=\log\sum_{x:\,p(x)\gt0}q(x).$$</p>
+          <p>That sum is at most $\sum_xq(x)=1$, and $\log1=0$. So $-\mathrm{KL}\le0$.</p>
         </details>
       </section>
     </article>
@@ -119,7 +158,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

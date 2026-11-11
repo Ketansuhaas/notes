@@ -107,14 +107,24 @@
 
       <h2>Bytes moved, tied to the roofline</h2>
       <p class="idea">Far below the ridge point, time is just bytes over bandwidth. So the speedup is the traffic ratio.</p>
-      <p>$$t\approx\frac{\text{bytes}}{\text{BW}},\qquad \text{speedup}\approx\frac{\text{bytes}_{\text{unfused}}}{\text{bytes}_{\text{fused}}}=\frac{6N}{2N}=3.$$</p>
-      <p class="example-label">Example: $x$ is $8192\times8192$ BF16 (134 MB), A100 (~2 TB/s)</p>
+      <p><strong>Count the trips</strong> (in $N$-sized tensors; $w,b$ are tiny and stay cached):</p>
+      <p>$$\text{unfused: }\underbrace{x\to t_1}_{\times w}+\underbrace{t_1\to t_2}_{+b}+\underbrace{t_2\to y}_{\text{gelu}},$$</p>
+      <p>$$3\ \text{kernels}\times(1\text{ read}+1\text{ write})=6N.$$</p>
+      <p>$$\text{fused: read }x\text{ once, write }y\text{ once}=2N.$$</p>
+      <p>Below the ridge the <a href="roofline-and-arithmetic-intensity.html">roofline</a> time is $t=\text{bytes}/\text{BW}$, and BW is the same for both, so it cancels in the ratio:</p>
+      <p>$$\text{speedup}=\frac{t_{\text{unfused}}}{t_{\text{fused}}}=\frac{\text{bytes}_{\text{unfused}}/\text{BW}}{\text{bytes}_{\text{fused}}/\text{BW}}=\frac{6N}{2N}=3.$$</p>
+      <p class="example-label">Example: $x$ is $8192\times8192$ BF16, A100 (~2 TB/s)</p>
+      <p>$$|x|=8192^2\cdot2\ \text{B}=2^{27}\ \text{B}\approx134\ \text{MB}.$$</p>
       <table>
-        <tr><td></td><td>HBM traffic</td><td>Time</td></tr>
-        <tr><td>Unfused (3 kernels)</td><td>$6\times134\approx805$ MB</td><td>~0.40 ms</td></tr>
-        <tr><td>Fused (1 kernel)</td><td>$2\times134\approx268$ MB</td><td>~0.13 ms</td></tr>
+        <tr><td></td><td>HBM traffic</td><td>Time = traffic / $2\times10^{12}$ B/s</td></tr>
+        <tr><td>Unfused (3 kernels)</td><td>$6\times134\approx805$ MB</td><td>$8.05\times10^8/2\times10^{12}\approx0.40$ ms</td></tr>
+        <tr><td>Fused (1 kernel)</td><td>$2\times134\approx268$ MB</td><td>$2.68\times10^8/2\times10^{12}\approx0.13$ ms</td></tr>
       </table>
-      <p>Still memory-bound: a few FLOPs per element over 4 bytes is well below even the non-tensor-core ridge (~10 FLOP/byte on A100).</p>
+      <p><strong>Is the fused kernel still memory-bound?</strong> Say the three ops cost $c$ FLOPs per element in total (GELU is the bulk; $c\approx20$ is a generous estimate). Per element it reads 2 B and writes 2 B:</p>
+      <p>$$I_{\text{fused}}=\frac{c}{4}\approx5\ \text{FLOP/B}.$$</p>
+      <p>Elementwise math runs on the plain lanes, not tensor cores, so compare with that ridge (peaks from <a href="why-gpus.html">Why GPUs</a>):</p>
+      <p>$$I^\ast_{\text{FP32 lanes}}=\frac{19.5\ \text{TFLOP/s}}{2\ \text{TB/s}}\approx10\ \text{FLOP/B}\gt5.$$</p>
+      <p>So yes: fused, it is still bound by bytes, and the $3\times$ is real.</p>
 
       <h2>torch.compile does it for you</h2>
       <p class="idea">You keep writing eager PyTorch. The compiler captures the graph, finds fusable ops, and writes the fused kernel.</p>
@@ -141,9 +151,14 @@ y = f_c(x, w, b)         # one fused Triton kernel instead of three</code></pre>
         <p>A chain of $k$ unary elementwise ops on $N$ elements. Unfused vs fused HBM traffic? For $k=5$, $N=10^8$ BF16 on an A100, how long does each take? When would fusing more ops stop helping?</p>
         <details>
           <summary>Solution</summary>
-          <p>Unfused: each op reads $N$ and writes $N$: $2kN$. Fused: read once, write once: $2N$. Ratio $k$.</p>
-          <p>$k=5$: unfused $2\cdot5\cdot10^8\cdot2$ B $=2$ GB $\to$ ~1 ms. Fused $0.4$ GB $\to$ ~0.2 ms.</p>
-          <p>The ratio holds while the fused kernel stays memory-bound. Once its FLOPs per byte pass the ridge point, compute sets the time and fusing more ops stops paying off.</p>
+          <p>Unfused: each of the $k$ ops reads $N$ and writes $N$. Fused: read once, write once.</p>
+          <p>$$\text{unfused}=k\cdot2N,\qquad \text{fused}=2N,\qquad \text{ratio}=\frac{2kN}{2N}=k.$$</p>
+          <p>$k=5$, $N=10^8$, 2 B per value, $2\times10^{12}$ B/s:</p>
+          <p>$$\text{unfused: }2\cdot5\cdot10^8\cdot2\ \text{B}=2\times10^{9}\ \text{B}\ \to\ \frac{2\times10^9}{2\times10^{12}}=1\ \text{ms}.$$</p>
+          <p>$$\text{fused: }2\cdot10^8\cdot2\ \text{B}=4\times10^{8}\ \text{B}\ \to\ 0.2\ \text{ms}.$$</p>
+          <p>The ratio holds only while $t=\text{bytes}/\text{BW}$, i.e. while the fused kernel is memory-bound. With $c$ FLOPs per op, the fused kernel does $kc$ FLOPs per $4$ B, and it reaches the ridge when</p>
+          <p>$$\frac{kc}{4}=I^\ast\approx10\quad\Rightarrow\quad k\approx\frac{40}{c}.$$</p>
+          <p>For one-FLOP ops that is $k\approx40$. Past it, compute sets the time ($kcN/P_{\text{peak}}$ grows with $k$ while the bytes stay $2N$), so fusing more ops stops paying off.</p>
         </details>
       </section>
     </article>
@@ -156,7 +171,7 @@ y = f_c(x, w, b)         # one fused Triton kernel instead of three</code></pre>
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=5"></script>
+  <script src="../assets/sidebar.js?v=6"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
