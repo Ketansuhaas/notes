@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>FlashAttention: tiling plus online softmax - Deep Learning Notes</title>
+  <meta name="description" content="Why standard attention is memory-bound on the n by n score matrix, and how FlashAttention tiles Q, K, V through on-chip SRAM with an online softmax (running max and running sum) to get the exact result with O(n) extra memory.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / FlashAttention: tiling plus online softmax</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>FlashAttention: tiling plus online softmax</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">attention</span><span class="tag">flash-attention</span><span class="tag">softmax</span><span class="tag">kernel-fusion</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="tiled-matrix-multiplication.html">Tiled matrix multiplication</a>, <a href="kernel-fusion-and-torch-compile.html">Kernel fusion and torch.compile</a>, <a href="triton-block-programming.html">Triton: programming GPUs in blocks</a></p>
+      <p class="idea">Attention's cost is not the math, it is the $n\times n$ score matrix round-tripping through HBM. FlashAttention never writes it: it tiles, and fixes up the softmax as it goes.</p>
+
+      <h2>Standard attention materializes $S$</h2>
+      <p class="idea">Every query meets every key, so the scores form an $n\times n$ matrix. The standard path writes it to HBM, reads it for softmax, writes $P$, reads $P$ again.</p>
+      <p>$$\underbrace{S}_{n\times n}=\frac{QK^T}{\sqrt d},\qquad P=\operatorname{softmax}_{\text{row}}(S),\qquad \underbrace{O}_{n\times d}=PV.$$</p>
+      <p class="example-label">Example: $n=8192$, $d=128$, BF16, one head</p>
+      <table>
+        <tr><td>$Q,K,V,O$</td><td>$4\times2$ MB</td></tr>
+        <tr><td>$S$ or $P$</td><td>$134$ MB each</td></tr>
+        <tr><td>HBM traffic for $S,P$ (write, read, write, read)</td><td>$\approx540$ MB</td></tr>
+      </table>
+      <p>Memory grows as $O(n^2)$, and the softmax is a memory-bound pass over it.</p>
+
+      <h2>Online softmax</h2>
+      <p class="idea">Softmax needs the row's max and sum over <em>all</em> keys. You can get both in one streaming pass: keep a running max $m$ and sum $\ell$, and rescale the old totals whenever the max grows.</p>
+      <p>For one query row, a new block of scores $s_j$ with values $v_j$:</p>
+      <p>$$m'=\max\!\big(m,\ \max_j s_j\big),\qquad \ell'=e^{m-m'}\,\ell+\sum_j e^{s_j-m'},$$ $$o'=e^{m-m'}\,o+\sum_j e^{s_j-m'}\,v_j.$$</p>
+      <p>Start at $m=-\infty$, $\ell=0$, $o=0$. Output $O=o/\ell$.</p>
+      <p class="example-label">Check: scores $(1,2\mid3,0)$, values $(1,0\mid2,4)$</p>
+      <table>
+        <tr><td></td><td>$m$</td><td>$\ell$</td><td>$o$</td></tr>
+        <tr><td>Block 1</td><td>$2$</td><td>$e^{-1}+1=1.368$</td><td>$e^{-1}\cdot1=0.368$</td></tr>
+        <tr><td>Block 2 (rescale $e^{2-3}=0.368$)</td><td>$3$</td><td>$0.503+1+e^{-3}=1.553$</td><td>$0.135+2+4e^{-3}=2.334$</td></tr>
+        <tr><td>Direct softmax</td><td>$3$</td><td>$e^{-2}+e^{-1}+1+e^{-3}=1.553$</td><td>$2.334$</td></tr>
+      </table>
+      <p>Both give $O=2.334/1.553=1.503$. Exact, not approximate.</p>
+
+      <h2>Tiling: $S$ only exists one tile at a time</h2>
+      <p class="idea">Each program owns a block of query rows and keeps $Q_i$, $m$, $\ell$, $o$ in SRAM. It streams $K_j,V_j$ blocks past, computing one score tile, folding it in, discarding it.</p>
+      <figure class="figure">
+        <svg width="408" viewBox="0 0 480 254" role="img" aria-label="Query block Q2 stays in SRAM while key blocks K1 to K4 and value blocks stream past; the current score tile S23 is computed, folded into running m, l, o, and discarded; O2 is written once at the end.">
+          <defs><marker id="fa1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker></defs>
+          <line class="accent" x1="130" y1="20" x2="270" y2="20" marker-end="url(#fa1-arr)"/>
+          <text class="lbl muted" x="282" y="25">stream j = 1 … 4</text>
+          <rect class="outline" x="130" y="34" width="144" height="36"/>
+          <line class="outline" x1="166" y1="34" x2="166" y2="70"/>
+          <line class="outline" x1="202" y1="34" x2="202" y2="70"/>
+          <line class="outline" x1="238" y1="34" x2="238" y2="70"/>
+          <rect class="area" x="202" y="34" width="36" height="36"/>
+          <rect class="accent" x="202" y="34" width="36" height="36"/>
+          <text class="lbl muted" x="148" y="57" text-anchor="middle">K₁</text>
+          <text class="lbl muted" x="184" y="57" text-anchor="middle">K₂</text>
+          <text class="lbl accent" x="220" y="57" text-anchor="middle">K₃</text>
+          <text class="lbl muted" x="256" y="57" text-anchor="middle">K₄</text>
+          <text class="lbl" x="120" y="57" text-anchor="end">Kᵀ</text>
+          <rect class="outline" x="82" y="80" width="36" height="144"/>
+          <rect class="area" x="82" y="116" width="36" height="36"/>
+          <rect class="accent" x="82" y="116" width="36" height="36"/>
+          <text class="lbl muted" x="100" y="103" text-anchor="middle">Q₁</text>
+          <text class="lbl accent" x="100" y="139" text-anchor="middle">Q₂</text>
+          <text class="lbl muted" x="100" y="175" text-anchor="middle">Q₃</text>
+          <text class="lbl muted" x="100" y="211" text-anchor="middle">Q₄</text>
+          <rect class="faint" fill="none" x="130" y="80" width="144" height="144"/>
+          <line class="faint" x1="166" y1="80" x2="166" y2="224"/>
+          <line class="faint" x1="202" y1="80" x2="202" y2="224"/>
+          <line class="faint" x1="238" y1="80" x2="238" y2="224"/>
+          <line class="faint" x1="130" y1="116" x2="274" y2="116"/>
+          <line class="faint" x1="130" y1="152" x2="274" y2="152"/>
+          <line class="faint" x1="130" y1="188" x2="274" y2="188"/>
+          <rect class="outline" x="130" y="116" width="144" height="36"/>
+          <line class="outline" x1="166" y1="116" x2="166" y2="152"/>
+          <line class="outline" x1="202" y1="116" x2="202" y2="152"/>
+          <line class="outline" x1="238" y1="116" x2="238" y2="152"/>
+          <text class="lbl muted" x="148" y="139" text-anchor="middle">✓</text>
+          <text class="lbl muted" x="184" y="139" text-anchor="middle">✓</text>
+          <rect class="area" x="202" y="116" width="36" height="36"/>
+          <rect class="accent" x="202" y="116" width="36" height="36"/>
+          <text class="lbl accent" x="220" y="139" text-anchor="middle">S₂₃</text>
+          <text class="lbl muted" x="202" y="244" text-anchor="middle">S: never in HBM</text>
+          <text class="lbl" x="328" y="72" text-anchor="middle">V</text>
+          <rect class="outline" x="310" y="80" width="36" height="144"/>
+          <line class="outline" x1="310" y1="116" x2="346" y2="116"/>
+          <line class="outline" x1="310" y1="152" x2="346" y2="152"/>
+          <line class="outline" x1="310" y1="188" x2="346" y2="188"/>
+          <rect class="area" x="310" y="152" width="36" height="36"/>
+          <rect class="accent" x="310" y="152" width="36" height="36"/>
+          <text class="lbl muted" x="328" y="103" text-anchor="middle">V₁</text>
+          <text class="lbl muted" x="328" y="139" text-anchor="middle">V₂</text>
+          <text class="lbl accent" x="328" y="175" text-anchor="middle">V₃</text>
+          <text class="lbl muted" x="328" y="211" text-anchor="middle">V₄</text>
+          <line class="accent" x1="350" y1="168" x2="405" y2="142" marker-end="url(#fa1-arr)"/>
+          <rect class="area" x="410" y="116" width="36" height="36"/>
+          <rect class="accent" x="410" y="116" width="36" height="36"/>
+          <text class="lbl accent" x="428" y="139" text-anchor="middle">O₂</text>
+          <text class="lbl muted" x="428" y="106" text-anchor="middle">m, ℓ, o</text>
+          <text class="lbl muted" x="428" y="172" text-anchor="middle">written once</text>
+        </svg>
+        <figcaption>Program 2 at step $j=3$: tiles $j=1,2$ are already folded into $m,\ell,o$; tile 4 is next.</figcaption>
+      </figure>
+      <table>
+        <tr><td></td><td><strong>Standard</strong></td><td><strong>FlashAttention</strong></td></tr>
+        <tr><td>Extra HBM memory</td><td>$O(n^2)$ for $S,P$</td><td>$O(n)$: $m,\ell$ per row</td></tr>
+        <tr><td>Kernels</td><td>matmul, softmax, matmul</td><td>one fused kernel</td></tr>
+        <tr><td>Result</td><td>exact</td><td>exact (same math, reordered)</td></tr>
+        <tr><td>Backward</td><td>reads stored $P$</td><td>recomputes $S$ tiles from $Q,K$</td></tr>
+      </table>
+      <p>In PyTorch, <code>F.scaled_dot_product_attention(q, k, v, is_causal=True)</code> picks a FlashAttention kernel when the GPU, dtype and shapes allow it.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Split a row's scores into blocks $A$ and $B$ with $m_A=\max_A s_j$, $\ell_A=\sum_{A}e^{s_j-m_A}$ (same for $B$). Show that $m=\max(m_A,m_B)$ and $\ell=e^{m_A-m}\ell_A+e^{m_B-m}\ell_B$ give the exact softmax normalizer.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$$e^{m_A-m}\,\ell_A=\sum_{A}e^{m_A-m}\,e^{s_j-m_A}=\sum_{A}e^{s_j-m}.$$</p>
+          <p>Same for $B$, so $\ell=\sum_{A\cup B}e^{s_j-m}=e^{-m}\sum_{\text{all}}e^{s_j}$.</p>
+          <p>Then $e^{s_j-m}/\ell=e^{s_j}/\sum_k e^{s_k}$: exactly softmax. Since $m$ is the true max, every exponent is $\le0$, so nothing overflows. The same factor $e^{m_A-m}$ rescales $o$, so $o/\ell$ is exact too.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

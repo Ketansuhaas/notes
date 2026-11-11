@@ -13,7 +13,7 @@
   </script>
   <title>Dynamics in the eigenbasis - Deep Learning Notes</title>
   <meta name="description" content="What A^k x and dx/dt=Ax look like once x is written in the eigenbasis, and why the dominant eigenvalue always wins.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -74,25 +74,26 @@
       <p>Second/first component: $0.5,\ 0.8,\ 0.929,\dots\to1$, so the direction approaches $v_1=(1,1)$, with the gap shrinking by about $|\lambda_2/\lambda_1|=\tfrac13$ per step.</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 320 260" role="img" aria-label="Successive points x0, Ax0, A squared x0, A cubed x0 drawn as rays from the origin, each closer in angle to the dominant eigenvector v1 than the last">
-          <text class="lbl" x="12" y="18">A&#7509;x&#8320; turns toward v&#8321;, k = 0,1,2,3</text>
-          <circle class="origin" cx="70" cy="230" r="3"/>
-          <line class="faint" x1="70" y1="230" x2="239" y2="61"/>
-          <text class="lbl muted" x="243" y="58">v&#8321; direction</text>
-          <line class="axis" x1="70" y1="230" x2="130" y2="230"/>
-          <circle class="pt" cx="130" cy="230" r="4"/>
-          <text class="lbl" x="134" y="246">x&#8320;</text>
-          <line class="axis" x1="70" y1="230" x2="150" y2="190"/>
-          <circle class="pt" cx="150" cy="190" r="4"/>
-          <text class="lbl" x="154" y="186">Ax&#8320;</text>
-          <line class="axis" x1="70" y1="230" x2="164" y2="155"/>
-          <circle class="pt" cx="164" cy="155" r="4"/>
-          <text class="lbl" x="168" y="150">A&#178;x&#8320;</text>
-          <line class="axis" x1="70" y1="230" x2="184" y2="125"/>
-          <circle class="pt" cx="184" cy="125" r="4"/>
-          <text class="lbl" x="188" y="118">A&#179;x&#8320;</text>
+        <svg width="255" viewBox="0 0 300 226" role="img" aria-label="Directions of x0, A x0, A squared x0 and A cubed x0, drawn as rays from the origin. Where they cross a vertical line their heights are 0, 0.5, 0.8 and 0.93, closing in on the v1 ray at height 1.">
+          <line class="faint" x1="210" y1="218" x2="210" y2="22"/>
+          <line class="accent" x1="40" y1="212" x2="240" y2="12"/>
+          <text class="lbl accent" x="244" y="16">v&#8321;</text>
+          <line class="outline" x1="40" y1="212" x2="210" y2="212"/>
+          <circle class="pt" cx="210" cy="212" r="3.5"/>
+          <text class="lbl" x="218" y="217">x&#8320;</text>
+          <line class="outline" x1="40" y1="212" x2="210" y2="127"/>
+          <circle class="pt" cx="210" cy="127" r="3.5"/>
+          <text class="lbl" x="218" y="132">Ax&#8320;</text>
+          <line class="outline" x1="40" y1="212" x2="210" y2="76"/>
+          <circle class="pt" cx="210" cy="76" r="3.5"/>
+          <text class="lbl" x="218" y="81">A&#178;x&#8320;</text>
+          <line class="outline" x1="40" y1="212" x2="210" y2="54.1"/>
+          <circle class="pt" cx="210" cy="54.1" r="3.5"/>
+          <text class="lbl" x="218" y="59.1">A&#179;x&#8320;</text>
+          <circle class="accent-fill" cx="210" cy="42" r="3.5"/>
+          <circle class="origin" cx="40" cy="212" r="3"/>
         </svg>
-        <figcaption>The $v_1$ part triples each step, the $v_2$ part stays put, so the ray swings toward $v_1$ (lengths not to scale).</figcaption>
+        <figcaption>Directions of $A^kx_0$: slopes $0,\ 0.5,\ 0.8,\ 0.93\to1$, closing in on $v_1=(1,1)$.</figcaption>
       </figure>
 
       <h2>Continuous time</h2>
@@ -108,22 +109,24 @@
       <p>$x(t)=2e^{3t}(1,1)+2e^{t}(1,-1)$: the $e^{3t}$ term swamps the other, so $x(t)$ bends toward $v_1$.</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 320 260" role="img" aria-label="A smooth curve from x of 0 bending toward the dominant eigenvector direction as t grows, approaching but never crossing it">
+        <svg width="280" viewBox="0 0 330 224" role="img" aria-label="Trajectories of x dot equals A x. Near the origin they run along v2, then the e to the 3t part takes over and each one turns to run along v1. The note's trajectory through x(0) = (4, 0) is highlighted.">
           <defs>
-            <marker id="dyn-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
-            </marker>
+            <marker id="dyn2-h" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
           </defs>
-          <text class="lbl" x="12" y="18">x(t) bends toward v&#8321; as t grows</text>
-          <circle class="origin" cx="70" cy="230" r="3"/>
-          <line class="faint" x1="70" y1="230" x2="239" y2="61"/>
-          <text class="lbl muted" x="243" y="58">v&#8321; direction</text>
-          <path d="M130,230 Q205,215 228,78" style="fill:none;stroke:currentColor;stroke-width:1.5" marker-end="url(#dyn-arrow)"/>
-          <circle class="pt" cx="130" cy="230" r="4"/>
-          <text class="lbl" x="134" y="246">x(0)</text>
-          <text class="lbl muted" x="150" y="202">t &#8594; &#8734;</text>
+          <line class="accent" x1="64.4" y1="197.6" x2="235.6" y2="26.4"/>
+          <line class="faint" x1="106.4" y1="68.4" x2="193.6" y2="155.6"/>
+          <text class="lbl accent" x="239.6" y="30.4">v&#8321; (&#955;=3)</text>
+          <text class="lbl muted" x="197.6" y="165.6">v&#8322; (&#955;=1)</text>
+          <polyline class="outline" fill="none" points="148.2,110.2 148.1,110.1 148,110 147.9,109.9 147.8,109.8 147.7,109.7 147.6,109.6 147.4,109.5 147.3,109.4 147.2,109.3 147,109.1 146.9,109 146.7,108.9 146.5,108.7 146.4,108.6 146.2,108.4 146,108.2 145.8,108.1 145.5,107.9 145.3,107.7 145.1,107.5 144.8,107.3 144.5,107.1 144.2,106.9 143.9,106.7 143.5,106.4 143.2,106.2 142.8,106 142.4,105.7 141.9,105.5 141.4,105.3 140.9,105 140.4,104.8 139.7,104.6 139.1,104.4 138.4,104.2 137.6,104 136.8,103.8 135.8,103.7 134.8,103.6 133.7,103.5 132.5,103.5 131.2,103.6 129.7,103.7 128.1,104 126.2,104.3 124.2,104.8 122,105.4 119.4,106.2 116.6,107.3 113.5,108.5 109.9,110.1 105.9,112 101.4,114.4 96.3,117.2 90.5,120.6 84,124.6 76.6,129.4 68.2,135.1 58.6,141.8 47.6,149.6"/>
+          <polyline class="outline" fill="none" points="148.2,110.2 148.1,110.1 148,110 147.9,109.9 147.8,109.8 147.7,109.7 147.6,109.6 147.5,109.4 147.4,109.3 147.3,109.2 147.1,109 147,108.9 146.9,108.7 146.7,108.5 146.6,108.4 146.4,108.2 146.2,108 146.1,107.8 145.9,107.5 145.7,107.3 145.5,107.1 145.3,106.8 145.1,106.5 144.9,106.2 144.7,105.9 144.4,105.5 144.2,105.2 144,104.8 143.7,104.4 143.5,103.9 143.3,103.4 143,102.9 142.8,102.4 142.6,101.7 142.4,101.1 142.2,100.4 142,99.6 141.8,98.8 141.7,97.8 141.6,96.8 141.5,95.7 141.5,94.5 141.6,93.2 141.7,91.7 142,90.1 142.3,88.2 142.8,86.2 143.4,84 144.2,81.4 145.3,78.6 146.5,75.5 148.1,71.9 150,67.9 152.4,63.4 155.2,58.3 158.6,52.5 162.6,46 167.4,38.6 173.1,30.2 179.8,20.6 187.6,9.6"/>
+          <polyline class="outline" fill="none" points="151.8,113.8 151.9,113.9 152,114 152.1,114.1 152.2,114.2 152.3,114.3 152.4,114.4 152.5,114.6 152.6,114.7 152.7,114.8 152.9,115 153,115.1 153.1,115.3 153.3,115.5 153.4,115.6 153.6,115.8 153.8,116 153.9,116.2 154.1,116.5 154.3,116.7 154.5,116.9 154.7,117.2 154.9,117.5 155.1,117.8 155.3,118.1 155.6,118.5 155.8,118.8 156,119.2 156.3,119.6 156.5,120.1 156.7,120.6 157,121.1 157.2,121.6 157.4,122.3 157.6,122.9 157.8,123.6 158,124.4 158.2,125.2 158.3,126.2 158.4,127.2 158.5,128.3 158.5,129.5 158.4,130.8 158.3,132.3 158,133.9 157.7,135.8 157.2,137.8 156.6,140 155.8,142.6 154.7,145.4 153.5,148.5 151.9,152.1 150,156.1 147.6,160.6 144.8,165.7 141.4,171.5 137.4,178 132.6,185.4 126.9,193.8 120.2,203.4 112.4,214.4"/>
+          <polyline class="faint" fill="none" points="151.8,113.8 151.9,113.9 152,113.9 152.1,114 152.2,114.1 152.2,114.2 152.3,114.3 152.4,114.4 152.6,114.5 152.7,114.6 152.8,114.7 152.9,114.8 153,114.9 153.2,115 153.3,115.2 153.5,115.3 153.6,115.4 153.8,115.6 153.9,115.7 154.1,115.9 154.3,116 154.5,116.2 154.7,116.3 154.9,116.5 155.2,116.7 155.4,116.8 155.6,117 155.9,117.2 156.2,117.4 156.5,117.6 156.8,117.8 157.2,118 157.5,118.2 157.9,118.4 158.3,118.6 158.7,118.8 159.2,119 159.7,119.2 160.2,119.4 160.8,119.6 161.4,119.8 162,119.9 162.7,120.1 163.5,120.2 164.3,120.3 165.1,120.4 166.1,120.5 167.1,120.5 168.3,120.4 169.5,120.3 170.8,120.2 172.3,120 173.9,119.7 175.6,119.3 177.5,118.7 179.6,118.1 182,117.3 184.5,116.3 187.4,115.1 190.5,113.7 194,112"/>
+          <polyline class="axis" fill="none" points="194,112 194.6,111.7 195.2,111.4 195.7,111.1 196.3,110.8 196.9,110.5 197.6,110.2 198.2,109.8 198.8,109.5 199.5,109.1 200.1,108.8 200.8,108.4 201.5,108 202.2,107.6 202.9,107.3 203.6,106.8 204.3,106.4 205.1,106 205.8,105.6 206.6,105.1 207.4,104.7 208.2,104.2 209,103.7 209.8,103.2 210.6,102.7 211.5,102.2 212.3,101.7 213.2,101.1 214.1,100.6 215,100 215.9,99.4 216.9,98.8 217.8,98.2 218.8,97.6 219.8,97 220.8,96.3 221.8,95.7 222.8,95 223.9,94.3 225,93.6 226,92.9 227.2,92.1 228.3,91.4 229.4,90.6 230.6,89.8 231.8,89 233,88.1 234.2,87.3 235.5,86.4 236.8,85.5 238.1,84.6 239.4,83.7 240.7,82.7 242.1,81.8 243.5,80.8 244.9,79.8 246.3,78.7 247.8,77.7 249.3,76.6 250.8,75.5 252.4,74.4" marker-end="url(#dyn2-h)"/>
+          <circle class="pt" cx="194" cy="112" r="3.5"/>
+          <text class="lbl" x="198" y="130">x(0)</text>
+          <circle class="origin" cx="150" cy="112" r="3"/>
         </svg>
-        <figcaption>$e^{3t}v_1$ outgrows $e^{t}v_2$, so $x(t)$ aligns with $v_1$.</figcaption>
+        <figcaption>Near the origin $e^{t}v_2$ is the bigger part; further out $e^{3t}v_1$ takes over, so every path ends up running along $v_1$.</figcaption>
       </figure>
 
       <h2>Why this matters</h2>
@@ -152,7 +155,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

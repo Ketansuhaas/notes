@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Triton: programming GPUs in blocks - Deep Learning Notes</title>
+  <meta name="description" content="Triton&#x27;s block-level programming model: each program instance handles a BLOCK_SIZE tile and the compiler maps it onto threads and warps; a masked vector-add kernel with its launch grid, and the structure of a fused row-wise softmax.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Triton: programming GPUs in blocks</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Triton: programming GPUs in blocks</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">triton</span><span class="tag">cuda</span><span class="tag">kernel-fusion</span><span class="tag">softmax</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="cuda-programming-model.html">The CUDA programming model</a>, <a href="kernel-fusion-and-torch-compile.html">Kernel fusion and torch.compile</a> &middot; <strong>Leads to:</strong> <a href="flash-attention.html">FlashAttention: tiling plus online softmax</a></p>
+      <p class="idea">In CUDA you write what one <em>thread</em> does. In Triton you write what one <em>program</em> does to a whole tile, and the compiler spreads it over threads.</p>
+
+      <h2>Threads vs. blocks</h2>
+      <p class="idea">A Triton program instance owns <code>BLOCK</code> elements at once. You think in vectors; the compiler handles the thread-level details.</p>
+      <table>
+        <tr><td></td><td><strong>CUDA</strong></td><td><strong>Triton</strong></td></tr>
+        <tr><td>You write</td><td>one thread</td><td>one program = one tile</td></tr>
+        <tr><td>Index</td><td><code>blockIdx.x*blockDim.x + threadIdx.x</code></td><td><code>pid*BLOCK + tl.arange(0, BLOCK)</code></td></tr>
+        <tr><td>Coalescing</td><td>you arrange it</td><td>compiler</td></tr>
+        <tr><td>Shared memory</td><td>you manage it</td><td>compiler</td></tr>
+        <tr><td>Threads per tile</td><td>you choose</td><td>hint: <code>num_warps</code> (default 4)</td></tr>
+      </table>
+      <p class="example-label">Example: $n=900$, <code>BLOCK</code> $=256$</p>
+      <figure class="figure">
+        <svg width="476" viewBox="0 0 560 128" role="img" aria-label="A vector of 900 elements split into four blocks of 256, one per program id; the last 124 slots of program 3 are masked off.">
+          <text class="lbl muted" x="20" y="18">grid = cdiv(900, 256) = 4 programs</text>
+          <rect class="area" x="20" y="50" width="125" height="30"/>
+          <rect class="area" x="145" y="50" width="125" height="30"/>
+          <rect class="area" x="270" y="50" width="125" height="30"/>
+          <rect class="area" x="395" y="50" width="64.5" height="30"/>
+          <rect class="area-2" x="459.5" y="50" width="60.5" height="30"/>
+          <rect class="outline" x="20" y="50" width="125" height="30"/>
+          <rect class="outline" x="145" y="50" width="125" height="30"/>
+          <rect class="outline" x="270" y="50" width="125" height="30"/>
+          <rect class="outline" x="395" y="50" width="125" height="30"/>
+          <line class="accent-2" x1="459.5" y1="46" x2="459.5" y2="84"/>
+          <text class="lbl accent" x="82.5" y="42" text-anchor="middle">pid 0</text>
+          <text class="lbl accent" x="207.5" y="42" text-anchor="middle">pid 1</text>
+          <text class="lbl accent" x="332.5" y="42" text-anchor="middle">pid 2</text>
+          <text class="lbl accent" x="457.5" y="42" text-anchor="middle">pid 3</text>
+          <text class="lbl muted" x="20" y="98" text-anchor="middle">0</text>
+          <text class="lbl muted" x="145" y="98" text-anchor="middle">256</text>
+          <text class="lbl muted" x="270" y="98" text-anchor="middle">512</text>
+          <text class="lbl muted" x="395" y="98" text-anchor="middle">768</text>
+          <text class="lbl accent-2" x="459.5" y="98" text-anchor="middle">900</text>
+          <text class="lbl muted" x="520" y="98" text-anchor="middle">1024</text>
+          <text class="lbl accent-2" x="520" y="120" text-anchor="end">masked: offs ≥ n</text>
+        </svg>
+        <figcaption>Each program loads one tile. The last tile overhangs the data, so a mask switches off the extra lanes.</figcaption>
+      </figure>
+
+      <h2>A complete kernel: vector add</h2>
+      <p class="idea">Find your tile, build its offsets, guard the tail, load, compute, store.</p>
+      <pre><code>import torch, triton, triton.language as tl
+
+@triton.jit
+def add_kernel(x_ptr, y_ptr, out_ptr, n, BLOCK: tl.constexpr):
+    pid = tl.program_id(axis=0)               # which tile am I?
+    offs = pid * BLOCK + tl.arange(0, BLOCK)  # its BLOCK indices
+    mask = offs &lt; n                           # tail guard
+    x = tl.load(x_ptr + offs, mask=mask)
+    y = tl.load(y_ptr + offs, mask=mask)
+    tl.store(out_ptr + offs, x + y, mask=mask)</code></pre>
+      <pre><code>x = torch.randn(900, device="cuda"); y = torch.randn_like(x)
+out = torch.empty_like(x)
+grid = (triton.cdiv(x.numel(), 256),)      # 4 programs
+add_kernel[grid](x, y, out, x.numel(), BLOCK=256)</code></pre>
+      <p>With <code>num_warps=4</code> (128 threads), each thread handles $256/128=2$ elements. You never wrote that mapping.</p>
+      <p>This is the form torch.compile's Inductor emits. Run with <code>TORCH_LOGS="output_code"</code> to read its kernels.</p>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>Write a fused row-wise softmax for an $M\times n$ matrix: one program per row. Sketch the kernel body. Why subtract the row max?</p>
+        <details>
+          <summary>Solution</summary>
+          <pre><code>row  = tl.program_id(0)                      # grid = (M,)
+offs = tl.arange(0, BLOCK)                   # BLOCK = next_power_of_2(n)
+mask = offs &lt; n
+x = tl.load(in_ptr + row*stride + offs, mask=mask, other=-float("inf"))
+x = x - tl.max(x, axis=0)                    # largest entry becomes 0
+num = tl.exp(x)                              # masked lanes: exp(-inf) = 0
+den = tl.sum(num, axis=0)
+tl.store(out_ptr + row*stride + offs, num / den, mask=mask)</code></pre>
+          <p>One HBM read and one write per row; max, exp, sum, divide all happen in registers.</p>
+          <p>Shifting is free: $\frac{e^{x_j-m}}{\sum_k e^{x_k-m}}=\frac{e^{x_j}}{\sum_k e^{x_k}}$. Without it, $e^{x}$ overflows for $x\gt 88$ in fp32 (about $11$ in fp16) and gives $\infty/\infty$. With it, every exponent is $\le0$ and the denominator is $\ge1$.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Autograd in PyTorch - Deep Learning Notes</title>
+  <meta name="description" content="How PyTorch records a graph of grad_fn nodes during the forward pass, runs reverse-mode autodiff on backward(), accumulates into .grad, turns recording off with no_grad and detach, and why a vector output needs a vector passed to backward.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Autograd in PyTorch</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Autograd in PyTorch</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">autograd</span><span class="tag">gradients</span><span class="tag">automatic-differentiation</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="automatic-differentiation.html">Automatic differentiation</a>, <a href="broadcasting-and-einsum.html">Broadcasting and einsum</a> &middot; <strong>Leads to:</strong> <a href="modules-and-the-training-loop.html">Modules and the training loop</a></p>
+      <p class="idea">Autograd is reverse-mode autodiff that records itself. Every op on a watched tensor runs and also leaves a node behind; <code>.backward()</code> walks those nodes in reverse.</p>
+
+      <h2>The graph is built as the code runs</h2>
+      <p class="idea">Mark leaves with <code>requires_grad=True</code>. Each result gets a <code>grad_fn</code>: the node that knows its local vector-Jacobian product. A fresh graph is recorded every forward pass, so ordinary Python <code>if</code>s and loops just work.</p>
+<pre><code>x = torch.tensor(2.0, requires_grad=True)
+w = torch.tensor(3.0, requires_grad=True)
+y = w * x           # y.grad_fn: &lt;MulBackward0&gt;
+z = y + x           # z.grad_fn: &lt;AddBackward0&gt;
+L = z ** 2          # L.grad_fn: &lt;PowBackward0&gt;
+L.backward()        # reverse sweep, seed dL/dL = 1
+x.grad, w.grad      # (tensor(64.), tensor(32.))</code></pre>
+
+      <figure class="figure">
+        <svg width="544" viewBox="0 0 640 186" role="img" aria-label="Recorded graph: leaves x and w feed MulBackward0, whose output and x feed AddBackward0, which feeds PowBackward0. backward() walks it right to left and leaves x.grad = 64 and w.grad = 32.">
+          <defs>
+            <marker id="ag1-h" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+            <marker id="ag1-b" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-2-fill"/></marker>
+          </defs>
+          <line class="accent-2" x1="622" y1="34" x2="220" y2="34" marker-end="url(#ag1-b)"/>
+          <text class="lbl accent-2" x="622" y="24" text-anchor="end">backward(): reverse order</text>
+          <rect class="area" x="20" y="48" width="80" height="30" rx="4"/>
+          <rect class="outline" x="20" y="48" width="80" height="30" rx="4"/>
+          <text class="lbl" x="60" y="68" text-anchor="middle">x = 2</text>
+          <rect class="area" x="20" y="124" width="80" height="30" rx="4"/>
+          <rect class="outline" x="20" y="124" width="80" height="30" rx="4"/>
+          <text class="lbl" x="60" y="144" text-anchor="middle">w = 3</text>
+          <text class="lbl accent-2" x="20" y="40">x.grad = 64</text>
+          <text class="lbl accent-2" x="20" y="174">w.grad = 32</text>
+          <rect class="outline" x="150" y="124" width="124" height="30" rx="4"/>
+          <text class="lbl" x="212" y="144" text-anchor="middle">MulBackward0</text>
+          <text class="lbl muted" x="212" y="174" text-anchor="middle">y = 6</text>
+          <rect class="outline" x="324" y="86" width="124" height="30" rx="4"/>
+          <text class="lbl" x="386" y="106" text-anchor="middle">AddBackward0</text>
+          <text class="lbl muted" x="386" y="136" text-anchor="middle">z = 8</text>
+          <rect class="outline" x="498" y="86" width="124" height="30" rx="4"/>
+          <text class="lbl" x="560" y="106" text-anchor="middle">PowBackward0</text>
+          <text class="lbl muted" x="560" y="136" text-anchor="middle">L = 64</text>
+          <line class="axis" x1="100" y1="139" x2="148" y2="139" marker-end="url(#ag1-h)"/>
+          <line class="axis" x1="100" y1="72" x2="148" y2="128" marker-end="url(#ag1-h)"/>
+          <line class="axis" x1="100" y1="63" x2="322" y2="96" marker-end="url(#ag1-h)"/>
+          <line class="axis" x1="274" y1="132" x2="322" y2="108" marker-end="url(#ag1-h)"/>
+          <line class="axis" x1="448" y1="101" x2="496" y2="101" marker-end="url(#ag1-h)"/>
+        </svg>
+        <figcaption>One node per op, recorded during forward. Leaves end in an <code>AccumulateGrad</code> node that writes <code>.grad</code>.</figcaption>
+      </figure>
+      <p>Check by hand: $L=(wx+x)^2$, $\partial L/\partial z=2z=16$. $x$ has two paths, so $\partial L/\partial x=16w+16=64$ and $\partial L/\partial w=16x=32$. &#10003;</p>
+
+      <h2>Gradients accumulate</h2>
+      <p class="idea"><code>backward()</code> adds into <code>.grad</code>, never overwrites. That is how a value used twice collects both terms, and why you must clear grads between steps.</p>
+<pre><code>x.grad = None           # clear (what optimizer.zero_grad() does)
+for _ in range(2):
+    L = (w * x + x) ** 2
+    L.backward()
+    print(x.grad)       # tensor(64.), then tensor(128.): added</code></pre>
+
+      <h2>Turning recording off</h2>
+      <p class="idea">Recording costs memory: every node keeps the inputs it needs for its backward. Switch it off when you will not differentiate.</p>
+      <table>
+        <tr><td><code>with torch.no_grad():</code></td><td>nothing inside is recorded (evaluation, weight updates)</td></tr>
+        <tr><td><code>t.detach()</code></td><td>same storage, cut from the graph: a constant to autograd</td></tr>
+        <tr><td><code>p.requires_grad_(False)</code></td><td>freeze a parameter</td></tr>
+      </table>
+<pre><code>with torch.no_grad():
+    w -= 0.1 * w.grad   # in-place update, not recorded
+c = (w * x).detach()    # c.requires_grad == False</code></pre>
+
+      <h2>Vector outputs need a vector</h2>
+      <p class="idea">Reverse mode computes $u^TJ$. For a scalar loss $u=1$ is implied. For a vector output you must pass $u$, shaped like the output.</p>
+<pre><code>x = torch.tensor([1., 2., 3.], requires_grad=True)
+y = x ** 2                  # J = diag(2x)
+y.backward(torch.ones(3))   # u^T J with u = 1: same as y.sum().backward()
+x.grad                      # tensor([2., 4., 6.])</code></pre>
+      <p>Plain <code>y.backward()</code> here raises "grad can be implicitly created only for scalar outputs".</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p><code>a = [1., 2.]</code>, <code>b = [3., 4.]</code>, both with <code>requires_grad=True</code>. <code>L = (a * b).sum() + (a ** 2).sum()</code>, then <code>L.backward()</code>. What are <code>a.grad</code> and <code>b.grad</code>? You recompute <code>L</code> and call <code>backward()</code> again without zeroing: now what?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$L=\sum_i a_ib_i+a_i^2$, so $\partial L/\partial a=b+2a=(5,\,8)$ and $\partial L/\partial b=a=(1,\,2)$.</p>
+          <p>Second call adds the same amounts: <code>a.grad = [10., 16.]</code>, <code>b.grad = [2., 4.]</code>.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

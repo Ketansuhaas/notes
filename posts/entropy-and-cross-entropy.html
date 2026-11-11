@@ -13,7 +13,7 @@
   </script>
   <title>Entropy and cross-entropy - Deep Learning Notes</title>
   <meta name="description" content="Surprise is -log p; entropy is average surprise; cross-entropy is average surprise under the wrong beliefs; the gap between them is KL. Why classification loss is -log q(true class).">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -67,6 +67,28 @@
         <tr><td>Uniform over $K$</td><td>$\log K$ (the maximum)</td></tr>
       </table>
 
+      <figure class="figure">
+        <svg width="323" viewBox="0 0 380 210" role="img" aria-label="Entropy of a coin with heads probability p: a hump that is 0 at p equals 0 and 1, peaks at 1 bit for a fair coin, and is 0.47 bits at p equals 0.9.">
+          <line class="axis" x1="40" y1="175" x2="310" y2="175"/>
+          <line class="axis" x1="40" y1="175" x2="40" y2="30"/>
+          <text class="lbl muted" x="46" y="26">H(p), bits</text>
+          <text class="lbl muted" x="318" y="180">p</text>
+          <line class="faint" x1="40" y1="45" x2="170" y2="45"/>
+          <text class="lbl muted" x="32" y="50" text-anchor="end">1</text>
+          <text class="lbl muted" x="32" y="180" text-anchor="end">0</text>
+          <line class="faint" x1="170" y1="45" x2="170" y2="175"/>
+          <line class="faint" x1="274" y1="114" x2="274" y2="175"/>
+          <text class="lbl muted" x="170" y="194" text-anchor="middle">½</text>
+          <text class="lbl muted" x="274" y="194" text-anchor="middle">0.9</text>
+          <polyline class="accent" points="40,175 41.3,169.1 42.6,164.5 45.2,156.6 47.8,149.7 53.0,137.8 59.5,125.0 66.0,114.0 79.0,95.7 92.0,81.1 105.0,69.5 118.0,60.4 131.0,53.6 144.0,48.8 157.0,45.9 170,45 183.0,45.9 196.0,48.8 209.0,53.6 222.0,60.4 235.0,69.5 248.0,81.1 261.0,95.7 274.0,114.0 280.5,125.0 287.0,137.8 292.2,149.7 294.8,156.6 297.4,164.5 298.7,169.1 300,175"/>
+          <circle class="accent-fill" cx="170" cy="45" r="4.5"/>
+          <circle class="accent-fill" cx="274" cy="114" r="4.5"/>
+          <text class="lbl" x="180" y="36">fair coin: 1 bit</text>
+          <text class="lbl" x="284" y="106">0.47 bits</text>
+        </svg>
+        <figcaption>Entropy is largest when the coin is fair and $0$ when the outcome is certain.</figcaption>
+      </figure>
+
       <h2>Cross-entropy: surprise under wrong beliefs</h2>
       <p class="idea">The world draws from $p$, you expect $q$. Wrong beliefs cost extra surprise.</p>
       <p>$$H(p,q)=\mathbb{E}_{x\sim p}[-\log q(x)].$$</p>
@@ -109,7 +131,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

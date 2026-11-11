@@ -13,7 +13,7 @@
   </script>
   <title>Law of large numbers and the central limit theorem - Deep Learning Notes</title>
   <meta name="description" content="Convergence in probability, almost surely, and in distribution; the weak law of large numbers proved via Chebyshev's inequality, with the strong law and the central limit theorem stated and explained without proof.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -57,16 +57,16 @@
       <p>$$x_i\overset{\text{iid}}{\sim}(\mu,\sigma^2), \qquad \bar x_n=\frac1n\sum_{i=1}^nx_i, \qquad \mathbb{E}[\bar x_n]=\mu, \qquad \operatorname{Var}(\bar x_n)=\frac{\sigma^2}n.$$</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 640 200" role="img" aria-label="Three bell curves centered at mu for sample sizes n, 4n and 16n; each is half as wide and twice as tall as the previous one.">
-          <line class="axis" x1="40" y1="175" x2="600" y2="175"/>
-          <line class="faint" x1="320" y1="175" x2="320" y2="25"/>
-          <path class="outline" d="M80,175 C168.8,175 231.2,140 320,140 C408.8,140 471.2,175 560,175"/>
-          <path class="outline" d="M200,175 C244.4,175 275.6,105 320,105 C364.4,105 395.6,175 440,175"/>
-          <path class="axis" fill="none" d="M260,175 C282.2,175 297.8,35 320,35 C342.2,35 357.8,175 380,175"/>
-          <text class="lbl" x="450" y="145">n</text>
-          <text class="lbl" x="370" y="118">4n</text>
-          <text class="lbl" x="338" y="30">16n</text>
-          <text class="lbl" x="315" y="194">&#956;</text>
+        <svg width="408" viewBox="0 0 480 176" role="img" aria-label="Three bell curves centered at mu for sample sizes n, 4n and 16n; each is half as wide and twice as tall as the previous one.">
+          <line class="axis" x1="20" y1="150" x2="460" y2="150"/>
+          <line class="faint" x1="240" y1="150" x2="240" y2="16"/>
+          <polyline class="outline" points="24,150.0 42,149.9 60,149.6 78,149.2 96,148.2 114,146.5 132,143.7 150,139.6 168,134.4 186,128.7 204,123.3 222,119.4 240,118.0 258,119.4 276,123.3 294,128.7 312,134.4 330,139.6 348,143.7 366,146.5 384,148.2 402,149.2 420,149.6 438,149.9 456,150.0"/>
+          <polyline class="outline" points="132,149.9 141,149.7 150,149.3 159,148.3 168,146.4 177,142.9 186,137.3 195,129.2 204,118.8 213,107.3 222,96.5 231,88.8 240,86.0 249,88.8 258,96.5 267,107.3 276,118.8 285,129.2 294,137.3 303,142.9 312,146.4 321,148.3 330,149.3 339,149.7 348,149.9"/>
+          <polyline class="accent" points="186,149.8 190.5,149.4 195,148.6 199.5,146.7 204,142.8 208.5,135.9 213,124.7 217.5,108.4 222,87.7 226.5,64.6 231,43.1 235.5,27.6 240,22.0 244.5,27.6 249,43.1 253.5,64.6 258,87.7 262.5,108.4 267,124.7 271.5,135.9 276,142.8 280.5,146.7 285,148.6 289.5,149.4 294,149.8"/>
+          <text class="lbl muted" x="346" y="136">n</text>
+          <text class="lbl muted" x="276" y="98">4n</text>
+          <text class="lbl accent" x="256" y="34">16n</text>
+          <text class="lbl" x="240" y="168" text-anchor="middle">&#956;</text>
         </svg>
         <figcaption>Distribution of $\bar x_n$: every $4\times$ more data halves the width $\sigma/\sqrt n$.</figcaption>
       </figure>
@@ -119,7 +119,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -13,7 +13,7 @@
   </script>
   <title>Lebesgue measure, densities, and KL divergence - Deep Learning Notes</title>
   <meta name="description" content="Sigma-algebras and measurable sets, why P(X=x)=0 yet p(x)>0, Lebesgue measure, the Dirichlet function as a worked example, densities as Radon-Nikodym derivatives, then KL divergence and forward vs. reverse KL.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -96,20 +96,18 @@
       </table>
 
       <figure class="figure">
-        <svg viewBox="0 0 640 220" role="img" aria-label="A bimodal target density with two fitting curves: a wide curve covering both modes, typical of minimizing forward KL, and a narrow curve sitting on only the left mode, typical of minimizing reverse KL">
-          <text class="lbl" x="16" y="18">target p(x): two modes</text>
-          <line class="axis" x1="30" y1="190" x2="610" y2="190"/>
-          <path class="faint" d="M40,190 C90,190 110,70 150,70 C190,70 200,150 230,150 C260,150 270,60 310,60 C350,60 360,150 390,170 C410,180 420,190 430,190" fill="none"/>
-          <text class="lbl muted" x="135" y="55">mode 1</text>
-          <text class="lbl muted" x="295" y="45">mode 2</text>
-
-          <path class="axis" d="M40,190 C110,190 160,100 230,100 C300,100 350,190 400,190" fill="none"/>
-          <text class="lbl" x="420" y="150">forward KL(p&#8741;q): wide, covers both</text>
-
-          <path class="axis" style="stroke-dasharray:2 2" d="M90,190 C115,190 125,85 150,85 C175,85 185,190 210,190" fill="none"/>
-          <text class="lbl" x="30" y="205">reverse KL(q&#8741;p): narrow, picks one</text>
+        <svg width="408" viewBox="0 0 480 200" role="img" aria-label="A two-mode target density p, a wide Gaussian fit spread over both modes from minimizing forward KL, and a narrow Gaussian fit sitting on the left mode only from minimizing reverse KL.">
+          <line class="axis" x1="30" y1="185" x2="450" y2="185"/>
+          <polyline class="axis" fill="none" points="30.0,185.0 35.8,185.0 41.7,184.9 47.5,184.9 53.3,184.7 59.2,184.5 65.0,184.0 70.8,183.2 76.7,181.9 82.5,179.9 88.3,177.0 94.2,173.0 100.0,167.6 105.8,160.9 111.7,153.0 117.5,144.4 123.3,135.7 129.2,127.6 135.0,121.0 140.8,116.7 146.7,115.2 152.5,116.7 158.3,121.0 164.2,127.6 170.0,135.7 175.8,144.4 181.7,153.0 187.5,160.9 193.3,167.6 199.2,173.0 205.0,177.0 210.8,179.9 216.7,181.9 222.5,183.2 228.3,183.9 234.2,184.3 240.0,184.5 245.8,184.3 251.7,183.9 257.5,183.2 263.3,181.9 269.2,179.9 275.0,177.0 280.8,173.0 286.7,167.6 292.5,160.9 298.3,153.0 304.2,144.4 310.0,135.7 315.8,127.6 321.7,121.0 327.5,116.7 333.3,115.2 339.2,116.7 345.0,121.0 350.8,127.6 356.7,135.7 362.5,144.4 368.3,153.0 374.2,160.9 380.0,167.6 385.8,173.0 391.7,177.0 397.5,179.9 403.3,181.9 409.2,183.2 415.0,184.0 420.8,184.5 426.7,184.7 432.5,184.9 438.3,184.9 444.2,185.0 450.0,185.0"/>
+          <polyline class="accent" points="30.0,181.1 41.7,179.9 53.3,178.6 65.0,177.0 76.7,175.2 88.3,173.1 100.0,170.7 111.7,168.1 123.3,165.4 135.0,162.5 146.7,159.6 158.3,156.8 170.0,154.0 181.7,151.5 193.3,149.2 205.0,147.4 216.7,146.0 228.3,145.2 240.0,144.9 251.7,145.2 263.3,146.0 275.0,147.4 286.7,149.2 298.3,151.5 310.0,154.0 321.7,156.8 333.3,159.6 345.0,162.5 356.7,165.4 368.3,168.1 380.0,170.7 391.7,173.1 403.3,175.2 415.0,177.0 426.7,178.6 438.3,179.9 450.0,181.1"/>
+          <polyline class="accent-2" points="30.0,185.0 35.8,184.9 41.7,184.9 47.5,184.7 53.3,184.5 59.2,183.9 65.0,183.0 70.8,181.4 76.7,178.9 82.5,174.9 88.3,169.1 94.2,160.9 100.0,150.2 105.8,136.8 111.7,121.1 117.5,103.8 123.3,86.3 129.2,70.1 135.0,57.0 140.8,48.4 146.7,45.4 152.5,48.4 158.3,57.0 164.2,70.1 170.0,86.3 175.8,103.8 181.7,121.1 187.5,136.8 193.3,150.2 199.2,160.9 205.0,169.1 210.8,174.9 216.7,178.9 222.5,181.4 228.3,183.0 234.2,183.9 240.0,184.5"/>
+          <text class="lbl" x="352" y="106">target p</text>
+          <text class="lbl accent" x="240" y="118" text-anchor="middle">forward KL(p||q)</text>
+          <text class="lbl accent" x="240" y="135" text-anchor="middle">covers both</text>
+          <text class="lbl accent-2" x="168" y="48">reverse KL(q||p)</text>
+          <text class="lbl accent-2" x="170" y="65">picks one</text>
         </svg>
-        <figcaption>Fitting a one-bump $q$ to a two-bump $p$.</figcaption>
+        <figcaption>Fitting one Gaussian $q$ to a two-mode $p$: forward KL spreads out, reverse KL locks onto a mode.</figcaption>
       </figure>
       <p>Forward KL is maximum likelihood (next note). Reverse KL drives variational inference (<a href="generative-modeling-and-kl-divergence.html">generative modeling</a>).</p>
 
@@ -131,7 +129,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -13,7 +13,7 @@
   </script>
   <title>The Lagrangian and KKT conditions - Deep Learning Notes</title>
   <meta name="description" content="Why a gradient is normal to a level set, how that forces the Lagrange tangency condition for equality constraints, and the KKT conditions for inequality constraints.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -65,24 +65,24 @@
       <p>$$\min_x f(x)\ \text{ s.t. } g(x)=0: \qquad \nabla f(x^*)+\lambda\,\nabla g(x^*)=0 \ \text{ for some } \lambda\in\mathbb{R} \qquad (\text{if } \nabla g(x^*)\ne0).$$</p>
       <p class="example-label">Example</p>
       <figure class="figure">
-        <svg viewBox="0 0 300 300" role="img" aria-label="A circular level curve of f tangent to the constraint line g=0 at the optimum, where the gradients of f and g point in the same direction">
-          <defs>
-            <marker id="lag-arrow2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
-            </marker>
-          </defs>
-          <circle class="faint" fill="none" cx="90" cy="210" r="71"/>
-          <circle class="origin" cx="90" cy="210" r="3"/>
-          <text class="lbl muted" x="74" y="228">0</text>
-          <text class="lbl muted" x="96" y="148">f(x,y) = &#189;</text>
-          <line class="axis" x1="60" y1="80" x2="220" y2="240"/>
-          <text class="lbl" x="178" y="232">g(x,y) = x+y&#8722;1 = 0</text>
-          <circle class="pt" cx="140" cy="160" r="4.5"/>
-          <text class="lbl" x="104" y="150">x* = (&#189;,&#189;)</text>
-          <line class="axis" x1="140" y1="160" x2="180" y2="120" marker-end="url(#lag-arrow2)"/>
-          <text class="lbl" x="184" y="112">&#8711;f = &#8711;g = (1,1)</text>
+        <svg width="255" viewBox="0 0 300 270" role="img" aria-label="Circular level curves of f = x squared plus y squared and the constraint line x + y = 1; the circle f = 1/2 touches the line at (1/2, 1/2), where the gradients of f and g point in the same direction.">
+          <defs><marker id="lag1-f" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker><marker id="lag1-g" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-2-fill"/></marker></defs>
+          <circle class="outline" cx="100" cy="175" r="29"/>
+          <circle class="outline" cx="100" cy="175" r="82"/>
+          <circle class="axis" fill="none" cx="100" cy="175" r="58"/>
+          <circle class="origin" cx="100" cy="175" r="3"/>
+          <text class="lbl muted" x="86" y="191">0</text>
+          <line class="accent-2" x1="75.4" y1="68.4" x2="218.9" y2="211.9"/>
+          <text class="lbl accent-2" x="222.9" y="219.9">x + y = 1</text>
+          <line class="accent" x1="137.8" y1="130.8" x2="184.2" y2="84.4" marker-end="url(#lag1-f)"/>
+          <line class="accent-2" x1="144.2" y1="137.2" x2="190.6" y2="90.8" marker-end="url(#lag1-g)"/>
+          <circle class="pt" cx="141" cy="134" r="4"/>
+          <text class="lbl accent" x="161.4" y="79.6">&#8711;f</text>
+          <text class="lbl accent-2" x="195.4" y="99.6">&#8711;g</text>
+          <text class="lbl" x="115" y="140">x*</text>
+          <text class="lbl muted" text-anchor="middle" x="100" y="223.5">f = &#189;</text>
         </svg>
-        <figcaption>$\min x^2+y^2$ on the line $x+y=1$: the contour $f=\tfrac12$ just touches the line at $(\tfrac12,\tfrac12)$, where $\nabla f=\nabla g=(1,1)$, so $\lambda=-1$.</figcaption>
+        <figcaption>The circle $f=\tfrac12$ just touches $x+y=1$ at $(\tfrac12,\tfrac12)$: there $\nabla f=\nabla g=(1,1)$ are parallel, so $\lambda=-1$.</figcaption>
       </figure>
 
       <h2>The Lagrangian</h2>
@@ -124,7 +124,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

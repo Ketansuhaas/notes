@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Kernel fusion and torch.compile - Deep Learning Notes</title>
+  <meta name="description" content="Why chains of elementwise ops are bound by HBM traffic, how fusing them into one kernel cuts bytes moved (and time) by the traffic ratio, and how torch.compile (TorchDynamo plus TorchInductor) generates fused Triton kernels automatically.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Kernel fusion and torch.compile</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Kernel fusion and torch.compile</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">pytorch</span><span class="tag">kernel-fusion</span><span class="tag">torch-compile</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="roofline-and-arithmetic-intensity.html">Arithmetic intensity and the roofline</a>, <a href="how-pytorch-runs-on-the-gpu.html">How PyTorch runs on the GPU</a> &middot; <strong>Leads to:</strong> <a href="triton-block-programming.html">Triton: programming GPUs in blocks</a></p>
+      <p class="idea">Elementwise ops do almost no math per byte, so HBM traffic sets their speed. Fuse a chain into one kernel: intermediates stay in registers, and only the input and output touch memory.</p>
+
+      <h2>Unfused: one HBM round trip per op</h2>
+      <p class="idea">Each PyTorch op is its own kernel. It reads its input from HBM and writes its result back, even if the next op immediately reads it again.</p>
+      <p>$$y=\operatorname{gelu}(x\odot w+b),\qquad \underbrace{x}_{N},\ \ w,b \text{ small (broadcast per feature)}.$$</p>
+      <figure class="figure">
+        <svg width="510" viewBox="0 0 600 246" role="img" aria-label="Unfused: three kernels, each reading a tensor from HBM and writing a new one back, six trips. Fused: one kernel reads x and writes y, two trips.">
+          <defs>
+            <marker id="kf1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+            <marker id="kf1-arr2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-2-fill"/></marker>
+            <marker id="kf1-arr1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker>
+          </defs>
+          <text class="lbl muted" x="10" y="48">HBM</text>
+          <text class="lbl muted" x="10" y="108">kernels</text>
+          <rect class="outline" rx="4" x="90" y="30" width="50" height="26"/>
+          <rect class="area-2" rx="4" x="210" y="30" width="50" height="26"/>
+          <rect class="area-2" rx="4" x="330" y="30" width="50" height="26"/>
+          <rect class="outline" rx="4" x="450" y="30" width="50" height="26"/>
+          <text class="lbl" x="115" y="48" text-anchor="middle">x</text>
+          <text class="lbl accent-2" x="235" y="48" text-anchor="middle">t₁</text>
+          <text class="lbl accent-2" x="355" y="48" text-anchor="middle">t₂</text>
+          <text class="lbl" x="475" y="48" text-anchor="middle">y</text>
+          <rect class="outline" rx="4" x="150" y="90" width="50" height="26"/>
+          <rect class="outline" rx="4" x="270" y="90" width="50" height="26"/>
+          <rect class="outline" rx="4" x="390" y="90" width="50" height="26"/>
+          <text class="lbl" x="175" y="108" text-anchor="middle">×w</text>
+          <text class="lbl" x="295" y="108" text-anchor="middle">+b</text>
+          <text class="lbl" x="415" y="108" text-anchor="middle">gelu</text>
+          <line class="axis" x1="125" y1="57" x2="160" y2="88" marker-end="url(#kf1-arr)"/>
+          <line class="accent-2" x1="190" y1="89" x2="224" y2="59" marker-end="url(#kf1-arr2)"/>
+          <line class="accent-2" x1="246" y1="57" x2="280" y2="88" marker-end="url(#kf1-arr2)"/>
+          <line class="accent-2" x1="310" y1="89" x2="344" y2="59" marker-end="url(#kf1-arr2)"/>
+          <line class="accent-2" x1="366" y1="57" x2="400" y2="88" marker-end="url(#kf1-arr2)"/>
+          <line class="axis" x1="430" y1="89" x2="464" y2="59" marker-end="url(#kf1-arr)"/>
+          <text class="lbl" x="520" y="66">unfused</text>
+          <text class="lbl accent-2" x="520" y="84">6 trips</text>
+          <line class="faint" x1="10" y1="136" x2="590" y2="136"/>
+          <text class="lbl muted" x="10" y="174">HBM</text>
+          <text class="lbl muted" x="10" y="234">kernel</text>
+          <rect class="outline" rx="4" x="90" y="156" width="50" height="26"/>
+          <rect class="outline" rx="4" x="450" y="156" width="50" height="26"/>
+          <text class="lbl" x="115" y="174" text-anchor="middle">x</text>
+          <text class="lbl" x="475" y="174" text-anchor="middle">y</text>
+          <rect class="area" rx="4" x="150" y="216" width="290" height="26"/>
+          <rect class="accent" rx="4" x="150" y="216" width="290" height="26"/>
+          <text class="lbl accent" x="295" y="234" text-anchor="middle">×w → +b → gelu  (registers)</text>
+          <line class="accent" x1="125" y1="183" x2="160" y2="213" marker-end="url(#kf1-arr1)"/>
+          <line class="accent" x1="430" y1="215" x2="464" y2="185" marker-end="url(#kf1-arr1)"/>
+          <text class="lbl" x="520" y="192">fused</text>
+          <text class="lbl accent" x="520" y="210">2 trips</text>
+        </svg>
+        <figcaption>Unfused, the intermediates $t_1,t_2$ make two wasted round trips. Fused, they never leave the chip.</figcaption>
+      </figure>
+
+      <h2>Bytes moved, tied to the roofline</h2>
+      <p class="idea">Far below the ridge point, time is just bytes over bandwidth. So the speedup is the traffic ratio.</p>
+      <p>$$t\approx\frac{\text{bytes}}{\text{BW}},\qquad \text{speedup}\approx\frac{\text{bytes}_{\text{unfused}}}{\text{bytes}_{\text{fused}}}=\frac{6N}{2N}=3.$$</p>
+      <p class="example-label">Example: $x$ is $8192\times8192$ BF16 (134 MB), A100 (~2 TB/s)</p>
+      <table>
+        <tr><td></td><td>HBM traffic</td><td>Time</td></tr>
+        <tr><td>Unfused (3 kernels)</td><td>$6\times134\approx805$ MB</td><td>~0.40 ms</td></tr>
+        <tr><td>Fused (1 kernel)</td><td>$2\times134\approx268$ MB</td><td>~0.13 ms</td></tr>
+      </table>
+      <p>Still memory-bound: a few FLOPs per element over 4 bytes is well below even the non-tensor-core ridge (~10 FLOP/byte on A100).</p>
+
+      <h2>torch.compile does it for you</h2>
+      <p class="idea">You keep writing eager PyTorch. The compiler captures the graph, finds fusable ops, and writes the fused kernel.</p>
+      <pre><code>import torch, torch.nn.functional as F
+x = torch.randn(8192, 8192, device="cuda", dtype=torch.bfloat16)
+w = torch.randn(8192, device="cuda", dtype=torch.bfloat16)
+b = torch.randn(8192, device="cuda", dtype=torch.bfloat16)
+
+def f(x, w, b):
+    return F.gelu(x * w + b)
+
+f_c = torch.compile(f)   # compiles on first call, then reuses
+y = f_c(x, w, b)         # one fused Triton kernel instead of three</code></pre>
+      <table>
+        <tr><td><strong>TorchDynamo</strong></td><td>Reads the Python bytecode as it runs and records the torch ops into a graph.</td></tr>
+        <tr><td><strong>AOTAutograd</strong></td><td>Traces the matching backward graph too, so training gets fused.</td></tr>
+        <tr><td><strong>TorchInductor</strong></td><td>Fuses ops and generates code: Triton kernels on GPU, C++/OpenMP on CPU.</td></tr>
+      </table>
+      <p><strong>Graph break:</strong> code Dynamo cannot trace (a <code>print</code>, data-dependent Python control flow, an unsupported call) splits the graph there and runs in plain Python. No fusion crosses a break.</p>
+      <p>Matmuls usually still go to cuBLAS. The win is in the elementwise and reduction glue around them.</p>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>A chain of $k$ unary elementwise ops on $N$ elements. Unfused vs fused HBM traffic? For $k=5$, $N=10^8$ BF16 on an A100, how long does each take? When would fusing more ops stop helping?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Unfused: each op reads $N$ and writes $N$: $2kN$. Fused: read once, write once: $2N$. Ratio $k$.</p>
+          <p>$k=5$: unfused $2\cdot5\cdot10^8\cdot2$ B $=2$ GB $\to$ ~1 ms. Fused $0.4$ GB $\to$ ~0.2 ms.</p>
+          <p>The ratio holds while the fused kernel stays memory-bound. Once its FLOPs per byte pass the ridge point, compute sets the time and fusing more ops stops paying off.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

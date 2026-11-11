@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Datasets and DataLoaders - Deep Learning Notes</title>
+  <meta name="description" content="A Dataset answers &quot;how many&quot; and &quot;give me example i&quot;; a DataLoader turns it into shuffled, collated batches with worker processes and pinned memory. Why shuffling keeps the mini-batch gradient unbiased, and steps per epoch with drop_last.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Datasets and DataLoaders</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Datasets and DataLoaders</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">data-loading</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="optimizers-and-their-state.html">Optimizers and their memory</a>, <a href="expectation-and-variance-algebra.html">Expectation and variance algebra</a> &middot; <strong>Leads to:</strong> <a href="why-gpus.html">Why GPUs: latency vs. throughput</a></p>
+      <p class="idea">The Dataset knows single examples. The DataLoader turns them into a stream of shuffled batches, fast enough to keep the GPU busy.</p>
+
+      <h2>Dataset: one example at a time</h2>
+      <p class="idea">Two methods: how many examples, and give me example $i$. Nothing about batches or order.</p>
+<pre><code>from torch.utils.data import Dataset, DataLoader
+class Squares(Dataset):
+    def __init__(self, n): self.x = torch.arange(n, dtype=torch.float32)
+    def __len__(self): return len(self.x)
+    def __getitem__(self, i): return self.x[i], self.x[i] ** 2</code></pre>
+
+      <h2>DataLoader: the batching pipeline</h2>
+      <p class="idea">Pick indices, fetch examples in parallel, stack them into one batch, stage it for a fast copy to the GPU.</p>
+      <figure class="figure">
+        <svg width="544" viewBox="0 0 640 104" role="img" aria-label="Pipeline: sampler gives shuffled indices, workers call Dataset[i] B times, collate stacks them into a batch, pinned memory stages it, then an async copy to the GPU.">
+          <defs>
+            <marker id="dl1-h" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+          </defs>
+          <polyline class="outline" points="8,30 8,24 502,24 502,30"/>
+          <text class="lbl muted" x="255" y="16" text-anchor="middle">DataLoader</text>
+          <rect class="outline" x="8" y="36" width="104" height="34" rx="4"/>
+          <text class="lbl" x="60" y="58" text-anchor="middle">sampler</text>
+          <rect class="area-2" x="138" y="36" width="104" height="34" rx="4"/>
+          <rect class="outline" x="138" y="36" width="104" height="34" rx="4"/>
+          <text class="lbl" x="190" y="58" text-anchor="middle">Dataset[i]</text>
+          <rect class="outline" x="268" y="36" width="104" height="34" rx="4"/>
+          <text class="lbl" x="320" y="58" text-anchor="middle">collate</text>
+          <rect class="outline" x="398" y="36" width="104" height="34" rx="4"/>
+          <text class="lbl" x="450" y="58" text-anchor="middle">pin_memory</text>
+          <rect class="area" x="528" y="36" width="104" height="34" rx="4"/>
+          <rect class="outline" x="528" y="36" width="104" height="34" rx="4"/>
+          <text class="lbl" x="580" y="58" text-anchor="middle">GPU</text>
+          <line class="axis" x1="112" y1="53" x2="136" y2="53" marker-end="url(#dl1-h)"/>
+          <line class="axis" x1="242" y1="53" x2="266" y2="53" marker-end="url(#dl1-h)"/>
+          <line class="axis" x1="372" y1="53" x2="396" y2="53" marker-end="url(#dl1-h)"/>
+          <line class="axis" x1="502" y1="53" x2="526" y2="53" marker-end="url(#dl1-h)"/>
+          <text class="lbl muted" x="60" y="92" text-anchor="middle">shuffled indices</text>
+          <text class="lbl muted" x="190" y="92" text-anchor="middle">×B, in workers</text>
+          <text class="lbl muted" x="320" y="92" text-anchor="middle">stack → batch</text>
+          <text class="lbl muted" x="450" y="92" text-anchor="middle">page-locked RAM</text>
+          <text class="lbl muted" x="580" y="92" text-anchor="middle">async copy</text>
+        </svg>
+        <figcaption>You write the orange box; the DataLoader does the bracketed rest. The final copy is your <code>.to('cuda')</code>.</figcaption>
+      </figure>
+<pre><code>loader = DataLoader(Squares(1000), batch_size=64, shuffle=True,
+                    num_workers=4, pin_memory=True, drop_last=False)
+x, y = next(iter(loader))                 # x, y: (64,)
+x = x.to('cuda', non_blocking=True)       # async copy from pinned memory</code></pre>
+      <table>
+        <tr><td><code>shuffle=True</code></td><td>new random order every epoch</td></tr>
+        <tr><td><code>collate_fn</code></td><td>list of examples &rarr; batch (default: stack each field)</td></tr>
+        <tr><td><code>num_workers</code></td><td>processes calling <code>__getitem__</code> in parallel with training</td></tr>
+        <tr><td><code>pin_memory</code></td><td>page-locked host memory: faster, asynchronous copies to the GPU</td></tr>
+        <tr><td><code>drop_last</code></td><td>skip the final short batch</td></tr>
+      </table>
+
+      <h2>Why shuffle</h2>
+      <p class="idea">SGD needs each mini-batch gradient to be an honest, noisy estimate of the full gradient. Random batches give that; sorted data does not.</p>
+      <p>$$\hat g_B=\frac1B\sum_{i\in\text{batch}}\nabla\ell_i, \qquad \mathbb{E}[\hat g_B]=\nabla L, \qquad \operatorname{Var}\approx\frac{\sigma^2}{B}.$$</p>
+      <p class="example-label">Example</p>
+      <p>MNIST sorted by label, batch 64: the first ~90 batches are all "0"s, so every step pushes toward predicting 0, then toward 1, and so on. Each batch gradient is biased; the model chases the latest class. The $\sigma^2/B$ is from <a href="expectation-and-variance-algebra.html">variance algebra</a>.</p>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>$N=50{,}000$ examples, <code>batch_size=64</code>. How many optimizer steps per epoch with <code>drop_last=False</code> and with <code>drop_last=True</code>? How big is the last batch, and why might you drop it?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$50{,}000=781\cdot64+16$. <code>drop_last=False</code>: $\lceil 50000/64\rceil=782$ steps, the last with only $16$ examples. <code>drop_last=True</code>: $781$ steps; $16$ examples skipped this epoch (different ones each epoch, thanks to shuffling).</p>
+          <p>Why drop: a batch of $16$ has $4\times$ the gradient variance of $64$ ($\sigma^2/B$), BatchNorm statistics get noisy, and every batch keeping the same shape helps compiled code.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

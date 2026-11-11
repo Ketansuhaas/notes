@@ -13,7 +13,7 @@
   </script>
   <title>Principal component analysis - Deep Learning Notes</title>
   <meta name="description" content="PCA derived two ways, maximizing variance and constrained optimization, both landing on the same eigenvectors of the covariance matrix, then tied to the SVD.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -90,45 +90,44 @@
       </p>
 
       <figure class="figure">
-        <svg viewBox="0 0 640 250" role="img" aria-label="Four points in the plane projected onto the first principal component, giving four coordinates on a number line">
+        <svg width="476" viewBox="0 0 560 210" role="img" aria-label="Four points in the plane projected onto the first principal component. x1 and x2 lie on PC1 and keep everything; x3 and x4 lose their whole perpendicular part and land at 0. Right: the kept coordinates on a number line, minus root 6, 0, 0, root 6.">
           <defs>
-            <marker id="pca-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
-            </marker>
+            <marker id="pca1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
           </defs>
-          <text class="lbl" x="12" y="14">Data in &#8477;&#178; with PC1</text>
-          <text class="lbl" x="400" y="14">Coordinates z in &#8477;&#185;</text>
-          <line class="axis" x1="12" y1="233" x2="228" y2="17"/>
-          <text class="lbl" x="234" y="20">v&#8321; (PC1)</text>
-          <line class="faint" x1="165" y1="170" x2="120" y2="125"/>
-          <line class="faint" x1="75" y1="80" x2="120" y2="125"/>
-          <circle class="pt" cx="198" cy="47" r="4.5"/>
-          <circle class="pt" cx="42" cy="203" r="4.5"/>
-          <circle class="pt" cx="165" cy="170" r="4.5"/>
-          <circle class="pt" cx="75" cy="80" r="4.5"/>
-          <circle class="origin" cx="120" cy="125" r="3"/>
-          <text class="lbl" x="204" y="60">x&#8321;</text>
-          <text class="lbl" x="22" y="218">x&#8322;</text>
-          <text class="lbl" x="172" y="186">x&#8323;</text>
-          <text class="lbl" x="54" y="76">x&#8324;</text>
-          <text class="lbl muted" x="128" y="150">lost</text>
-          <line class="axis" x1="262" y1="125" x2="368" y2="125" marker-end="url(#pca-arrow)"/>
-          <text class="lbl" x="283" y="115">project</text>
-          <line class="axis" x1="400" y1="125" x2="620" y2="125"/>
-          <line class="axis" x1="449" y1="119" x2="449" y2="131"/>
-          <line class="axis" x1="510" y1="119" x2="510" y2="131"/>
-          <line class="axis" x1="571" y1="119" x2="571" y2="131"/>
-          <circle class="pt" cx="449" cy="125" r="4.5"/>
-          <circle class="pt" cx="571" cy="125" r="4.5"/>
-          <circle class="pt" cx="510" cy="125" r="4.5"/>
-          <text class="lbl" x="441" y="108">x&#8322;</text>
-          <text class="lbl" x="563" y="108">x&#8321;</text>
-          <text class="lbl" x="490" y="108">x&#8323;, x&#8324;</text>
-          <text class="lbl" x="427" y="152">&#8722;&#8730;6</text>
-          <text class="lbl" x="504" y="152">0</text>
-          <text class="lbl" x="555" y="152">&#8730;6</text>
+          <text class="lbl" x="10" y="16">x in &#8477;&#178;</text>
+          <line class="accent" x1="25" y1="195" x2="195" y2="25"/>
+          <text class="lbl accent" x="200" y="30">PC1</text>
+          <line class="accent-2" x1="148" y1="148" x2="110" y2="110"/>
+          <line class="accent-2" x1="72" y1="72" x2="110" y2="110"/>
+          <circle class="origin" cx="110" cy="110" r="3.5"/>
+          <circle class="pt" cx="175.8" cy="44.2" r="4.5"/>
+          <circle class="pt" cx="44.2" cy="175.8" r="4.5"/>
+          <circle class="pt" cx="148" cy="148" r="4.5"/>
+          <circle class="pt" cx="72" cy="72" r="4.5"/>
+          <text class="lbl" x="184" y="56">x&#8321;</text>
+          <text class="lbl" x="20" y="170">x&#8322;</text>
+          <text class="lbl" x="156" y="164">x&#8323;</text>
+          <text class="lbl" x="50" y="70">x&#8324;</text>
+          <text class="lbl accent-2" x="100" y="150">lost</text>
+          <line class="axis" x1="245" y1="110" x2="335" y2="110" marker-end="url(#pca1-arr)"/>
+          <text class="lbl" x="290" y="100" text-anchor="middle">z = v&#8321;&#7488;x</text>
+          <text class="lbl" x="360" y="16">kept: z in &#8477;</text>
+          <line class="accent" x1="360" y1="110" x2="550" y2="110"/>
+          <line class="axis" x1="381.5" y1="104" x2="381.5" y2="116"/>
+          <line class="axis" x1="455" y1="104" x2="455" y2="116"/>
+          <line class="axis" x1="528.5" y1="104" x2="528.5" y2="116"/>
+          <circle class="accent-fill" cx="381.5" cy="110" r="4.5"/>
+          <circle class="accent-fill" cx="528.5" cy="110" r="4.5"/>
+          <circle class="accent-fill" cx="455" cy="110" r="4.5"/>
+          <circle class="accent-fill" cx="455" cy="100.5" r="4.5"/>
+          <text class="lbl" x="381.5" y="94" text-anchor="middle">x&#8322;</text>
+          <text class="lbl" x="528.5" y="94" text-anchor="middle">x&#8321;</text>
+          <text class="lbl" x="455" y="86" text-anchor="middle">x&#8323;, x&#8324;</text>
+          <text class="lbl" x="381.5" y="136" text-anchor="middle">&#8722;&#8730;6</text>
+          <text class="lbl" x="455" y="136" text-anchor="middle">0</text>
+          <text class="lbl" x="528.5" y="136" text-anchor="middle">&#8730;6</text>
         </svg>
-        <figcaption>$x_1,x_2$ lie on PC1 and come back exactly; $x_3,x_4$ lie along $q_2$ and collapse to $0$.</figcaption>
+        <figcaption>$x_1,x_2$ lie on PC1 and lose nothing; $x_3,x_4$ lie along $q_2$, lose their whole length, and land at $0$.</figcaption>
       </figure>
 
       <table>
@@ -155,7 +154,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

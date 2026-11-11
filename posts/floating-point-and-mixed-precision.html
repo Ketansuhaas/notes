@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Floating point and mixed precision - Deep Learning Notes</title>
+  <meta name="description" content="fp32, fp16 and bf16 split their bits between exponent (range) and mantissa (precision). Why bf16 trains without loss scaling, why fp16 needs it, and how mixed precision keeps fp32 exactly where it matters.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Floating point and mixed precision</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Floating point and mixed precision</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">floating-point</span><span class="tag">mixed-precision</span><span class="tag">bf16</span><span class="tag">fp16</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="tiled-matrix-multiplication.html">Tiled matrix multiplication</a>, <a href="roofline-and-arithmetic-intensity.html">Arithmetic intensity and the roofline</a> &middot; <strong>Leads to:</strong> <a href="how-pytorch-runs-on-the-gpu.html">How PyTorch runs on the GPU</a></p>
+      <p class="idea">A float is scientific notation in binary. 16-bit floats halve the bytes and unlock tensor cores; the art is choosing which bits to give up.</p>
+
+      <h2>Sign, exponent, mantissa</h2>
+      <p class="idea">The exponent is the "$\times2^e$" part: how big or tiny a number can be (range). The mantissa is the "$1.xxx$" part: how many digits it keeps (precision).</p>
+      <p>$$x=(-1)^s\times1.m\times2^{\,e-\text{bias}}.$$</p>
+      <figure class="figure">
+        <svg width="425" viewBox="0 0 500 136" role="img" aria-label="Bit layouts. fp32: 1 sign bit, 8 exponent bits, 23 mantissa bits. bf16: 1, 8, 7, the top half of fp32. fp16: 1, 5, 10.">
+          <text class="lbl accent-2" x="125" y="14" text-anchor="middle">exponent = range</text>
+          <text class="lbl accent" x="326.5" y="14" text-anchor="middle">mantissa = precision</text>
+          <text class="lbl" x="50" y="41" text-anchor="end">fp32</text>
+          <rect class="outline" x="60" y="24" width="13" height="24"/>
+          <text class="lbl muted" x="66.5" y="41" text-anchor="middle">s</text>
+          <rect class="area-2" x="73" y="24" width="104" height="24"/>
+          <rect class="outline" x="73" y="24" width="104" height="24"/>
+          <text class="lbl accent-2" x="125" y="41" text-anchor="middle">8</text>
+          <rect class="area" x="177" y="24" width="299" height="24"/>
+          <rect class="outline" x="177" y="24" width="299" height="24"/>
+          <text class="lbl accent" x="326.5" y="41" text-anchor="middle">23</text>
+          <text class="lbl" x="50" y="81" text-anchor="end">bf16</text>
+          <rect class="outline" x="60" y="64" width="13" height="24"/>
+          <text class="lbl muted" x="66.5" y="81" text-anchor="middle">s</text>
+          <rect class="area-2" x="73" y="64" width="104" height="24"/>
+          <rect class="outline" x="73" y="64" width="104" height="24"/>
+          <text class="lbl accent-2" x="125" y="81" text-anchor="middle">8</text>
+          <rect class="area" x="177" y="64" width="91" height="24"/>
+          <rect class="outline" x="177" y="64" width="91" height="24"/>
+          <text class="lbl accent" x="222.5" y="81" text-anchor="middle">7</text>
+          <text class="lbl muted" x="282" y="73">= fp32 with the low</text>
+          <text class="lbl muted" x="282" y="89">16 bits chopped off</text>
+          <text class="lbl" x="50" y="121" text-anchor="end">fp16</text>
+          <rect class="outline" x="60" y="104" width="13" height="24"/>
+          <text class="lbl muted" x="66.5" y="121" text-anchor="middle">s</text>
+          <rect class="area-2" x="73" y="104" width="65" height="24"/>
+          <rect class="outline" x="73" y="104" width="65" height="24"/>
+          <text class="lbl accent-2" x="105.5" y="121" text-anchor="middle">5</text>
+          <rect class="area" x="138" y="104" width="130" height="24"/>
+          <rect class="outline" x="138" y="104" width="130" height="24"/>
+          <text class="lbl accent" x="203" y="121" text-anchor="middle">10</text>
+          <text class="lbl muted" x="282" y="113">less range,</text>
+          <text class="lbl muted" x="282" y="129">more precision</text>
+          <line class="faint" x1="268" y1="50" x2="268" y2="62"/>
+        </svg>
+        <figcaption>Bits per field. bf16 keeps fp32's exponent and drops mantissa; fp16 trades exponent for mantissa.</figcaption>
+      </figure>
+      <table>
+        <tr><td></td><td><strong>bias</strong></td><td><strong>largest</strong></td><td><strong>spacing at 1</strong></td></tr>
+        <tr><td>fp32</td><td>127</td><td>$\approx3.4\times10^{38}$</td><td>$2^{-23}\approx1.2\times10^{-7}$</td></tr>
+        <tr><td>bf16</td><td>127</td><td>$\approx3.4\times10^{38}$</td><td>$2^{-7}\approx7.8\times10^{-3}$</td></tr>
+        <tr><td>fp16</td><td>15</td><td>$65504$</td><td>$2^{-10}\approx9.8\times10^{-4}$</td></tr>
+      </table>
+      <p class="example-label">Example</p>
+      <p>bf16 keeps under 3 significant digits: $256+1=256$, because the spacing at 256 is $2^8\cdot2^{-7}=2$.</p>
+
+      <h2>Why bf16 for training</h2>
+      <p class="idea">Activations and gradients span many orders of magnitude. bf16 has fp32's range, so nothing overflows or flushes to zero; fp16's narrow range does both.</p>
+      <table>
+        <tr><td>fp16</td><td>above 65504 → inf; tiny gradients → 0</td><td>needs loss scaling</td></tr>
+        <tr><td>bf16</td><td>same range as fp32</td><td>no scaling; coarse precision is tolerated</td></tr>
+      </table>
+      <p>Loss scaling: multiply the loss by $S$ (e.g. $2^{16}$) so every gradient is $S\times$ larger, then divide by $S$ in fp32 before the update. Lower $S$ whenever an inf appears.</p>
+
+      <h2>Mixed precision: low precision where it is cheap</h2>
+      <p class="idea">Do the bulk math (matmuls) in bf16 on tensor cores; keep anything that adds up many small numbers in fp32.</p>
+      <table>
+        <tr><td>matmul inputs</td><td>bf16</td></tr>
+        <tr><td>matmul accumulation</td><td>fp32 (inside the tensor core)</td></tr>
+        <tr><td>master weights, optimizer state</td><td>fp32</td></tr>
+        <tr><td>softmax, norms, loss</td><td>fp32 (autocast chooses this)</td></tr>
+      </table>
+      <p class="example-label">Example: why fp32 master weights</p>
+      <p>$w=1$, update $\eta g=10^{-6}$. In bf16, $1+10^{-6}=1$ (spacing $2^{-7}$): training silently stalls. In fp32 the update survives.</p>
+      <pre><code>import torch, torch.nn.functional as F
+model = Net().cuda()                                # weights stay fp32
+opt = torch.optim.AdamW(model.parameters(), lr=1e-3)
+for x, y in loader:
+    x, y = x.cuda(), y.cuda()
+    with torch.autocast("cuda", dtype=torch.bfloat16):
+        loss = F.cross_entropy(model(x), y)         # matmuls run in bf16
+    loss.backward()                                 # grads are fp32, like the weights
+    opt.step(); opt.zero_grad()</code></pre>
+      <p>For fp16, add <code>scaler = torch.amp.GradScaler("cuda")</code> and use <code>scaler.scale(loss).backward()</code>, <code>scaler.step(opt)</code>, <code>scaler.update()</code>.</p>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>What is the smallest positive normal number in fp16 and in bf16? A gradient of $10^{-8}$ is cast to fp16: what happens, and how does $S=2^{16}$ rescue it?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Smallest normal: exponent field $1$, mantissa $0$: $2^{1-\text{bias}}$. fp16: $2^{-14}\approx6.1\times10^{-5}$. bf16: $2^{-126}\approx1.2\times10^{-38}$.</p>
+          <p>Below that, fp16 has subnormals down to $2^{-24}\approx6\times10^{-8}$. $10^{-8}$ is under half of that, so it rounds to $0$: the gradient vanishes. In bf16 it is an ordinary number.</p>
+          <p>Scaled: $10^{-8}\cdot2^{16}\approx6.6\times10^{-4}$, a normal fp16 value. Unscale in fp32 and the update is intact.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

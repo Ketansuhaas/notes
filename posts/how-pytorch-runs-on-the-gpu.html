@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>How PyTorch runs on the GPU - Deep Learning Notes</title>
+  <meta name="description" content="The path from a Python torch op through the dispatcher and cuBLAS/ATen kernels to an asynchronous CUDA launch on a stream, why naive timing lies, why tiny ops are launch-bound, and what the caching allocator does.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / How PyTorch runs on the GPU</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>How PyTorch runs on the GPU</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">pytorch</span><span class="tag">cuda</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="cuda-programming-model.html">The CUDA programming model</a>, <a href="pytorch-autograd.html">Autograd in PyTorch</a> &middot; <strong>Leads to:</strong> <a href="kernel-fusion-and-torch-compile.html">Kernel fusion and torch.compile</a></p>
+      <p class="idea">A line like <code>y = x @ w</code> never runs on the GPU itself. It travels down a stack and ends as a kernel <em>queued</em> on a stream, and the CPU moves on at once.</p>
+
+      <h2>The stack</h2>
+      <p class="idea">Python asks; the dispatcher routes by device and dtype; a library kernel does the math; the launch hands it to the GPU.</p>
+      <figure class="figure">
+        <svg width="510" viewBox="0 0 600 238" role="img" aria-label="Five stacked layers: Python op, dispatcher, ATen or library kernel, CUDA launch onto a stream, and the GPU. The first four run on the CPU.">
+          <defs><marker id="hpg1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker></defs>
+          <rect class="outline" rx="4" x="10" y="6" width="510" height="32"/>
+          <rect class="outline" rx="4" x="10" y="54" width="510" height="32"/>
+          <rect class="outline" rx="4" x="10" y="102" width="510" height="32"/>
+          <rect class="area" rx="4" x="10" y="150" width="510" height="32"/>
+          <rect class="accent" rx="4" x="10" y="150" width="510" height="32"/>
+          <rect class="outline" rx="4" x="10" y="198" width="510" height="32"/>
+          <line class="axis" x1="40" y1="38" x2="40" y2="52" marker-end="url(#hpg1-arr)"/>
+          <line class="axis" x1="40" y1="86" x2="40" y2="100" marker-end="url(#hpg1-arr)"/>
+          <line class="axis" x1="40" y1="134" x2="40" y2="148" marker-end="url(#hpg1-arr)"/>
+          <line class="axis" x1="40" y1="182" x2="40" y2="196" marker-end="url(#hpg1-arr)"/>
+          <text class="lbl" x="56" y="27">Python</text>
+          <text class="lbl muted" x="160" y="27">y = x @ w</text>
+          <text class="lbl" x="56" y="75">Dispatcher</text>
+          <text class="lbl muted" x="160" y="75">route by device, dtype;</text>
+          <text class="lbl accent-2" x="318" y="75">autograd saves backward</text>
+          <text class="lbl" x="56" y="123">ATen / library</text>
+          <text class="lbl muted" x="160" y="123">cuBLAS (matmul), cuDNN (conv), ATen (rest)</text>
+          <text class="lbl accent" x="56" y="171">CUDA launch</text>
+          <text class="lbl accent" x="160" y="171">kernel queued on a stream; CPU returns</text>
+          <text class="lbl" x="56" y="219">GPU</text>
+          <text class="lbl muted" x="160" y="219">SMs run queued kernels in order</text>
+          <line class="faint" x1="534" y1="8" x2="534" y2="180"/>
+          <text class="lbl muted" x="566" y="99" text-anchor="middle">CPU</text>
+          <text class="lbl muted" x="566" y="219" text-anchor="middle">GPU</text>
+        </svg>
+        <figcaption>Four layers run on the CPU. Only the queued kernel reaches the GPU.</figcaption>
+      </figure>
+      <p class="example-label">Example</p>
+      <pre><code>opts = dict(device="cuda", dtype=torch.bfloat16)
+x = torch.randn(4096, 4096, **opts, requires_grad=True)
+w = torch.randn(4096, 4096, **opts)
+y = x @ w           # CUDA + bf16 -&gt; cuBLAS GEMM, queued
+print(y.grad_fn)    # &lt;MmBackward0&gt;: autograd recorded the backward</code></pre>
+
+      <h2>Launches are asynchronous</h2>
+      <p class="idea">The CPU only enqueues kernels on a stream and runs ahead. The GPU drains the queue in order. They meet only when the CPU needs a value.</p>
+      <figure class="figure">
+        <svg width="476" viewBox="0 0 560 172" role="img" aria-label="Timeline: the CPU queues three kernels quickly, then waits at y.item() until the GPU finishes all three kernels, then continues.">
+          <defs><marker id="hpg2-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker></defs>
+          <text class="lbl" x="10" y="60">CPU</text>
+          <text class="lbl" x="10" y="120">GPU</text>
+          <rect class="outline" x="60" y="42" width="20" height="26"/>
+          <rect class="outline" x="82" y="42" width="20" height="26"/>
+          <rect class="outline" x="104" y="42" width="20" height="26"/>
+          <text class="lbl muted" x="60" y="32">queue K₁ K₂ K₃</text>
+          <rect class="area-2" x="130" y="42" width="270" height="26"/>
+          <text class="lbl accent-2" x="265" y="60" text-anchor="middle">idle: y.item() waits</text>
+          <rect class="outline" x="404" y="42" width="70" height="26"/>
+          <text class="lbl" x="439" y="60" text-anchor="middle">continue</text>
+          <line class="faint" x1="70" y1="68" x2="80" y2="100" marker-end="url(#hpg2-arr)"/>
+          <line class="faint" x1="92" y1="68" x2="188" y2="100" marker-end="url(#hpg2-arr)"/>
+          <line class="faint" x1="114" y1="68" x2="298" y2="100" marker-end="url(#hpg2-arr)"/>
+          <rect class="area" x="80" y="102" width="108" height="26"/>
+          <rect class="area" x="190" y="102" width="108" height="26"/>
+          <rect class="area" x="300" y="102" width="100" height="26"/>
+          <text class="lbl accent" x="134" y="120" text-anchor="middle">K₁</text>
+          <text class="lbl accent" x="244" y="120" text-anchor="middle">K₂</text>
+          <text class="lbl accent" x="350" y="120" text-anchor="middle">K₃</text>
+          <line class="axis" x1="402" y1="22" x2="402" y2="136"/>
+          <text class="lbl" x="410" y="30">sync</text>
+          <line class="axis" x1="60" y1="156" x2="540" y2="156" marker-end="url(#hpg2-arr)"/>
+          <text class="lbl muted" x="540" y="148" text-anchor="end">time</text>
+        </svg>
+        <figcaption>The CPU queues work in microseconds, then stalls only at the sync point.</figcaption>
+      </figure>
+      <table>
+        <tr><td><strong>Syncs (CPU waits)</strong></td><td><strong>Does not sync</strong></td></tr>
+        <tr><td><code>.item()</code>, <code>.cpu()</code>, <code>.tolist()</code>, <code>print(t)</code></td><td>math ops, <code>.to("cuda", non_blocking=True)</code> from pinned memory</td></tr>
+        <tr><td><code>torch.cuda.synchronize()</code>, <code>if t.sum() &gt; 0:</code></td><td>reading <code>.shape</code>, <code>.grad_fn</code></td></tr>
+      </table>
+
+      <h2>Timing it right</h2>
+      <p class="idea">A wall clock around async code measures how fast the CPU <em>queued</em> work, not how long the GPU took.</p>
+      <pre><code>t0 = time.perf_counter(); y = x @ w
+t1 = time.perf_counter()        # wrong: only the launch
+
+s, e = (torch.cuda.Event(enable_timing=True) for _ in range(2))
+s.record(); y = x @ w; e.record()
+torch.cuda.synchronize()
+print(s.elapsed_time(e), "ms")  # right: GPU time between the events</code></pre>
+      <p class="example-label">Example</p>
+      <p>The $4096^3$ matmul is $2\cdot4096^3\approx1.4\times10^{11}$ FLOP. On an A100 (roughly 312 TFLOP/s BF16 dense) that is at least ~0.45 ms. The wrong timer reports tens of microseconds. Warm up first: the first call pays one-time setup.</p>
+
+      <h2>Small ops are launch-bound</h2>
+      <p class="idea">Each op costs a few microseconds of CPU work (Python, dispatcher, driver) no matter how small the tensor. If the kernel is shorter than that, the GPU waits for the CPU.</p>
+      <p>$$t_{\text{op}}\approx\max\big(t_{\text{launch}},\ \tfrac{\text{bytes}}{\text{bandwidth}}\big),\qquad t_{\text{launch}}\sim 5\ \mu\text{s}.$$</p>
+      <p class="example-label">Example: fp32 add, A100 (~2 TB/s)</p>
+      <table>
+        <tr><td>Elements</td><td>Bytes moved</td><td>GPU time</td><td>Bound by</td></tr>
+        <tr><td>$10^3$</td><td>12 KB</td><td>~6 ns</td><td>launch (~1000&times;)</td></tr>
+        <tr><td>$10^8$</td><td>1.2 GB</td><td>~0.6 ms</td><td>bandwidth</td></tr>
+      </table>
+      <p><strong>Memory:</strong> the caching allocator keeps freed GPU blocks and reuses them instead of calling <code>cudaMalloc</code> each time, so <code>nvidia-smi</code> shows <code>memory_reserved()</code>, not <code>memory_allocated()</code>.</p>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p><code>for i in range(10_000): x = x * 1.0001 + 0.001</code> on a CUDA tensor of 1000 floats takes ~0.1 s. Why, and what helps?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Two ops per step: $2\times10^4$ launches $\times\sim5\ \mu$s $\approx0.1$ s. The GPU work is nanoseconds per kernel, so it is pure launch overhead.</p>
+          <table>
+            <tr><td><strong>Batching</strong></td><td>If the items are independent, stack them into one big tensor: one launch does all the work.</td></tr>
+            <tr><td><strong>Fusion</strong></td><td>One kernel for <code>x * a + b</code> halves the launches (<a href="kernel-fusion-and-torch-compile.html">torch.compile</a>).</td></tr>
+            <tr><td><strong>CUDA graphs</strong></td><td>Record the launch sequence once, replay it with one call: the per-kernel CPU cost disappears (<code>torch.cuda.CUDAGraph</code>, or <code>torch.compile(mode="reduce-overhead")</code>).</td></tr>
+          </table>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

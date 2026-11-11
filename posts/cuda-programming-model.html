@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>The CUDA programming model - Deep Learning Notes</title>
+  <meta name="description" content="A CUDA kernel is one function run by many threads, organized as a grid of blocks. Each thread computes its global index, blocks are scheduled onto SMs, and a bounds check handles the leftover threads.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / The CUDA programming model</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>The CUDA programming model</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">cuda</span><span class="tag">kernels</span><span class="tag">threads</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="gpu-architecture-and-memory.html">Inside a GPU: SMs, warps, and memory</a>, <a href="roofline-and-arithmetic-intensity.html">Arithmetic intensity and the roofline</a> &middot; <strong>Leads to:</strong> <a href="tiled-matrix-multiplication.html">Tiled matrix multiplication</a></p>
+      <p class="idea">You write the code for one thread. CUDA runs it over a grid of blocks of threads, and each thread uses its coordinates to pick its piece of the data.</p>
+
+      <h2>Grid, blocks, threads</h2>
+      <p class="idea">A launch is a grid of blocks. A block is up to 1024 threads that live on one SM and can cooperate. Each thread knows where it sits.</p>
+      <table>
+        <tr><td><strong>level</strong></td><td><strong>runs on</strong></td><td><strong>coordinate</strong></td></tr>
+        <tr><td>grid</td><td>whole GPU</td><td>one per launch</td></tr>
+        <tr><td>block</td><td>one SM</td><td><code>blockIdx.x</code> (size <code>blockDim.x</code>)</td></tr>
+        <tr><td>warp</td><td>32 lanes of that SM</td><td>formed automatically</td></tr>
+        <tr><td>thread</td><td>one lane</td><td><code>threadIdx.x</code></td></tr>
+      </table>
+      <p>$$i=\texttt{blockIdx.x}\cdot\texttt{blockDim.x}+\texttt{threadIdx.x}.$$</p>
+      <figure class="figure">
+        <svg width="493" viewBox="0 0 580 170" role="img" aria-label="Sixteen threads in four blocks of four, laid over an array of fourteen elements. Thread 1 of block 2 has global index 9 and handles x[9]; threads 14 and 15 have no element.">
+          <defs>
+            <marker id="cpm1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker>
+          </defs>
+          <text class="lbl muted" x="162" y="18" text-anchor="middle">block 0</text>
+          <rect class="outline" rx="4" x="107" y="26" width="110" height="34"/>
+          <text class="lbl muted" x="278" y="18" text-anchor="middle">block 1</text>
+          <rect class="outline" rx="4" x="223" y="26" width="110" height="34"/>
+          <text class="lbl muted" x="394" y="18" text-anchor="middle">block 2</text>
+          <rect class="outline" rx="4" x="339" y="26" width="110" height="34"/>
+          <text class="lbl muted" x="510" y="18" text-anchor="middle">block 3</text>
+          <rect class="outline" rx="4" x="455" y="26" width="110" height="34"/>
+          <text class="lbl muted" x="98" y="48" text-anchor="end">threadIdx</text>
+          <text class="lbl muted" x="98" y="82" text-anchor="end">i</text>
+          <text class="lbl muted" x="98" y="128" text-anchor="end">x[i]</text>
+          <rect class="outline" x="110" y="30" width="26" height="26"/>
+          <text class="lbl" x="123" y="48" text-anchor="middle">0</text>
+          <text class="lbl muted" x="123" y="82" text-anchor="middle">0</text>
+          <rect class="outline" x="110" y="110" width="26" height="26"/>
+          <rect class="outline" x="136" y="30" width="26" height="26"/>
+          <text class="lbl" x="149" y="48" text-anchor="middle">1</text>
+          <text class="lbl muted" x="149" y="82" text-anchor="middle">1</text>
+          <rect class="outline" x="136" y="110" width="26" height="26"/>
+          <rect class="outline" x="162" y="30" width="26" height="26"/>
+          <text class="lbl" x="175" y="48" text-anchor="middle">2</text>
+          <text class="lbl muted" x="175" y="82" text-anchor="middle">2</text>
+          <rect class="outline" x="162" y="110" width="26" height="26"/>
+          <rect class="outline" x="188" y="30" width="26" height="26"/>
+          <text class="lbl" x="201" y="48" text-anchor="middle">3</text>
+          <text class="lbl muted" x="201" y="82" text-anchor="middle">3</text>
+          <rect class="outline" x="188" y="110" width="26" height="26"/>
+          <rect class="outline" x="226" y="30" width="26" height="26"/>
+          <text class="lbl" x="239" y="48" text-anchor="middle">0</text>
+          <text class="lbl muted" x="239" y="82" text-anchor="middle">4</text>
+          <rect class="outline" x="226" y="110" width="26" height="26"/>
+          <rect class="outline" x="252" y="30" width="26" height="26"/>
+          <text class="lbl" x="265" y="48" text-anchor="middle">1</text>
+          <text class="lbl muted" x="265" y="82" text-anchor="middle">5</text>
+          <rect class="outline" x="252" y="110" width="26" height="26"/>
+          <rect class="outline" x="278" y="30" width="26" height="26"/>
+          <text class="lbl" x="291" y="48" text-anchor="middle">2</text>
+          <text class="lbl muted" x="291" y="82" text-anchor="middle">6</text>
+          <rect class="outline" x="278" y="110" width="26" height="26"/>
+          <rect class="outline" x="304" y="30" width="26" height="26"/>
+          <text class="lbl" x="317" y="48" text-anchor="middle">3</text>
+          <text class="lbl muted" x="317" y="82" text-anchor="middle">7</text>
+          <rect class="outline" x="304" y="110" width="26" height="26"/>
+          <rect class="outline" x="342" y="30" width="26" height="26"/>
+          <text class="lbl" x="355" y="48" text-anchor="middle">0</text>
+          <text class="lbl muted" x="355" y="82" text-anchor="middle">8</text>
+          <rect class="outline" x="342" y="110" width="26" height="26"/>
+          <rect class="area" x="368" y="30" width="26" height="26"/>
+          <rect class="outline" x="368" y="30" width="26" height="26"/>
+          <text class="lbl accent" x="381" y="48" text-anchor="middle">1</text>
+          <text class="lbl accent" x="381" y="82" text-anchor="middle">9</text>
+          <rect class="area" x="368" y="110" width="26" height="26"/>
+          <rect class="outline" x="368" y="110" width="26" height="26"/>
+          <rect class="outline" x="394" y="30" width="26" height="26"/>
+          <text class="lbl" x="407" y="48" text-anchor="middle">2</text>
+          <text class="lbl muted" x="407" y="82" text-anchor="middle">10</text>
+          <rect class="outline" x="394" y="110" width="26" height="26"/>
+          <rect class="outline" x="420" y="30" width="26" height="26"/>
+          <text class="lbl" x="433" y="48" text-anchor="middle">3</text>
+          <text class="lbl muted" x="433" y="82" text-anchor="middle">11</text>
+          <rect class="outline" x="420" y="110" width="26" height="26"/>
+          <rect class="outline" x="458" y="30" width="26" height="26"/>
+          <text class="lbl" x="471" y="48" text-anchor="middle">0</text>
+          <text class="lbl muted" x="471" y="82" text-anchor="middle">12</text>
+          <rect class="outline" x="458" y="110" width="26" height="26"/>
+          <rect class="outline" x="484" y="30" width="26" height="26"/>
+          <text class="lbl" x="497" y="48" text-anchor="middle">1</text>
+          <text class="lbl muted" x="497" y="82" text-anchor="middle">13</text>
+          <rect class="outline" x="484" y="110" width="26" height="26"/>
+          <rect class="area-2" x="510" y="30" width="26" height="26"/>
+          <rect class="outline" x="510" y="30" width="26" height="26"/>
+          <text class="lbl" x="523" y="48" text-anchor="middle">2</text>
+          <text class="lbl accent-2" x="523" y="82" text-anchor="middle">14</text>
+          <rect class="area-2" x="536" y="30" width="26" height="26"/>
+          <rect class="outline" x="536" y="30" width="26" height="26"/>
+          <text class="lbl" x="549" y="48" text-anchor="middle">3</text>
+          <text class="lbl accent-2" x="549" y="82" text-anchor="middle">15</text>
+          <line class="accent" x1="381" y1="88" x2="381" y2="106" marker-end="url(#cpm1-arr)"/>
+          <text class="lbl accent-2" x="536" y="128" text-anchor="middle">idle</text>
+          <text class="lbl accent" x="381" y="160" text-anchor="middle">i = 2·4 + 1 = 9</text>
+        </svg>
+        <figcaption>blockDim = 4, $n=14$: four blocks, sixteen threads. The last two fail <code>i &lt; n</code> and do nothing.</figcaption>
+      </figure>
+
+      <h2>A complete kernel: vector add</h2>
+      <p class="idea">One thread per element. Launch enough blocks to cover $n$ (round up), and let the surplus threads do nothing.</p>
+      <pre><code>__global__ void add(const float* x, const float* y, float* out, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;  // my element
+    if (i &lt; n) out[i] = x[i] + y[i];                 // bounds check
+}
+
+int threads = 256;                                   // 8 warps per block
+int blocks  = (n + threads - 1) / threads;           // ceil(n / threads)
+add&lt;&lt;&lt;blocks, threads&gt;&gt;&gt;(x, y, out, n);              // x, y, out live on the GPU</code></pre>
+      <p>Blocks are independent and may run in any order on any SM. That is what lets one kernel scale from a laptop GPU to an H100.</p>
+      <p class="example-label">Example: $n=1000$</p>
+      <p>blocks $=\lceil1000/256\rceil=4$, so $1024$ threads; the last $24$ fail the check. Each element reads 8 B and writes 4 B for 1 FLOP: $I=1/12$, firmly on the roofline's slope.</p>
+
+      <h2>Cooperation inside a block</h2>
+      <p class="idea">Threads of a block share a small, fast <code>__shared__</code> array on their SM, and <code>__syncthreads()</code> is a barrier: everyone finishes writing before anyone reads. Tiled matmul is built on exactly this.</p>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>$n=10^6$, 256 threads per block. How many blocks, idle threads, and warps per block? Which element does thread 5 of block 3 handle? What goes wrong without <code>if (i &lt; n)</code>?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Blocks $=\lceil10^6/256\rceil=\lceil3906.25\rceil=3907$. Threads $3907\cdot256=1{,}000{,}192$, so $192$ idle. Warps per block: $256/32=8$.</p>
+          <p>$i=3\cdot256+5=773$.</p>
+          <p>Without the check, the last 192 threads read and write past the ends of the arrays: an illegal memory access error, or silent corruption of neighbouring data.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

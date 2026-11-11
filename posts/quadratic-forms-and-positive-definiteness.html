@@ -13,7 +13,7 @@
   </script>
   <title>Quadratic forms and positive definiteness - Deep Learning Notes</title>
   <meta name="description" content="x^TAx, diagonalized into a sum of squares, positive definiteness, and how it determines minima, maxima, and saddle points via the Hessian.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -83,29 +83,33 @@
       </table>
 
       <figure class="figure">
-        <svg viewBox="0 0 640 260" role="img" aria-label="Left: elliptical level sets of the positive definite form, aligned with the eigenvectors and narrower along the larger eigenvalue. Right: hyperbolic level sets of the indefinite form B, a saddle.">
-          <text class="lbl" x="20" y="20">A: bowl</text>
-          <circle class="origin" cx="150" cy="140" r="3"/>
-          <line class="axis" x1="86" y1="204" x2="214" y2="76"/>
-          <line class="axis" x1="86" y1="76" x2="214" y2="204"/>
-          <text class="lbl" x="218" y="72">q&#8321; (&#955;=3)</text>
-          <text class="lbl" x="218" y="212">q&#8322; (&#955;=1)</text>
-          <ellipse style="fill:none;stroke:currentColor;stroke-width:1.5" cx="150" cy="140" rx="35" ry="61" transform="rotate(-45 150 140)"/>
-          <ellipse style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" cx="150" cy="140" rx="52" ry="91" transform="rotate(-45 150 140)"/>
-          <text class="lbl" x="340" y="20">B: saddle</text>
-          <g transform="translate(470,140) rotate(-45)">
-            <line class="axis" x1="-90" y1="0" x2="90" y2="0"/>
-            <line class="axis" x1="0" y1="-90" x2="0" y2="90"/>
-            <circle class="origin" cx="0" cy="0" r="3"/>
-            <path style="fill:none;stroke:currentColor;stroke-width:1.5" d="M 55,-45 C 25,-18 25,18 55,45"/>
-            <path style="fill:none;stroke:currentColor;stroke-width:1.5" d="M -55,-45 C -25,-18 -25,18 -55,45"/>
-            <path style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" d="M -45,-55 C -18,-25 18,-25 45,-55"/>
-            <path style="fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 3" d="M -45,55 C -18,25 18,25 45,55"/>
-          </g>
-          <text class="lbl" x="538" y="72">q&#8321; (&#955;=+1)</text>
-          <text class="lbl" x="538" y="212">q&#8322; (&#955;=&#8722;1)</text>
+        <svg width="459" viewBox="0 0 540 248" role="img" aria-label="Level sets of two quadratic forms. Left, A: nested ellipses on the eigenvector axes, narrowest along q1 where lambda is 3; the surface curves up along both axes. Right, B: hyperbolas, blue where f is positive along q1 which curves up, orange where f is negative along q2 which curves down.">
+          <text class="lbl" x="12" y="20">A: bowl</text>
+          <line class="axis" x1="55.5" y1="186.5" x2="180.5" y2="61.5"/>
+          <line class="axis" x1="55.5" y1="61.5" x2="180.5" y2="186.5"/>
+          <ellipse class="accent" cx="118" cy="124" rx="19.6" ry="34" transform="rotate(-45 118 124)"/>
+          <ellipse class="accent" cx="118" cy="124" rx="39.3" ry="68" transform="rotate(-45 118 124)"/>
+          <circle class="origin" cx="118" cy="124" r="3"/>
+          <text class="lbl" x="183.5" y="63.5">q&#8321; &#955;=3</text>
+          <path class="accent" d="M237.5,55.5 Q245.5,71.5 253.5,55.5"/>
+          <text class="lbl" x="183.5" y="198.5">q&#8322; &#955;=1</text>
+          <path class="accent" d="M237.5,190.5 Q245.5,206.5 253.5,190.5"/>
+          <text class="lbl" x="286" y="20">B: saddle</text>
+          <line class="faint" x1="325.5" y1="124" x2="458.5" y2="124"/>
+          <line class="faint" x1="392" y1="57.5" x2="392" y2="190.5"/>
+          <line class="axis" x1="329.5" y1="186.5" x2="454.5" y2="61.5"/>
+          <line class="axis" x1="329.5" y1="61.5" x2="454.5" y2="186.5"/>
+          <polyline class="accent" fill="none" points="397.6,21.4 397.8,24.5 398,27.6 398.2,30.6 398.4,33.6 398.6,36.6 398.8,39.6 399.1,42.6 399.4,45.6 399.7,48.5 400,51.4 400.3,54.3 400.7,57.2 401,60 401.5,62.9 401.9,65.6 402.4,68.4 402.9,71.1 403.5,73.7 404.1,76.3 404.8,78.9 405.6,81.4 406.4,83.8 407.3,86.1 408.2,88.4 409.3,90.6 410.4,92.6 411.7,94.6 413,96.5 414.5,98.3 416,100 417.7,101.5 419.5,103 421.4,104.3 423.4,105.6 425.4,106.7 427.6,107.8 429.9,108.7 432.2,109.6 434.6,110.4 437.1,111.2 439.7,111.9 442.3,112.5 444.9,113.1 447.6,113.6 450.4,114.1 453.1,114.5 456,115 458.8,115.3 461.7,115.7 464.6,116 467.5,116.3 470.4,116.6 473.4,116.9 476.4,117.2 479.4,117.4 482.4,117.6 485.4,117.8 488.4,118 491.5,118.2 494.6,118.4"/>
+          <polyline class="accent" fill="none" points="289.4,129.6 292.5,129.8 295.6,130 298.6,130.2 301.6,130.4 304.6,130.6 307.6,130.8 310.6,131.1 313.6,131.4 316.5,131.7 319.4,132 322.3,132.3 325.2,132.7 328,133 330.9,133.5 333.6,133.9 336.4,134.4 339.1,134.9 341.7,135.5 344.3,136.1 346.9,136.8 349.4,137.6 351.8,138.4 354.1,139.3 356.4,140.2 358.6,141.3 360.6,142.4 362.6,143.7 364.5,145 366.3,146.5 368,148 369.5,149.7 371,151.5 372.3,153.4 373.6,155.4 374.7,157.4 375.8,159.6 376.7,161.9 377.6,164.2 378.4,166.6 379.2,169.1 379.9,171.7 380.5,174.3 381.1,176.9 381.6,179.6 382.1,182.4 382.5,185.1 383,188 383.3,190.8 383.7,193.7 384,196.6 384.3,199.5 384.6,202.4 384.9,205.4 385.2,208.4 385.4,211.4 385.6,214.4 385.8,217.4 386,220.4 386.2,223.5 386.4,226.6"/>
+          <polyline class="accent-2" fill="none" points="397.6,226.6 397.8,223.5 398,220.4 398.2,217.4 398.4,214.4 398.6,211.4 398.8,208.4 399.1,205.4 399.4,202.4 399.7,199.5 400,196.6 400.3,193.7 400.7,190.8 401,188 401.5,185.1 401.9,182.4 402.4,179.6 402.9,176.9 403.5,174.3 404.1,171.7 404.8,169.1 405.6,166.6 406.4,164.2 407.3,161.9 408.2,159.6 409.3,157.4 410.4,155.4 411.7,153.4 413,151.5 414.5,149.7 416,148 417.7,146.5 419.5,145 421.4,143.7 423.4,142.4 425.4,141.3 427.6,140.2 429.9,139.3 432.2,138.4 434.6,137.6 437.1,136.8 439.7,136.1 442.3,135.5 444.9,134.9 447.6,134.4 450.4,133.9 453.1,133.5 456,133 458.8,132.7 461.7,132.3 464.6,132 467.5,131.7 470.4,131.4 473.4,131.1 476.4,130.8 479.4,130.6 482.4,130.4 485.4,130.2 488.4,130 491.5,129.8 494.6,129.6"/>
+          <polyline class="accent-2" fill="none" points="289.4,118.4 292.5,118.2 295.6,118 298.6,117.8 301.6,117.6 304.6,117.4 307.6,117.2 310.6,116.9 313.6,116.6 316.5,116.3 319.4,116 322.3,115.7 325.2,115.3 328,115 330.9,114.5 333.6,114.1 336.4,113.6 339.1,113.1 341.7,112.5 344.3,111.9 346.9,111.2 349.4,110.4 351.8,109.6 354.1,108.7 356.4,107.8 358.6,106.7 360.6,105.6 362.6,104.3 364.5,103 366.3,101.5 368,100 369.5,98.3 371,96.5 372.3,94.6 373.6,92.6 374.7,90.6 375.8,88.4 376.7,86.1 377.6,83.8 378.4,81.4 379.2,78.9 379.9,76.3 380.5,73.7 381.1,71.1 381.6,68.4 382.1,65.6 382.5,62.9 383,60 383.3,57.2 383.7,54.3 384,51.4 384.3,48.5 384.6,45.6 384.9,42.6 385.2,39.6 385.4,36.6 385.6,33.6 385.8,30.6 386,27.6 386.2,24.5 386.4,21.4"/>
+          <circle class="origin" cx="392" cy="124" r="3"/>
+          <text class="lbl accent" x="457.5" y="63.5">q&#8321; &#955;=+1</text>
+          <path class="accent" d="M521.5,55.5 Q529.5,71.5 537.5,55.5"/>
+          <text class="lbl accent-2" x="457.5" y="198.5">q&#8322; &#955;=&#8722;1</text>
+          <path class="accent-2" d="M521.5,198.5 Q529.5,182.5 537.5,198.5"/>
         </svg>
-        <figcaption>Level sets $x^TAx=c$ are ellipses on the eigenvector axes, semi-axis $\propto1/\sqrt{\lambda_i}$ (tightest along $\lambda=3$). $B=A-2I$ has the same axes, but its level sets are hyperbolas: solid $c\gt0$, dashed $c\lt0$.</figcaption>
+        <figcaption>Level sets $x^TAx=c$. Bowl: ellipses, tightest along $\lambda=3$. Saddle: $f$ curves up along $q_1$ (blue, $c\gt0$) and down along $q_2$ (orange, $c\lt0$).</figcaption>
       </figure>
 
       <p class="idea">Up close, near a point where the slope is zero, every smooth function looks like a quadratic form. So bowl, dome, or saddle is exactly how minima, maxima, and saddle points are classified; see <a href="taylor-expansion.html">Taylor expansion</a>.</p>
@@ -128,7 +132,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

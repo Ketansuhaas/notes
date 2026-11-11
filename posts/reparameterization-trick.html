@@ -13,7 +13,7 @@
   </script>
   <title>The reparameterization trick - Deep Learning Notes</title>
   <meta name="description" content="The reparameterization trick: rewriting a sample as a deterministic function of a fixed noise source, so a gradient of an expectation over a parameterized distribution can move inside the expectation.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -66,6 +66,38 @@
       <h2>The trick: $z=\mu+\sigma\epsilon$</h2>
       <p class="idea">Write the sample as a deterministic function of $\theta$ and noise with no $\theta$ in it. The randomness moves to $\epsilon$; $\theta$ moves into the function.</p>
       <p>$$z=\mu+\sigma\epsilon,\quad \epsilon\sim\mathcal N(0,1) \quad\Rightarrow\quad z\sim\mathcal N(\mu,\sigma^2), \qquad \theta=(\mu,\sigma).$$</p>
+
+      <figure class="figure">
+        <svg width="340" viewBox="0 0 400 190" role="img" aria-label="Two computation graphs. Before: theta feeds a random node z sampled from q theta, then f; the gradient from f stops at the random node. After: theta and noise epsilon feed a deterministic node z equals mu plus sigma epsilon, then f; the gradient flows from f through z back to theta.">
+          <defs>
+            <marker id="rp1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+            <marker id="rp1-acc" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker>
+          </defs>
+          <text class="lbl muted" x="8" y="22">before</text>
+          <text class="lbl" x="75" y="60" text-anchor="middle">&#952;</text>
+          <rect class="faint" fill="none" x="150" y="40" width="100" height="30" rx="6"/>
+          <text class="lbl" x="200" y="60" text-anchor="middle">z ~ q<tspan font-size="11" baseline-shift="sub">&#952;</tspan></text>
+          <text class="lbl" x="340" y="60" text-anchor="middle">f(z)</text>
+          <line class="axis" x1="88" y1="55" x2="147" y2="55" marker-end="url(#rp1-arr)"/>
+          <line class="axis" x1="253" y1="55" x2="318" y2="55" marker-end="url(#rp1-arr)"/>
+          <path class="accent" d="M336,42 Q272,12 212,37" marker-end="url(#rp1-acc)"/>
+          <path class="faint" fill="none" d="M188,38 Q132,12 82,40"/>
+          <path class="accent-2" d="M127,19 L139,31 M127,31 L139,19"/>
+
+          <text class="lbl muted" x="8" y="104">after</text>
+          <text class="lbl" x="75" y="127" text-anchor="middle">&#952;</text>
+          <text class="lbl" x="75" y="176" text-anchor="middle">&#949; ~ N(0,1)</text>
+          <rect class="outline" x="150" y="128" width="100" height="30" rx="6"/>
+          <text class="lbl" x="200" y="148" text-anchor="middle">z = &#956; + &#963;&#949;</text>
+          <text class="lbl" x="340" y="148" text-anchor="middle">f(z)</text>
+          <line class="axis" x1="88" y1="125" x2="147" y2="137" marker-end="url(#rp1-arr)"/>
+          <line class="axis" x1="110" y1="163" x2="147" y2="151" marker-end="url(#rp1-arr)"/>
+          <line class="axis" x1="253" y1="143" x2="318" y2="143" marker-end="url(#rp1-arr)"/>
+          <path class="accent" d="M336,130 Q272,100 212,125" marker-end="url(#rp1-acc)"/>
+          <path class="accent" d="M188,126 Q136,98 86,113" marker-end="url(#rp1-acc)"/>
+        </svg>
+        <figcaption>Before, the gradient stops at the random node. After, it flows through $z$ back to $\theta$.</figcaption>
+      </figure>
       <p>
         $$
         \nabla_\theta\,\mathbb{E}_{z\sim q_\theta}[f(z)]=\nabla_\theta\,\mathbb{E}_{\epsilon}[f(\mu+\sigma\epsilon)]=\mathbb{E}_{\epsilon}\big[\nabla_\theta f(\mu+\sigma\epsilon)\big]\approx\frac1S\sum_{s=1}^S\nabla_\theta f(\mu+\sigma\epsilon_s).
@@ -112,7 +144,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

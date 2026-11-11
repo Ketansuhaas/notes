@@ -13,7 +13,7 @@
   </script>
   <title>Eigenvalues, eigenvectors, and defectiveness - Deep Learning Notes</title>
   <meta name="description" content="Eigenvalues and eigenvectors, their connection to rank, algebraic vs. geometric multiplicity, and defectiveness.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -59,26 +59,24 @@
       <p>$$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}: \ \lambda^2-4\lambda+3=0 \Rightarrow \lambda=3,1. \qquad \lambda=3: v=\begin{pmatrix}1\\1\end{pmatrix}, \quad \lambda=1: v=\begin{pmatrix}1\\-1\end{pmatrix}.$$</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 240 200" role="img" aria-label="For A with eigenvector v=(1,1), Av=3v stays on the same line through the origin; for a non-eigenvector u=(1,0), Au=(2,1) rotates off its line">
+        <svg width="221" viewBox="0 0 260 180" role="img" aria-label="For A, the eigenvector v=(1,1) maps to Av=3v on the same line through the origin, while u=(1,0) maps to Au=(2,1), off its own line.">
           <defs>
-            <marker id="eig-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
-            </marker>
-            <marker id="eig-arrow-muted" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="var(--muted)"/>
-            </marker>
+            <marker id="eig1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+            <marker id="eig1-arr-a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker>
           </defs>
-          <circle class="origin" cx="60" cy="160" r="3"/>
-          <line class="axis" x1="60" y1="160" x2="140" y2="79" marker-end="url(#eig-arrow)"/>
-          <line class="axis" x1="60" y1="160" x2="85" y2="135" marker-end="url(#eig-arrow)"/>
-          <line class="axis" x1="60" y1="160" x2="85" y2="160" marker-end="url(#eig-arrow)"/>
-          <line class="faint" x1="60" y1="160" x2="113" y2="135" marker-end="url(#eig-arrow-muted)"/>
-          <text class="lbl" x="90" y="128">v</text>
-          <text class="lbl" x="144" y="75">Av = 3v</text>
-          <text class="lbl" x="82" y="178">u</text>
-          <text class="lbl muted" x="117" y="130">Au</text>
+          <line class="faint" x1="35" y1="170" x2="150" y2="55"/>
+          <line class="faint" x1="35" y1="155" x2="170" y2="155"/>
+          <line class="axis" x1="50" y1="155" x2="80" y2="155" marker-end="url(#eig1-arr)"/>
+          <line class="axis" x1="50" y1="155" x2="110" y2="125" marker-end="url(#eig1-arr)"/>
+          <line class="accent" x1="50" y1="155" x2="140" y2="65" marker-end="url(#eig1-arr-a)"/>
+          <line class="accent" x1="50" y1="155" x2="80" y2="125" stroke-width="3.5" marker-end="url(#eig1-arr-a)"/>
+          <circle class="origin" cx="50" cy="155" r="3"/>
+          <text class="lbl accent" x="70" y="118" text-anchor="end">v</text>
+          <text class="lbl accent" x="148" y="76">Av = 3v</text>
+          <text class="lbl" x="74" y="173">u</text>
+          <text class="lbl" x="116" y="130">Au</text>
         </svg>
-        <figcaption>$v=(1,1)$ stays on its line ($Av=3v$). $u=(1,0)$ gets turned ($Au=(2,1)$).</figcaption>
+        <figcaption>$v=(1,1)$ stays on its line, only stretched: $Av=3v$. $u=(1,0)$ gets turned: $Au=(2,1)$.</figcaption>
       </figure>
 
       <h2>Diagonalization</h2>
@@ -103,21 +101,21 @@
       </table>
 
       <figure class="figure">
-        <svg viewBox="0 0 420 200" role="img" aria-label="Left, a defective matrix has a one-dimensional eigenspace for a repeated eigenvalue. Right, a non-defective matrix with the same repeated eigenvalue has a two-dimensional eigenspace, the whole plane">
-          <line class="faint" x1="205" y1="15" x2="205" y2="185"/>
-          <text class="lbl" x="40" y="30">AM(2) = 2</text>
-          <circle class="origin" cx="100" cy="100" r="3"/>
-          <line class="axis" x1="35" y1="100" x2="165" y2="100"/>
-          <text class="lbl muted" x="30" y="125">GM(2) = 1 (one line)</text>
-          <text class="lbl" x="250" y="30">AM(2) = 2</text>
-          <circle class="origin" cx="310" cy="100" r="3"/>
-          <line class="axis" x1="245" y1="100" x2="375" y2="100"/>
-          <line class="axis" x1="310" y1="40" x2="310" y2="160"/>
-          <line class="axis" x1="267" y1="143" x2="353" y2="57"/>
-          <line class="axis" x1="267" y1="57" x2="353" y2="143"/>
-          <text class="lbl muted" x="236" y="178">GM(2) = 2 (whole plane)</text>
+        <svg width="323" viewBox="0 0 380 160" role="img" aria-label="Left, the defective matrix with eigenvalue 2 twice has only one eigen-line, the x-axis. Right, 2I with the same repeated eigenvalue has every direction in the plane as an eigenvector.">
+          <line class="faint" x1="190" y1="15" x2="190" y2="150"/>
+          <text class="lbl" x="95" y="24" text-anchor="middle">GM(2) = 1</text>
+          <line class="accent" x1="30" y1="95" x2="160" y2="95"/>
+          <circle class="origin" cx="95" cy="95" r="3"/>
+          <text class="lbl muted" x="95" y="140" text-anchor="middle">one eigen-line</text>
+          <text class="lbl" x="285" y="24" text-anchor="middle">GM(2) = 2</text>
+          <rect class="area" x="230" y="40" width="110" height="110"/>
+          <line class="accent" x1="235" y1="95" x2="335" y2="95"/>
+          <line class="accent" x1="285" y1="45" x2="285" y2="145"/>
+          <line class="accent" x1="249.6" y1="130.4" x2="320.4" y2="59.6"/>
+          <line class="accent" x1="249.6" y1="59.6" x2="320.4" y2="130.4"/>
+          <circle class="origin" cx="285" cy="95" r="3"/>
         </svg>
-        <figcaption>Same AM. Left: one eigen-direction (defective). Right: every direction is an eigenvector.</figcaption>
+        <figcaption>Same $\operatorname{AM}(2)=2$. Left, $\left(\begin{smallmatrix}2&1\\0&2\end{smallmatrix}\right)$: one eigen-line, defective. Right, $2I$: every direction is an eigenvector.</figcaption>
       </figure>
 
       <h2>Eigenvalues and rank</h2>
@@ -145,7 +143,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

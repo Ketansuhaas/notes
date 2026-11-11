@@ -13,7 +13,7 @@
   </script>
   <title>Supervised learning as KL minimization - Deep Learning Notes</title>
   <meta name="description" content="Supervised learning as minimizing forward KL between p_data(y|x) and p_theta(y|x): the derivation lands on maximum likelihood, and specializing the output distribution gives exactly the MSE and cross-entropy losses.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -62,18 +62,6 @@
         <tr><td>Classification</td><td>$p_\theta(y\mid x)=\text{Cat}\big(y;\,\operatorname{softmax}(\underbrace{z}_{K\times1})\big)$</td><td>output = $K$ logits</td></tr>
       </table>
 
-      <figure class="figure">
-        <svg viewBox="0 0 320 170" role="img" aria-label="An observed label marked on the output axis, with the model's predicted distribution drawn as a bell curve centered at the network's output, which training moves to cover the observed point">
-          <line class="axis" x1="20" y1="140" x2="300" y2="140"/>
-          <path class="axis" d="M40,138 C80,138 105,40 170,40 C235,40 260,138 290,138" fill="none"/>
-          <line class="faint" x1="170" y1="140" x2="170" y2="40"/>
-          <text class="lbl" x="176" y="56">p&#952;(y|x), mean f&#952;(x)</text>
-          <circle class="pt" cx="205" cy="140" r="4.5"/>
-          <text class="lbl" x="200" y="160">y (observed)</text>
-        </svg>
-        <figcaption>Training raises $\log p_\theta(y\mid x)$ at the observed $y$.</figcaption>
-      </figure>
-
       <h2>Forward KL = maximum likelihood</h2>
       <p class="idea">Pull $p_\theta(y\mid x)$ toward $p_{\text{data}}(y\mid x)$ at every $x$. The data's entropy has no $\theta$, so only the log-likelihood term matters.</p>
       <p>$$\mathbb{E}_x\,\mathrm{KL}\big(p_{\text{data}}(y\mid x)\,\|\,p_\theta(y\mid x)\big)=\underbrace{-H(y\mid x)}_{\text{no }\theta}-\mathbb{E}_{(x,y)\sim p_{\text{data}}}\big[\log p_\theta(y\mid x)\big].$$</p>
@@ -101,19 +89,20 @@
       </table>
 
       <figure class="figure">
-        <svg viewBox="0 0 320 190" role="img" aria-label="Several observed y values for a fixed x marked on a line, with the fitted Gaussian's peak landing exactly on their average rather than on any single observed value">
-          <line class="axis" x1="20" y1="150" x2="300" y2="150"/>
-          <path class="axis" d="M48,148 C83,148 107,55 138,55 C169,55 193,148 228,148" fill="none"/>
-          <line class="faint" x1="138" y1="150" x2="138" y2="55"/>
-          <circle class="pt" cx="70" cy="150" r="4"/>
-          <circle class="pt" cx="95" cy="150" r="4"/>
-          <circle class="pt" cx="150" cy="150" r="4"/>
-          <circle class="pt" cx="165" cy="150" r="4"/>
-          <circle class="pt" cx="210" cy="150" r="4"/>
-          <text class="lbl" x="144" y="46">f&#952;(x) &rarr; E[y|x]</text>
-          <text class="lbl muted" x="68" y="170">observed y's at this x</text>
+        <svg width="272" viewBox="0 0 320 175" role="img" aria-label="Five observed y values at one x marked on a line, and the fitted Gaussian p theta of y given x whose peak sits at their average, not on any single observation.">
+          <line class="axis" x1="20" y1="140" x2="300" y2="140"/>
+          <polyline class="accent" points="30.0,135.6 36.5,134.0 43.0,132.0 49.5,129.5 56.0,126.5 62.5,122.8 69.0,118.4 75.5,113.3 82.0,107.5 88.5,101.1 95.0,94.2 101.5,86.9 108.0,79.3 114.5,71.8 121.0,64.5 127.5,57.7 134.0,51.8 140.5,46.8 147.0,43.1 153.5,40.8 160,40 166.5,40.8 173.0,43.1 179.5,46.8 186.0,51.8 192.5,57.7 199.0,64.5 205.5,71.8 212.0,79.3 218.5,86.9 225.0,94.2 231.5,101.1 238.0,107.5 244.5,113.3 251.0,118.4 257.5,122.8 264.0,126.5 270.5,129.5 277.0,132.0 283.5,134.0 290.0,135.6"/>
+          <line class="faint" x1="160" y1="140" x2="160" y2="40"/>
+          <circle class="pt" cx="92.4" cy="140" r="4"/>
+          <circle class="pt" cx="123.6" cy="140" r="4"/>
+          <circle class="pt" cx="165.2" cy="140" r="4"/>
+          <circle class="pt" cx="186" cy="140" r="4"/>
+          <circle class="pt" cx="232.8" cy="140" r="4"/>
+          <path class="accent-fill" d="M160,140 l-5,9 h10 z"/>
+          <text class="lbl accent" x="160" y="28" text-anchor="middle">f&#952;(x) = average</text>
+          <text class="lbl muted" x="160" y="166" text-anchor="middle">observed y's at one x</text>
         </svg>
-        <figcaption>Several $y$'s at one $x$: MSE puts $f_\theta(x)$ at their average.</figcaption>
+        <figcaption>MSE puts the Gaussian's center $f_\theta(x)$ at the average of the $y$'s, not on any one of them.</figcaption>
       </figure>
 
       <section class="exercise">
@@ -134,7 +123,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

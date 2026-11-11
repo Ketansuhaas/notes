@@ -4,6 +4,8 @@
   --muted: #666666;
   --border: #dddddd;
   --code-bg: #f4f4f4;
+  --accent: #2563eb;
+  --accent-2: #d9480f;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -13,6 +15,8 @@
     --muted: #999999;
     --border: #333333;
     --code-bg: #1c1c1c;
+    --accent: #6ea8fe;
+    --accent-2: #ff922b;
   }
 }
 
@@ -22,6 +26,8 @@
   --muted: #999999;
   --border: #333333;
   --code-bg: #1c1c1c;
+  --accent: #6ea8fe;
+  --accent-2: #ff922b;
 }
 
 :root[data-theme="light"] {
@@ -30,6 +36,8 @@
   --muted: #666666;
   --border: #dddddd;
   --code-bg: #f4f4f4;
+  --accent: #2563eb;
+  --accent-2: #d9480f;
 }
 
 * {
@@ -633,8 +641,7 @@ footer.site-footer {
 
 .figure svg {
   display: block;
-  width: 100%;
-  max-width: 640px;
+  max-width: 100%;
   height: auto;
   margin: 0 auto;
   color: var(--fg);
@@ -670,12 +677,71 @@ footer.site-footer {
 
 .figure .lbl {
   fill: currentColor;
-  font-size: 13px;
+  font-size: 14px;
   font-family: inherit;
 }
 
 .figure .lbl.muted {
   fill: var(--muted);
+}
+
+.figure .lbl.accent {
+  fill: var(--accent);
+}
+
+.figure .lbl.accent-2 {
+  fill: var(--accent-2);
+}
+
+.figure .accent {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+.figure .accent-2 {
+  stroke: var(--accent-2);
+  stroke-width: 2;
+  fill: none;
+}
+
+.figure text.accent,
+.figure text.accent-2,
+.figure tspan.accent,
+.figure tspan.accent-2 {
+  stroke: none;
+}
+
+.figure tspan.accent {
+  fill: var(--accent);
+}
+
+.figure tspan.accent-2 {
+  fill: var(--accent-2);
+}
+
+.figure .accent-fill {
+  fill: var(--accent);
+}
+
+.figure .accent-2-fill {
+  fill: var(--accent-2);
+}
+
+.figure .area {
+  fill: var(--accent);
+  fill-opacity: 0.15;
+  stroke: none;
+}
+
+.figure .area-2 {
+  fill: var(--accent-2);
+  fill-opacity: 0.15;
+  stroke: none;
+}
+
+.figure .head {
+  fill: currentColor;
 }
 
 article table {

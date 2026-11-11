@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Tiled matrix multiplication - Deep Learning Notes</title>
+  <meta name="description" content="A naive matmul kernel re-reads A and B from HBM for every output. Tiling loads T by T tiles into shared memory once and reuses each value T times, cutting HBM traffic by a factor of T and raising arithmetic intensity.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Tiled matrix multiplication</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Tiled matrix multiplication</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">matmul</span><span class="tag">tiling</span><span class="tag">shared-memory</span><span class="tag">arithmetic-intensity</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="cuda-programming-model.html">The CUDA programming model</a>, <a href="roofline-and-arithmetic-intensity.html">Arithmetic intensity and the roofline</a> &middot; <strong>Leads to:</strong> <a href="floating-point-and-mixed-precision.html">Floating point and mixed precision</a></p>
+      <p class="idea">Each value of $A$ and $B$ is needed by $n$ different outputs. Fetch it from HBM once per tile, park it in shared memory, and use it $T$ times.</p>
+
+      <h2>Naive: one thread per output</h2>
+      <p class="idea">Thread $(i,j)$ walks row $i$ of $A$ and column $j$ of $B$ on its own. Its neighbours fetch the same rows and columns again.</p>
+      <p>$$C_{ij}=\sum_{k=1}^{n}A_{ik}B_{kj}:\qquad 2n \text{ reads per output},\quad n^2\cdot2n=2n^3 \text{ reads in total}.$$</p>
+      <p>One value read per FLOP: $I=1/s$ FLOP/B for $s$-byte values, $0.5$ in fp16. Far down the roofline's slope.</p>
+
+      <h2>Tiled: load once, reuse $T$ times</h2>
+      <p class="idea">A block owns a $T\times T$ tile of $C$. It marches along $k$; each step copies one tile of $A$ and one of $B$ into shared memory, and every thread does $T$ multiply-adds from that fast copy.</p>
+      <figure class="figure">
+        <svg width="493" viewBox="0 0 580 280" role="img" aria-label="Matrices A, B and C split into a 4 by 4 grid of tiles. One tile of C is highlighted; it is computed from the row strip of A and the column strip of B, one pair of tiles at a time as k advances.">
+          <defs>
+            <marker id="tmm1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+          </defs>
+          <line class="faint" x1="68" y1="130" x2="68" y2="242"/>
+          <line class="faint" x1="40" y1="158" x2="152" y2="158"/>
+          <line class="faint" x1="96" y1="130" x2="96" y2="242"/>
+          <line class="faint" x1="40" y1="186" x2="152" y2="186"/>
+          <line class="faint" x1="124" y1="130" x2="124" y2="242"/>
+          <line class="faint" x1="40" y1="214" x2="152" y2="214"/>
+          <line class="faint" x1="208" y1="10" x2="208" y2="122"/>
+          <line class="faint" x1="180" y1="38" x2="292" y2="38"/>
+          <line class="faint" x1="236" y1="10" x2="236" y2="122"/>
+          <line class="faint" x1="180" y1="66" x2="292" y2="66"/>
+          <line class="faint" x1="264" y1="10" x2="264" y2="122"/>
+          <line class="faint" x1="180" y1="94" x2="292" y2="94"/>
+          <line class="faint" x1="208" y1="130" x2="208" y2="242"/>
+          <line class="faint" x1="180" y1="158" x2="292" y2="158"/>
+          <line class="faint" x1="236" y1="130" x2="236" y2="242"/>
+          <line class="faint" x1="180" y1="186" x2="292" y2="186"/>
+          <line class="faint" x1="264" y1="130" x2="264" y2="242"/>
+          <line class="faint" x1="180" y1="214" x2="292" y2="214"/>
+          <rect class="area-2" x="40" y="158" width="112" height="28"/>
+          <rect class="area-2" x="236" y="10" width="28" height="112"/>
+          <rect class="area-2" x="68" y="158" width="28" height="28"/>
+          <rect class="area-2" x="236" y="38" width="28" height="28"/>
+          <rect class="accent-2" x="68" y="158" width="28" height="28"/>
+          <rect class="accent-2" x="236" y="38" width="28" height="28"/>
+          <rect class="area" x="236" y="158" width="28" height="28"/>
+          <rect class="accent" x="236" y="158" width="28" height="28"/>
+          <rect class="outline" x="40" y="130" width="112" height="112"/>
+          <rect class="outline" x="180" y="10" width="112" height="112"/>
+          <rect class="outline" x="180" y="130" width="112" height="112"/>
+          <text class="lbl" x="96" y="120" text-anchor="middle">A</text>
+          <text class="lbl" x="170" y="71" text-anchor="end">B</text>
+          <text class="lbl" x="302" y="242">C</text>
+          <line class="axis" x1="40" y1="256" x2="152" y2="256" marker-end="url(#tmm1-arr)"/>
+          <text class="lbl muted" x="96" y="274" text-anchor="middle">step along k</text>
+          <line class="axis" x1="306" y1="10" x2="306" y2="122" marker-end="url(#tmm1-arr)"/>
+          <text class="lbl muted" x="316" y="71">k</text>
+          <text class="lbl accent" x="330" y="150">C tile (T × T): one block</text>
+          <text class="lbl accent-2" x="330" y="182">A tile + B tile → shared memory,</text>
+          <text class="lbl accent-2" x="330" y="200">each value reused T times</text>
+          <text class="lbl muted" x="330" y="232">n / T steps along k</text>
+        </svg>
+        <figcaption>The blue C tile needs the orange strips of A and B, one tile pair per step of $k$.</figcaption>
+      </figure>
+      <pre><code>__shared__ float As[T][T], Bs[T][T];          // T = 32: 1024 threads
+int r = threadIdx.y, c = threadIdx.x;         // one thread per C element
+int i = blockIdx.y * T + r, j = blockIdx.x * T + c;
+float acc = 0.0f;
+for (int k0 = 0; k0 &lt; n; k0 += T) {
+    As[r][c] = A[i * n + k0 + c];             // each thread loads one value
+    Bs[r][c] = B[(k0 + r) * n + j];
+    __syncthreads();                          // tiles are complete
+    for (int k = 0; k &lt; T; ++k) acc += As[r][k] * Bs[k][c];
+    __syncthreads();                          // done before overwriting
+}
+C[i * n + j] = acc;</code></pre>
+      <p>$$\underbrace{(n/T)^2}_{\text{blocks}}\cdot\underbrace{n/T}_{\text{steps}}\cdot\underbrace{2T^2}_{\text{values per step}}=\frac{2n^3}{T}\ \text{reads}.$$</p>
+      <table>
+        <tr><td></td><td><strong>values read from HBM</strong></td><td><strong>$I$ in fp16</strong></td></tr>
+        <tr><td>naive</td><td>$2n^3$</td><td>$0.5$ FLOP/B</td></tr>
+        <tr><td>tiled</td><td>$2n^3/T$</td><td>$T/2$ FLOP/B</td></tr>
+      </table>
+      <p class="example-label">Example: $T=128$ (real kernels, each thread computing several outputs)</p>
+      <p>$I=64$ FLOP/B, a $128\times$ climb up the roofline. Neighbouring blocks also share tiles through L2, which carries big matmuls past the A100 ridge (~156).</p>
+
+      <h2>Tensor cores</h2>
+      <p class="idea">Tensor cores multiply small matrix tiles in one instruction (bf16/fp16 in, fp32 accumulate): ~312 TFLOP/s on an A100 vs ~19.5 on its plain FP32 lanes. Tiling is what keeps them fed.</p>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>$n=4096$, fp16. HBM bytes read by the naive kernel vs tiled with $T=128$? At ~2 TB/s, how long does each take, next to the math at ~312 TFLOP/s?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Naive: $2n^3\approx1.37\times10^{11}$ values $\approx275$ GB, about $140$ ms.</p>
+          <p>Tiled: $\div128$: $1.07\times10^{9}$ values $\approx2.1$ GB, about $1.1$ ms.</p>
+          <p>Math: $1.37\times10^{11}$ FLOPs $/\,3.12\times10^{14}\approx0.44$ ms. Tiling turns a 140 ms stall into ~1 ms; L2 reuse and larger tiles close the rest, so a tuned kernel runs near the 0.44 ms compute bound. (The floor: read $A$ and $B$ once, $2n^2\cdot2$ B $\approx67$ MB.)</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

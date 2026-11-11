@@ -13,7 +13,7 @@
   </script>
   <title>Confidence intervals: the z and t statistics - Deep Learning Notes</title>
   <meta name="description" content="What a confidence interval actually claims, the z-statistic when sigma is known, and why replacing sigma with its sample estimate forces the heavier-tailed t-distribution with n-1 degrees of freedom instead of the normal.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -58,20 +58,20 @@
       <p>The probability is over samples (random $L,U$), not over $\mu$.</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 640 190" role="img" aria-label="Eight intervals from eight samples, drawn as horizontal bars around a vertical line at mu; seven cross the line, one misses.">
-          <line class="faint" x1="320" y1="22" x2="320" y2="182"/>
-          <text class="lbl" x="326" y="16">&#956; (fixed)</text>
-          <line class="axis" x1="245" y1="30" x2="355" y2="30"/><circle class="pt" cx="300" cy="30" r="3.5"/>
-          <line class="axis" x1="280" y1="50" x2="410" y2="50"/><circle class="pt" cx="345" cy="50" r="3.5"/>
-          <line class="axis" x1="260" y1="70" x2="360" y2="70"/><circle class="pt" cx="310" cy="70" r="3.5"/>
-          <line class="axis" x1="230" y1="90" x2="350" y2="90"/><circle class="pt" cx="290" cy="90" r="3.5"/>
-          <line class="axis" x1="342" y1="110" x2="458" y2="110"/><circle class="pt" cx="400" cy="110" r="3.5"/>
-          <line class="axis" x1="268" y1="130" x2="392" y2="130"/><circle class="pt" cx="330" cy="130" r="3.5"/>
-          <line class="axis" x1="263" y1="150" x2="367" y2="150"/><circle class="pt" cx="315" cy="150" r="3.5"/>
-          <line class="axis" x1="269" y1="170" x2="401" y2="170"/><circle class="pt" cx="335" cy="170" r="3.5"/>
-          <text class="lbl muted" x="470" y="114">miss</text>
+        <svg width="374" viewBox="0 0 440 190" role="img" aria-label="Eight intervals from eight samples, drawn as horizontal bars of equal width around a vertical line at mu; seven cross the line, one misses.">
+          <line class="faint" x1="220" y1="24" x2="220" y2="186"/>
+          <text class="lbl" x="220" y="16" text-anchor="middle">&#956; (fixed)</text>
+          <line class="axis" x1="150" y1="36" x2="250" y2="36"/><circle class="pt" cx="200" cy="36" r="3.5"/>
+          <line class="axis" x1="195" y1="56" x2="295" y2="56"/><circle class="pt" cx="245" cy="56" r="3.5"/>
+          <line class="axis" x1="162" y1="76" x2="262" y2="76"/><circle class="pt" cx="212" cy="76" r="3.5"/>
+          <line class="axis" x1="137" y1="96" x2="237" y2="96"/><circle class="pt" cx="187" cy="96" r="3.5"/>
+          <line class="accent-2" x1="232" y1="116" x2="332" y2="116"/><circle class="accent-2-fill" cx="282" cy="116" r="3.5"/>
+          <line class="axis" x1="182" y1="136" x2="282" y2="136"/><circle class="pt" cx="232" cy="136" r="3.5"/>
+          <line class="axis" x1="143" y1="156" x2="243" y2="156"/><circle class="pt" cx="193" cy="156" r="3.5"/>
+          <line class="axis" x1="188" y1="176" x2="288" y2="176"/><circle class="pt" cx="238" cy="176" r="3.5"/>
+          <text class="lbl accent-2" x="342" y="121">miss</text>
         </svg>
-        <figcaption>Eight samples, eight intervals $\bar x_n\pm$ margin. Seven cover $\mu$.</figcaption>
+        <figcaption>Eight samples, eight intervals $\bar x_n\pm$ margin: the centers wander, and one misses $\mu$.</figcaption>
       </figure>
 
       <h2>$\sigma$ known: the z-interval</h2>
@@ -115,7 +115,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

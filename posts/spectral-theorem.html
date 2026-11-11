@@ -13,7 +13,7 @@
   </script>
   <title>The spectral theorem - Deep Learning Notes</title>
   <meta name="description" content="Symmetric matrices have real eigenvalues and orthogonal eigenvectors: A = QΛQ^T, and A as a sum of simple rank-1 pieces.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -68,45 +68,41 @@
       <p>$$q_1=\tfrac1{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix},\ q_2=\tfrac1{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix},\ \Lambda=\begin{pmatrix}3&0\\0&1\end{pmatrix}: \quad Q\Lambda Q^T=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A.$$</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 640 260" role="img" aria-label="A acting on a point by stretching its eigenbasis coordinates by lambda 1 and lambda 2">
+        <svg width="382" viewBox="0 0 450 240" role="img" aria-label="Left: the unit circle with a point x split into its q1 and q2 parts. Right: A maps the circle to an ellipse with axes 3 q1 and 1 q2; the q1 part of x is tripled and the q2 part is unchanged.">
           <defs>
-            <marker id="spec-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
-            </marker>
+            <marker id="spec1-a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker>
+            <marker id="spec1-h" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
           </defs>
-          <text class="lbl" x="12" y="14">x in the eigenbasis</text>
-          <text class="lbl" x="370" y="14">Ax, stretched along q&#8321;, q&#8322;</text>
-
-          <line class="axis" x1="111.7" y1="168.3" x2="203.6" y2="76.4"/>
-          <line class="axis" x1="111.7" y1="111.7" x2="203.6" y2="203.6"/>
-          <text class="lbl" x="207" y="72">q&#8321;</text>
-          <text class="lbl" x="207" y="212">q&#8322;</text>
-          <circle class="origin" cx="140" cy="140" r="3"/>
-
-          <circle class="pt" cx="165.5" cy="140" r="4.5"/>
-          <text class="lbl" x="171" y="136">x</text>
-          <line class="faint" x1="165.5" y1="140" x2="152.7" y2="127.3"/>
-          <line class="faint" x1="165.5" y1="140" x2="152.7" y2="152.7"/>
-          <circle class="pt" cx="152.7" cy="127.3" r="3"/>
-          <circle class="pt" cx="152.7" cy="152.7" r="3"/>
-
-          <line class="axis" x1="240" y1="140" x2="350" y2="140" marker-end="url(#spec-arrow)"/>
-          <text class="lbl" x="283" y="130">A</text>
-
-          <line class="axis" x1="451.7" y1="168.3" x2="571.9" y2="48.1"/>
-          <line class="axis" x1="451.7" y1="111.7" x2="571.9" y2="231.9"/>
-          <text class="lbl" x="576" y="44">q&#8321;</text>
-          <text class="lbl" x="576" y="226">q&#8322;</text>
-          <circle class="origin" cx="480" cy="140" r="3"/>
-
-          <circle class="pt" cx="530.9" cy="114.6" r="4.5"/>
-          <text class="lbl" x="536" y="110">Ax</text>
-          <line class="faint" x1="530.9" y1="114.6" x2="518.2" y2="101.8"/>
-          <line class="faint" x1="530.9" y1="114.6" x2="492.7" y2="152.7"/>
-          <circle class="pt" cx="518.2" cy="101.8" r="3"/>
-          <circle class="pt" cx="492.7" cy="152.7" r="3"/>
+          <line class="faint" x1="22" y1="164" x2="106" y2="80"/>
+          <line class="faint" x1="22" y1="80" x2="106" y2="164"/>
+          <circle class="outline" cx="64" cy="122" r="44"/>
+          <line class="faint" x1="107.6" y1="128.2" x2="82.7" y2="103.3"/>
+          <line class="faint" x1="107.6" y1="128.2" x2="88.9" y2="146.9"/>
+          <line class="accent" x1="64" y1="122" x2="82.7" y2="103.3" marker-end="url(#spec1-a)"/>
+          <line class="axis" x1="64" y1="122" x2="88.9" y2="146.9" marker-end="url(#spec1-h)"/>
+          <circle class="pt" cx="107.6" cy="128.2" r="3.5"/>
+          <text class="lbl" x="114.6" y="133.2">x</text>
+          <text class="lbl accent" x="109" y="78">q&#8321;</text>
+          <text class="lbl" x="109" y="176">q&#8322;</text>
+          <circle class="origin" cx="64" cy="122" r="3"/>
+          <line class="axis" x1="150" y1="122" x2="210" y2="122" marker-end="url(#spec1-h)"/>
+          <text class="lbl" x="180" y="113" text-anchor="middle">A</text>
+          <line class="faint" x1="216.9" y1="223.1" x2="419.1" y2="20.9"/>
+          <line class="faint" x1="276" y1="80" x2="360" y2="164"/>
+          <ellipse class="outline" cx="318" cy="122" rx="132" ry="44" transform="rotate(-45 318 122)"/>
+          <line class="faint" x1="398.9" y1="90.9" x2="374" y2="66"/>
+          <line class="faint" x1="398.9" y1="90.9" x2="342.9" y2="146.9"/>
+          <line class="accent" x1="318" y1="122" x2="374" y2="66" marker-end="url(#spec1-a)"/>
+          <line class="axis" x1="318" y1="122" x2="342.9" y2="146.9" marker-end="url(#spec1-h)"/>
+          <circle class="pt" cx="398.9" cy="90.9" r="3.5"/>
+          <text class="lbl" x="405.9" y="95.9">Ax</text>
+          <text class="lbl accent" x="316" y="90">&#215;3</text>
+          <text class="lbl" x="338.4" y="131.4">&#215;1</text>
+          <text class="lbl accent" x="422.1" y="18.9">q&#8321;</text>
+          <text class="lbl" x="363" y="176">q&#8322;</text>
+          <circle class="origin" cx="318" cy="122" r="3"/>
         </svg>
-        <figcaption>The $q_1$ coordinate of $x$ is tripled, the $q_2$ coordinate is kept: $Ax=3(q_1^Tx)q_1+1(q_2^Tx)q_2$.</figcaption>
+        <figcaption>$A$ triples the $q_1$ part and keeps the $q_2$ part, so the unit circle becomes an ellipse with semi-axes $3q_1$ and $1q_2$.</figcaption>
       </figure>
 
       <h2>Eigenvalues are real</h2>
@@ -135,19 +131,28 @@
       <p>$$q_1=\tfrac1{\sqrt3}(1,1,1),\quad q_2=\tfrac1{\sqrt2}(1,-1,0),\quad q_3=\tfrac1{\sqrt6}(1,1,-2).$$</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 400 260" role="img" aria-label="Any orthonormal basis of a repeated eigenvalue's eigenspace is a valid choice of eigenvectors">
-          <circle class="faint" cx="200" cy="140" r="90" style="fill:none"/>
-          <circle class="origin" cx="200" cy="140" r="3"/>
-          <line class="axis" x1="110" y1="140" x2="290" y2="140"/>
-          <line class="axis" x1="200" y1="50" x2="200" y2="230"/>
-          <text class="lbl" x="294" y="144">q&#8322;</text>
-          <text class="lbl" x="204" y="46">q&#8323;</text>
-          <line class="faint" x1="122.1" y1="95" x2="277.9" y2="185"/>
-          <line class="faint" x1="155" y1="62.1" x2="245" y2="217.9"/>
-          <text class="lbl muted" x="283" y="189">q&#8322;&#8242;</text>
-          <text class="lbl muted" x="249" y="224">q&#8323;&#8242;</text>
+        <svg width="255" viewBox="0 0 300 210" role="img" aria-label="Looking straight down q1, the eigenspace of eigenvalue 0 is a plane. Two different perpendicular unit pairs in it, q2 q3 and the rotated q2 prime q3 prime, are both valid eigenvector choices.">
+          <defs>
+            <marker id="spec2-a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker>
+            <marker id="spec2-b" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-2-fill"/></marker>
+          </defs>
+          <circle class="area" cx="150" cy="108" r="80"/>
+          <circle class="outline" cx="150" cy="108" r="80"/>
+          <line class="accent-2" x1="150" y1="108" x2="219.3" y2="68" marker-end="url(#spec2-b)"/>
+          <line class="accent-2" x1="150" y1="108" x2="110" y2="38.7" marker-end="url(#spec2-b)"/>
+          <line class="accent" x1="150" y1="108" x2="230" y2="108" marker-end="url(#spec2-a)"/>
+          <line class="accent" x1="150" y1="108" x2="150" y2="28" marker-end="url(#spec2-a)"/>
+          <path class="faint" fill="none" d="M188,108 A38,38 0 0 0 182.9,89"/>
+          <text class="lbl muted" x="198.5" y="100.9" text-anchor="middle">&#952;</text>
+          <text class="lbl accent" x="235" y="113">q&#8322;</text>
+          <text class="lbl accent" x="159" y="25">q&#8323;</text>
+          <text class="lbl accent-2" x="227.3" y="67">q&#8322;&#8242;</text>
+          <text class="lbl accent-2" x="103" y="36.7" text-anchor="end">q&#8323;&#8242;</text>
+          <circle class="origin" cx="150" cy="108" r="6"/>
+          <circle class="pt" cx="150" cy="108" r="2"/>
+          <text class="lbl" x="138" y="130" text-anchor="end">q&#8321;</text>
         </svg>
-        <figcaption>Inside the eigenspace of $\lambda=0$, the solid pair $(q_2,q_3)$ and the dashed pair $(q_2',q_3')$ work equally well.</figcaption>
+        <figcaption>Looking down $q_1$: the $\lambda=0$ eigenspace is a whole plane, and any perpendicular unit pair in it, $(q_2,q_3)$ or the rotated $(q_2',q_3')$, completes $Q$.</figcaption>
       </figure>
 
       <h2>$A$ as a sum of rank-1 pieces</h2>
@@ -174,7 +179,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

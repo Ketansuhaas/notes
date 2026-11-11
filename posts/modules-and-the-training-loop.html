@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Modules and the training loop - Deep Learning Notes</title>
+  <meta name="description" content="nn.Module as a tree of parameters and submodules, the five-line training loop (forward, loss, zero_grad, backward, step) as a cycle, train versus eval mode for dropout and batchnorm, and gradient accumulation.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Modules and the training loop</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Modules and the training loop</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">modules</span><span class="tag">training-loop</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="pytorch-autograd.html">Autograd in PyTorch</a>, <a href="backpropagation-via-jvps.html">Backpropagation via Jacobian-vector products</a> &middot; <strong>Leads to:</strong> <a href="optimizers-and-their-state.html">Optimizers and their memory</a></p>
+      <p class="idea">A model is a tree of modules that owns its parameters. Training is one five-line cycle, repeated per batch.</p>
+
+      <h2><code>nn.Module</code>: a tree of parameters</h2>
+      <p class="idea">A Module stores parameters (leaf tensors with <code>requires_grad=True</code>) and child modules, and defines <code>forward</code>. Assigning a child as an attribute registers it, so <code>model.parameters()</code> finds every weight in the tree.</p>
+<pre><code>import torch, torch.nn as nn
+class MLP(nn.Module):
+    def __init__(self, d_in, d_hid, d_out):
+        super().__init__()
+        self.fc1 = nn.Linear(d_in, d_hid)   # weight (d_hid, d_in), bias (d_hid,)
+        self.fc2 = nn.Linear(d_hid, d_out)
+    def forward(self, x):                   # x: (B, d_in)
+        return self.fc2(torch.relu(self.fc1(x)))
+
+model = MLP(784, 256, 10)
+sum(p.numel() for p in model.parameters())  # 203530</code></pre>
+      <table>
+        <tr><td><code>model(x)</code></td><td>runs <code>forward</code> (plus hooks)</td></tr>
+        <tr><td><code>model.parameters()</code></td><td>every weight, for the optimizer</td></tr>
+        <tr><td><code>model.to('cuda')</code></td><td>moves every parameter and buffer</td></tr>
+        <tr><td><code>model.state_dict()</code></td><td>name &rarr; tensor, for saving</td></tr>
+      </table>
+      <p class="example-label">Example</p>
+      <p>$784\cdot256+256=200{,}960$ and $256\cdot10+10=2{,}570$: total $203{,}530$.</p>
+
+      <h2>The training loop</h2>
+      <p class="idea">Predict, score, clear old gradients, compute new ones, nudge the weights. Then the next batch.</p>
+<pre><code>opt = torch.optim.SGD(model.parameters(), lr=0.1)
+loss_fn = nn.CrossEntropyLoss()
+for x, y in loader:               # x: (B, 784), y: (B,) int64
+    logits = model(x)             # 1. forward: (B, 10), graph recorded
+    loss = loss_fn(logits, y)     # 2. loss: a scalar
+    opt.zero_grad()               # 3. clear .grad
+    loss.backward()               # 4. fill .grad, free the graph
+    opt.step()                    # 5. p -= lr * p.grad</code></pre>
+
+      <figure class="figure">
+        <svg width="476" viewBox="0 0 560 180" role="img" aria-label="Cycle of five boxes: forward, loss, zero_grad, backward, step, and back to forward for the next batch.">
+          <defs>
+            <marker id="tl1-h" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+          </defs>
+          <rect class="outline" x="30" y="30" width="130" height="34" rx="4"/>
+          <text class="lbl" x="95" y="52" text-anchor="middle">1  forward</text>
+          <rect class="outline" x="215" y="30" width="130" height="34" rx="4"/>
+          <text class="lbl" x="280" y="52" text-anchor="middle">2  loss</text>
+          <rect class="outline" x="400" y="30" width="130" height="34" rx="4"/>
+          <text class="lbl" x="465" y="52" text-anchor="middle">3  zero_grad</text>
+          <rect class="area" x="400" y="136" width="130" height="34" rx="4"/>
+          <rect class="outline" x="400" y="136" width="130" height="34" rx="4"/>
+          <text class="lbl" x="465" y="158" text-anchor="middle">4  backward</text>
+          <rect class="area-2" x="30" y="136" width="130" height="34" rx="4"/>
+          <rect class="outline" x="30" y="136" width="130" height="34" rx="4"/>
+          <text class="lbl" x="95" y="158" text-anchor="middle">5  step</text>
+          <line class="axis" x1="160" y1="47" x2="213" y2="47" marker-end="url(#tl1-h)"/>
+          <line class="axis" x1="345" y1="47" x2="398" y2="47" marker-end="url(#tl1-h)"/>
+          <line class="axis" x1="465" y1="64" x2="465" y2="134" marker-end="url(#tl1-h)"/>
+          <line class="axis" x1="400" y1="153" x2="162" y2="153" marker-end="url(#tl1-h)"/>
+          <line class="axis" x1="95" y1="136" x2="95" y2="66" marker-end="url(#tl1-h)"/>
+          <text class="lbl muted" x="455" y="104" text-anchor="end">.grad = None</text>
+          <text class="lbl accent" x="281" y="145" text-anchor="middle">p.grad = ∇L</text>
+          <text class="lbl accent-2" x="105" y="104">p updated, next batch</text>
+          <text class="lbl muted" x="280" y="20" text-anchor="middle">graph + activations held until backward</text>
+        </svg>
+        <figcaption>Backward (blue) fills <code>.grad</code>; step (orange) consumes it. <code>zero_grad</code> just has to come before the next backward.</figcaption>
+      </figure>
+
+      <h2>train() and eval()</h2>
+      <p class="idea">A few layers act differently while training. <code>model.eval()</code> flips every submodule to its deterministic inference behavior.</p>
+      <table>
+        <tr><td><strong>Layer</strong></td><td><strong><code>train()</code></strong></td><td><strong><code>eval()</code></strong></td></tr>
+        <tr><td>Dropout($p$)</td><td>zero each unit with prob. $p$, scale the rest by $\tfrac1{1-p}$</td><td>identity</td></tr>
+        <tr><td>BatchNorm</td><td>normalize with this batch's mean/var; update running stats</td><td>use the running stats</td></tr>
+      </table>
+<pre><code>model.eval()                 # mode flag only: autograd still records
+with torch.no_grad():        # so also turn recording off
+    val_logits = model(x_val)
+model.train()</code></pre>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>Delete <code>opt.zero_grad()</code> from the loop. What does <code>p.grad</code> hold at step $t$, and what happens to training? When is this behavior useful on purpose?</p>
+        <details>
+          <summary>Solution</summary>
+          <p><code>p.grad</code> $=g_1+g_2+\dots+g_t$: every past gradient, never forgotten. Each step moves along this growing sum, like momentum with no decay, so steps grow and training goes erratic or diverges.</p>
+          <p>On purpose: <strong>gradient accumulation</strong>. Want batch $kB$ but only $B$ fits in memory? Run $k$ backward passes, then one step.</p>
+<pre><code>for i, (x, y) in enumerate(loader):
+    loss = loss_fn(model(x), y) / k   # / k: average over k*B examples
+    loss.backward()                   # adds into .grad
+    if (i + 1) % k == 0:
+        opt.step()
+        opt.zero_grad()</code></pre>
+          <p>Same gradient as one batch of $kB$ (BatchNorm still sees batches of $B$).</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

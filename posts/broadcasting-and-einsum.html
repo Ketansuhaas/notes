@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Broadcasting and einsum - Deep Learning Notes</title>
+  <meta name="description" content="Broadcasting aligns shapes on the right and stretches size-1 axes with stride 0, for free; einsum names every axis and sums the ones missing from the output, covering dot products, matmuls, batch matmuls and attention scores.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Broadcasting and einsum</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Broadcasting and einsum</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">broadcasting</span><span class="tag">einsum</span><span class="tag">tensors</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="pytorch-tensors-and-strides.html">Tensors: shape, dtype, device, and strides</a>, <a href="four-views-of-matrix-multiplication.html">Four views of matrix multiplication</a> &middot; <strong>Leads to:</strong> <a href="pytorch-autograd.html">Autograd in PyTorch</a></p>
+      <p class="idea">Two ways to say "do this for every index" without a loop. Broadcasting repeats a tensor along missing axes; einsum names the axes and says which ones to sum.</p>
+
+      <h2>Broadcasting: align right, stretch the 1s</h2>
+      <p class="idea">Line the shapes up from the right. Each pair of sizes must match, or one of them is $1$ (or missing) and gets stretched.</p>
+      <table>
+        <tr><td><strong>Shapes</strong></td><td><strong>Result</strong></td><td><strong>Use</strong></td></tr>
+        <tr><td><code>(3, 1)</code> + <code>(1, 4)</code></td><td><code>(3, 4)</code></td><td>all pairs $a_i+b_j$</td></tr>
+        <tr><td><code>(B, T, 64)</code> + <code>(64,)</code></td><td><code>(B, T, 64)</code></td><td>add a bias everywhere</td></tr>
+        <tr><td><code>(B, 1, D)</code> &minus; <code>(1, N, D)</code></td><td><code>(B, N, D)</code></td><td>pairwise differences</td></tr>
+        <tr><td><code>(3,)</code> + <code>(4,)</code></td><td>error</td><td>$3\ne4$, neither is $1$</td></tr>
+      </table>
+
+      <figure class="figure">
+        <svg width="400" viewBox="0 0 470 160" role="img" aria-label="A 3 by 1 column and a 1 by 4 row are each stretched, as dashed virtual copies, into a 3 by 4 grid; their sum fills a new 3 by 4 tensor.">
+          <rect class="area" x="20" y="40" width="28" height="28"/>
+          <rect class="outline" x="20" y="40" width="28" height="28"/>
+          <text class="lbl" x="34" y="59" text-anchor="middle">0</text>
+          <rect class="faint" x="48" y="40" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="62" y="59" text-anchor="middle">0</text>
+          <rect class="faint" x="76" y="40" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="90" y="59" text-anchor="middle">0</text>
+          <rect class="faint" x="104" y="40" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="118" y="59" text-anchor="middle">0</text>
+          <rect class="area" x="20" y="68" width="28" height="28"/>
+          <rect class="outline" x="20" y="68" width="28" height="28"/>
+          <text class="lbl" x="34" y="87" text-anchor="middle">1</text>
+          <rect class="faint" x="48" y="68" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="62" y="87" text-anchor="middle">1</text>
+          <rect class="faint" x="76" y="68" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="90" y="87" text-anchor="middle">1</text>
+          <rect class="faint" x="104" y="68" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="118" y="87" text-anchor="middle">1</text>
+          <rect class="area" x="20" y="96" width="28" height="28"/>
+          <rect class="outline" x="20" y="96" width="28" height="28"/>
+          <text class="lbl" x="34" y="115" text-anchor="middle">2</text>
+          <rect class="faint" x="48" y="96" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="62" y="115" text-anchor="middle">2</text>
+          <rect class="faint" x="76" y="96" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="90" y="115" text-anchor="middle">2</text>
+          <rect class="faint" x="104" y="96" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="118" y="115" text-anchor="middle">2</text>
+          <rect class="area-2" x="180" y="40" width="28" height="28"/>
+          <rect class="outline" x="180" y="40" width="28" height="28"/>
+          <text class="lbl" x="194" y="59" text-anchor="middle">0</text>
+          <rect class="area-2" x="208" y="40" width="28" height="28"/>
+          <rect class="outline" x="208" y="40" width="28" height="28"/>
+          <text class="lbl" x="222" y="59" text-anchor="middle">1</text>
+          <rect class="area-2" x="236" y="40" width="28" height="28"/>
+          <rect class="outline" x="236" y="40" width="28" height="28"/>
+          <text class="lbl" x="250" y="59" text-anchor="middle">2</text>
+          <rect class="area-2" x="264" y="40" width="28" height="28"/>
+          <rect class="outline" x="264" y="40" width="28" height="28"/>
+          <text class="lbl" x="278" y="59" text-anchor="middle">3</text>
+          <rect class="faint" x="180" y="68" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="194" y="87" text-anchor="middle">0</text>
+          <rect class="faint" x="208" y="68" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="222" y="87" text-anchor="middle">1</text>
+          <rect class="faint" x="236" y="68" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="250" y="87" text-anchor="middle">2</text>
+          <rect class="faint" x="264" y="68" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="278" y="87" text-anchor="middle">3</text>
+          <rect class="faint" x="180" y="96" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="194" y="115" text-anchor="middle">0</text>
+          <rect class="faint" x="208" y="96" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="222" y="115" text-anchor="middle">1</text>
+          <rect class="faint" x="236" y="96" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="250" y="115" text-anchor="middle">2</text>
+          <rect class="faint" x="264" y="96" width="28" height="28" fill="none"/>
+          <text class="lbl muted" x="278" y="115" text-anchor="middle">3</text>
+          <rect class="outline" x="340" y="40" width="28" height="28"/>
+          <text class="lbl" x="354" y="59" text-anchor="middle">0</text>
+          <rect class="outline" x="368" y="40" width="28" height="28"/>
+          <text class="lbl" x="382" y="59" text-anchor="middle">1</text>
+          <rect class="outline" x="396" y="40" width="28" height="28"/>
+          <text class="lbl" x="410" y="59" text-anchor="middle">2</text>
+          <rect class="outline" x="424" y="40" width="28" height="28"/>
+          <text class="lbl" x="438" y="59" text-anchor="middle">3</text>
+          <rect class="outline" x="340" y="68" width="28" height="28"/>
+          <text class="lbl" x="354" y="87" text-anchor="middle">1</text>
+          <rect class="outline" x="368" y="68" width="28" height="28"/>
+          <text class="lbl" x="382" y="87" text-anchor="middle">2</text>
+          <rect class="outline" x="396" y="68" width="28" height="28"/>
+          <text class="lbl" x="410" y="87" text-anchor="middle">3</text>
+          <rect class="outline" x="424" y="68" width="28" height="28"/>
+          <text class="lbl" x="438" y="87" text-anchor="middle">4</text>
+          <rect class="outline" x="340" y="96" width="28" height="28"/>
+          <text class="lbl" x="354" y="115" text-anchor="middle">2</text>
+          <rect class="outline" x="368" y="96" width="28" height="28"/>
+          <text class="lbl" x="382" y="115" text-anchor="middle">3</text>
+          <rect class="outline" x="396" y="96" width="28" height="28"/>
+          <text class="lbl" x="410" y="115" text-anchor="middle">4</text>
+          <rect class="outline" x="424" y="96" width="28" height="28"/>
+          <text class="lbl" x="438" y="115" text-anchor="middle">5</text>
+          <text class="lbl" x="20" y="28">a: (3, 1)</text>
+          <text class="lbl" x="180" y="28">b: (1, 4)</text>
+          <text class="lbl" x="340" y="28">a + b: (3, 4)</text>
+          <text class="lbl" x="156" y="88" text-anchor="middle">+</text>
+          <text class="lbl" x="316" y="88" text-anchor="middle">=</text>
+          <text class="lbl muted" x="76" y="146" text-anchor="middle">stride (1, 0)</text>
+          <text class="lbl muted" x="236" y="146" text-anchor="middle">stride (0, 1)</text>
+          <text class="lbl muted" x="396" y="146" text-anchor="middle">new memory</text>
+        </svg>
+        <figcaption>Dashed copies are never stored: the stretched axis gets stride $0$. Only the result is new memory.</figcaption>
+      </figure>
+
+<pre><code>a = torch.arange(3.).view(3, 1)    # column
+b = torch.arange(4.).view(1, 4)    # row
+(a + b).shape                      # (3, 4)
+a.expand(3, 4).stride()            # (1, 0): stride 0, no copy
+x = torch.randn(32, 128)
+(x - x.mean(0)).shape              # (32, 128): center every column</code></pre>
+
+      <h2>einsum: name the axes</h2>
+      <p class="idea">Give every axis a letter. Letters in the output survive; letters that appear in the inputs but not the output are multiplied and summed.</p>
+      <table>
+        <tr><td><strong>Operation</strong></td><td><strong>einsum</strong></td><td><strong>Math</strong></td></tr>
+        <tr><td>dot product</td><td><code>'i,i-&gt;'</code></td><td>$\sum_i x_iy_i$</td></tr>
+        <tr><td>outer product</td><td><code>'i,j-&gt;ij'</code></td><td>$x_iy_j$</td></tr>
+        <tr><td>matmul</td><td><code>'ik,kj-&gt;ij'</code></td><td>$\sum_k A_{ik}B_{kj}$</td></tr>
+        <tr><td>batch matmul</td><td><code>'bik,bkj-&gt;bij'</code></td><td>one matmul per $b$</td></tr>
+        <tr><td>row sums</td><td><code>'ij-&gt;i'</code></td><td>$\sum_j A_{ij}$</td></tr>
+        <tr><td>attention scores</td><td><code>'bhqd,bhkd-&gt;bhqk'</code></td><td>$\sum_d Q_{qd}K_{kd}$ per batch, head</td></tr>
+      </table>
+      <p>Matmul's string is the "entry = row &middot; column" view from <a href="four-views-of-matrix-multiplication.html">Four views</a>: the shared $k$ is the dot product. The outer product has no shared letter, so nothing is summed.</p>
+      <p class="example-label">Example: attention scores</p>
+<pre><code>B, H, T, D = 2, 4, 16, 32
+q, k = torch.randn(B, H, T, D), torch.randn(B, H, T, D)
+s = torch.einsum('bhqd,bhkd-&gt;bhqk', q, k) / D**0.5    # (2, 4, 16, 16)
+torch.allclose(s, q @ k.transpose(-2, -1) / D**0.5, atol=1e-5)   # True</code></pre>
+      <p>$d$ is missing from the output, so it is summed: every query dotted with every key, per batch and head.</p>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>Batched bilinear form: $s_b=x_b^TA\,y_b$ with $x$ of shape <code>(B, n)</code>, $A$ of shape <code>(n, m)</code>, $y$ of shape <code>(B, m)</code>. Write it with einsum. Then let $A$ have $K$ matrices, shape <code>(K, n, m)</code>: what is the string and the output shape?</p>
+        <details>
+          <summary>Solution</summary>
+          <p><code>torch.einsum('bi,ij,bj-&gt;b', x, A, y)</code>, shape <code>(B,)</code>: $s_b=\sum_{i,j}x_{bi}A_{ij}y_{bj}$. Same as <code>((x @ A) * y).sum(-1)</code>.</p>
+          <p>With $K$ matrices: <code>'bi,kij,bj-&gt;bk'</code>, shape <code>(B, K)</code>, one score per example per matrix (what <code>nn.Bilinear</code> computes, plus a bias).</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

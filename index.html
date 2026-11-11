@@ -13,7 +13,7 @@
   </script>
   <title>Deep Learning Notes: Mathematics &amp; Theory</title>
   <meta name="description" content="Deep Learning Notes: Mathematics &amp; Theory - notes on mathematics and deep learning, filterable by tag.">
-  <link rel="stylesheet" href="assets/style.css?v=14">
+  <link rel="stylesheet" href="assets/style.css?v=16">
 </head>
 <body>
   <header class="site-header">
@@ -100,6 +100,45 @@
       <button type="button" data-tag="gradient-descent">gradient-descent</button>
       <button type="button" data-tag="condition-number">condition-number</button>
       <button type="button" data-tag="matrix-calculus">matrix-calculus</button>
+      <button type="button" data-tag="pytorch">pytorch</button>
+      <button type="button" data-tag="tensors">tensors</button>
+      <button type="button" data-tag="strides">strides</button>
+      <button type="button" data-tag="memory">memory</button>
+      <button type="button" data-tag="broadcasting">broadcasting</button>
+      <button type="button" data-tag="einsum">einsum</button>
+      <button type="button" data-tag="autograd">autograd</button>
+      <button type="button" data-tag="modules">modules</button>
+      <button type="button" data-tag="training-loop">training-loop</button>
+      <button type="button" data-tag="optimizers">optimizers</button>
+      <button type="button" data-tag="adam">adam</button>
+      <button type="button" data-tag="data-loading">data-loading</button>
+      <button type="button" data-tag="gpu">gpu</button>
+      <button type="button" data-tag="hardware">hardware</button>
+      <button type="button" data-tag="throughput">throughput</button>
+      <button type="button" data-tag="latency">latency</button>
+      <button type="button" data-tag="memory-hierarchy">memory-hierarchy</button>
+      <button type="button" data-tag="warps">warps</button>
+      <button type="button" data-tag="simt">simt</button>
+      <button type="button" data-tag="coalescing">coalescing</button>
+      <button type="button" data-tag="roofline">roofline</button>
+      <button type="button" data-tag="arithmetic-intensity">arithmetic-intensity</button>
+      <button type="button" data-tag="matmul">matmul</button>
+      <button type="button" data-tag="performance">performance</button>
+      <button type="button" data-tag="cuda">cuda</button>
+      <button type="button" data-tag="kernels">kernels</button>
+      <button type="button" data-tag="threads">threads</button>
+      <button type="button" data-tag="tiling">tiling</button>
+      <button type="button" data-tag="shared-memory">shared-memory</button>
+      <button type="button" data-tag="floating-point">floating-point</button>
+      <button type="button" data-tag="mixed-precision">mixed-precision</button>
+      <button type="button" data-tag="bf16">bf16</button>
+      <button type="button" data-tag="fp16">fp16</button>
+      <button type="button" data-tag="kernel-fusion">kernel-fusion</button>
+      <button type="button" data-tag="torch-compile">torch-compile</button>
+      <button type="button" data-tag="triton">triton</button>
+      <button type="button" data-tag="softmax">softmax</button>
+      <button type="button" data-tag="attention">attention</button>
+      <button type="button" data-tag="flash-attention">flash-attention</button>
     </div>
 
     <ul class="post-list" id="notes-list">
@@ -239,6 +278,70 @@
         <div class="title-row"><a href="posts/matrix-calculus.html">Matrix calculus with differentials</a></div>
         <div class="tags"><span class="tag">calculus</span><span class="tag">matrix-calculus</span><span class="tag">gradients</span><span class="tag">linear-algebra</span></div>
       </li>
+      <li data-tags="pytorch tensors strides memory">
+        <div class="title-row"><a href="posts/pytorch-tensors-and-strides.html">Tensors: shape, dtype, device, and strides</a></div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">tensors</span><span class="tag">strides</span><span class="tag">memory</span></div>
+      </li>
+      <li data-tags="pytorch broadcasting einsum tensors">
+        <div class="title-row"><a href="posts/broadcasting-and-einsum.html">Broadcasting and einsum</a></div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">broadcasting</span><span class="tag">einsum</span><span class="tag">tensors</span></div>
+      </li>
+      <li data-tags="pytorch autograd gradients automatic-differentiation">
+        <div class="title-row"><a href="posts/pytorch-autograd.html">Autograd in PyTorch</a></div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">autograd</span><span class="tag">gradients</span><span class="tag">automatic-differentiation</span></div>
+      </li>
+      <li data-tags="pytorch modules training-loop">
+        <div class="title-row"><a href="posts/modules-and-the-training-loop.html">Modules and the training loop</a></div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">modules</span><span class="tag">training-loop</span></div>
+      </li>
+      <li data-tags="pytorch optimizers adam memory">
+        <div class="title-row"><a href="posts/optimizers-and-their-state.html">Optimizers and their memory</a></div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">optimizers</span><span class="tag">adam</span><span class="tag">memory</span></div>
+      </li>
+      <li data-tags="pytorch data-loading">
+        <div class="title-row"><a href="posts/datasets-and-dataloaders.html">Datasets and DataLoaders</a></div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">data-loading</span></div>
+      </li>
+      <li data-tags="gpu hardware throughput latency">
+        <div class="title-row"><a href="posts/why-gpus.html">Why GPUs: latency vs. throughput</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">hardware</span><span class="tag">throughput</span><span class="tag">latency</span></div>
+      </li>
+      <li data-tags="gpu memory-hierarchy warps simt coalescing">
+        <div class="title-row"><a href="posts/gpu-architecture-and-memory.html">Inside a GPU: SMs, warps, and memory</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">memory-hierarchy</span><span class="tag">warps</span><span class="tag">simt</span><span class="tag">coalescing</span></div>
+      </li>
+      <li data-tags="gpu roofline arithmetic-intensity matmul performance">
+        <div class="title-row"><a href="posts/roofline-and-arithmetic-intensity.html">Arithmetic intensity and the roofline</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">roofline</span><span class="tag">arithmetic-intensity</span><span class="tag">matmul</span><span class="tag">performance</span></div>
+      </li>
+      <li data-tags="gpu cuda kernels threads">
+        <div class="title-row"><a href="posts/cuda-programming-model.html">The CUDA programming model</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">cuda</span><span class="tag">kernels</span><span class="tag">threads</span></div>
+      </li>
+      <li data-tags="gpu matmul tiling shared-memory arithmetic-intensity">
+        <div class="title-row"><a href="posts/tiled-matrix-multiplication.html">Tiled matrix multiplication</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">matmul</span><span class="tag">tiling</span><span class="tag">shared-memory</span><span class="tag">arithmetic-intensity</span></div>
+      </li>
+      <li data-tags="gpu floating-point mixed-precision bf16 fp16">
+        <div class="title-row"><a href="posts/floating-point-and-mixed-precision.html">Floating point and mixed precision</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">floating-point</span><span class="tag">mixed-precision</span><span class="tag">bf16</span><span class="tag">fp16</span></div>
+      </li>
+      <li data-tags="gpu pytorch cuda">
+        <div class="title-row"><a href="posts/how-pytorch-runs-on-the-gpu.html">How PyTorch runs on the GPU</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">pytorch</span><span class="tag">cuda</span></div>
+      </li>
+      <li data-tags="gpu pytorch kernel-fusion torch-compile">
+        <div class="title-row"><a href="posts/kernel-fusion-and-torch-compile.html">Kernel fusion and torch.compile</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">pytorch</span><span class="tag">kernel-fusion</span><span class="tag">torch-compile</span></div>
+      </li>
+      <li data-tags="gpu triton cuda kernel-fusion softmax">
+        <div class="title-row"><a href="posts/triton-block-programming.html">Triton: programming GPUs in blocks</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">triton</span><span class="tag">cuda</span><span class="tag">kernel-fusion</span><span class="tag">softmax</span></div>
+      </li>
+      <li data-tags="gpu attention flash-attention softmax kernel-fusion">
+        <div class="title-row"><a href="posts/flash-attention.html">FlashAttention: tiling plus online softmax</a></div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">attention</span><span class="tag">flash-attention</span><span class="tag">softmax</span><span class="tag">kernel-fusion</span></div>
+      </li>
     </ul>
     <script>
       (function () {
@@ -313,7 +416,7 @@
   </footer>
   <script src="assets/cite.js?v=2"></script>
   <script src="assets/theme.js?v=2"></script>
-  <script src="assets/sidebar.js?v=4"></script>
+  <script src="assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

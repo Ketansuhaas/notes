@@ -58,6 +58,32 @@
         ["posts/weight-initialization-and-variance.html", "Weight initialization and variance propagation"],
         ["posts/reparameterization-trick.html", "The reparameterization trick"]
       ]
+    },
+    {
+      title: "PyTorch",
+      posts: [
+        ["posts/pytorch-tensors-and-strides.html", "Tensors: shape, dtype, device, and strides"],
+        ["posts/broadcasting-and-einsum.html", "Broadcasting and einsum"],
+        ["posts/pytorch-autograd.html", "Autograd in PyTorch"],
+        ["posts/modules-and-the-training-loop.html", "Modules and the training loop"],
+        ["posts/optimizers-and-their-state.html", "Optimizers and their memory"],
+        ["posts/datasets-and-dataloaders.html", "Datasets and DataLoaders"]
+      ]
+    },
+    {
+      title: "GPUs & Kernels",
+      posts: [
+        ["posts/why-gpus.html", "Why GPUs: latency vs. throughput"],
+        ["posts/gpu-architecture-and-memory.html", "Inside a GPU: SMs, warps, and memory"],
+        ["posts/roofline-and-arithmetic-intensity.html", "Arithmetic intensity and the roofline"],
+        ["posts/cuda-programming-model.html", "The CUDA programming model"],
+        ["posts/tiled-matrix-multiplication.html", "Tiled matrix multiplication"],
+        ["posts/floating-point-and-mixed-precision.html", "Floating point and mixed precision"],
+        ["posts/how-pytorch-runs-on-the-gpu.html", "How PyTorch runs on the GPU"],
+        ["posts/kernel-fusion-and-torch-compile.html", "Kernel fusion and torch.compile"],
+        ["posts/triton-block-programming.html", "Triton: programming GPUs in blocks"],
+        ["posts/flash-attention.html", "FlashAttention: tiling plus online softmax"]
+      ]
     }
   ];
 

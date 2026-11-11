@@ -13,7 +13,7 @@
   </script>
   <title>Probability notation and random variables - Deep Learning Notes</title>
   <meta name="description" content="Random variables vs. realizations, P(X=x) vs p(x), random vectors, expectation notation, and the data-generating distribution p_data that all of machine learning is trying to approximate.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -72,26 +72,29 @@
       <p>$P(x)$ alone is ill-formed: $x$ is a number, not an event. Write $P(X=x)$.</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 560 190" role="img" aria-label="Left, a discrete probability mass function shown as bars whose heights are probabilities summing to one. Right, a continuous probability density function shown as a smooth curve whose area, not height, integrates to one">
-          <text class="lbl" x="16" y="18">pmf (discrete): bars sum to 1</text>
-          <line class="axis" x1="30" y1="150" x2="250" y2="150"/>
-          <line class="axis" x1="60" y1="150" x2="60" y2="70"/>
-          <line class="axis" x1="110" y1="150" x2="110" y2="100"/>
-          <line class="axis" x1="160" y1="150" x2="160" y2="120"/>
-          <line class="axis" x1="210" y1="150" x2="210" y2="135"/>
-          <text class="lbl muted" x="46" y="165">x&#8321;</text>
-          <text class="lbl muted" x="96" y="165">x&#8322;</text>
-          <text class="lbl muted" x="146" y="165">x&#8323;</text>
-          <text class="lbl muted" x="196" y="165">x&#8324;</text>
-          <text class="lbl muted" x="62" y="64">p(x&#8321;)</text>
-
-          <text class="lbl" x="310" y="18">pdf (continuous): area = 1</text>
-          <line class="axis" x1="320" y1="150" x2="540" y2="150"/>
-          <path class="axis" d="M330,150 C360,150 370,70 430,70 C490,70 500,150 530,150" fill="none"/>
-          <line class="faint" x1="430" y1="150" x2="430" y2="70"/>
-          <text class="lbl muted" x="436" y="100">p(x) can exceed 1</text>
+        <svg width="442" viewBox="0 0 520 190" role="img" aria-label="Left, a probability mass function as bars; the highlighted bar's height is the probability P(X = x2). Right, a probability density curve; the shaded area between a and b is the probability P(a at most X at most b).">
+          <text class="lbl" x="10" y="20">pmf: probability = <tspan class="accent-fill">height</tspan></text>
+          <line class="axis" x1="20" y1="150" x2="225" y2="150"/>
+          <rect class="outline" x="46" y="70" width="18" height="80"/>
+          <text class="lbl muted" x="55" y="168" text-anchor="middle">x&#8321;</text>
+          <rect class="accent-fill" x="91" y="90" width="18" height="60"/>
+          <text class="lbl muted" x="100" y="168" text-anchor="middle">x&#8322;</text>
+          <rect class="outline" x="136" y="110" width="18" height="40"/>
+          <text class="lbl muted" x="145" y="168" text-anchor="middle">x&#8323;</text>
+          <rect class="outline" x="181" y="130" width="18" height="20"/>
+          <text class="lbl muted" x="190" y="168" text-anchor="middle">x&#8324;</text>
+          <text class="lbl accent" x="100" y="80" text-anchor="middle">P(X=x&#8322;)</text>
+          <text class="lbl" x="290" y="20">pdf: probability = <tspan class="accent-fill">area</tspan></text>
+          <path class="area" d="M365,150 L365,105 L370,97 L375,89 L380,81.3 L385,74.3 L390,68.3 L395,63.8 L400,61 L405,60 L410,61 L415,63.8 L420,68.3 L425,74.3 L430,81.3 L435,89 L440,97 L445,105 L445,150 Z"/>
+          <line class="axis" x1="290" y1="150" x2="515" y2="150"/>
+          <polyline class="axis" fill="none" points="300,149.2 305,148.8 310,148.2 315,147.3 320,146 325,144.4 330,142.1 335,139.2 340,135.5 345,131 350,125.7 355,119.5 360,112.5 365,105 370,97 375,89 380,81.3 385,74.3 390,68.3 395,63.8 400,61 405,60 410,61 415,63.8 420,68.3 425,74.3 430,81.3 435,89 440,97 445,105 450,112.5 455,119.5 460,125.7 465,131 470,135.5 475,139.2 480,142.1 485,144.4 490,146 495,147.3 500,148.2 505,148.8 510,149.2"/>
+          <line class="accent" x1="365" y1="150" x2="365" y2="105"/>
+          <line class="accent" x1="445" y1="150" x2="445" y2="105"/>
+          <text class="lbl muted" x="365" y="168" text-anchor="middle">a</text>
+          <text class="lbl muted" x="445" y="168" text-anchor="middle">b</text>
+          <text class="lbl accent" x="405" y="135" text-anchor="middle">P(a&#8804;X&#8804;b)</text>
         </svg>
-        <figcaption>Bar heights are probabilities. Curve height is a density; only the area is a probability.</figcaption>
+        <figcaption>A bar's height is a probability. A density's height is not; only area under it is.</figcaption>
       </figure>
       <p class="example-label">Example</p>
       <p>$X\sim\text{Unif}[0,\tfrac12]$: $p(x)=2$ on the interval, yet $P(X=\tfrac14)=0$ and $P(X\le\tfrac14)=2\cdot\tfrac14=\tfrac12$.</p>
@@ -141,7 +144,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

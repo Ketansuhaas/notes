@@ -13,7 +13,7 @@
   </script>
   <title>Primal and dual problems - Deep Learning Notes</title>
   <meta name="description" content="The Lagrangian dual function, weak and strong duality, why the dual is always concave, and where duality shows up: shadow prices, the SVM kernel trick, max-flow min-cut.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -84,19 +84,26 @@
       <p>$d'(\mu)=1-\mu=0$: $\mu^\star=1$, $d^\star=\tfrac12=p^\star$. Slater holds: $(1,1)$ has $h=-1\lt0$.</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 320 200" role="img" aria-label="The concave dual function d of mu, staying below the primal optimal value everywhere and touching it at its peak mu equals 1">
-          <line class="axis" x1="30" y1="160" x2="290" y2="160"/>
-          <text class="lbl muted" x="294" y="164">&mu;</text>
-          <text class="lbl muted" x="30" y="30">d(&mu;)</text>
-          <line class="faint" x1="40" y1="50" x2="280" y2="50"/>
-          <text class="lbl muted" x="284" y="46">p* = 1/2</text>
-          <polyline style="fill:none;stroke:currentColor;stroke-width:2"
-            points="40,160 70,111.9 100,77.5 130,56.9 160,50 190,56.9 220,77.5 250,111.9 280,160"/>
-          <circle class="pt" cx="160" cy="50" r="4.5"/>
-          <text class="lbl" x="168" y="40">d* = d(1) = 1/2</text>
-          <text class="lbl muted" x="36" y="175">0</text>
+        <svg width="280" viewBox="0 0 330 175" role="img" aria-label="The concave dual function d of mu equals mu minus mu squared over 2, always below the primal value p* = 1/2 and touching it at its peak mu = 1.">
+          <line class="axis" x1="40" y1="150" x2="304" y2="150"/>
+          <line class="axis" x1="40" y1="150" x2="40" y2="13.6"/>
+          <line class="accent-2" x1="40" y1="40" x2="304" y2="40"/>
+          <text class="lbl accent-2" x="232" y="32">p* = &#189;</text>
+          <path class="accent" d="M40,150 Q160,-70 280,150"/>
+          <circle class="pt" cx="40" cy="150" r="3.5"/>
+          <circle class="pt" cx="100" cy="67.5" r="3.5"/>
+          <circle class="accent-fill" cx="160" cy="40" r="4.5"/>
+          <circle class="pt" cx="280" cy="150" r="3.5"/>
+          <line class="axis" x1="160" y1="146" x2="160" y2="154"/>
+          <text class="lbl muted" x="156" y="170">1</text>
+          <line class="axis" x1="280" y1="146" x2="280" y2="154"/>
+          <text class="lbl muted" x="276" y="170">2</text>
+          <text class="lbl muted" x="36" y="170">0</text>
+          <text class="lbl muted" x="310" y="155">&#956;</text>
+          <text class="lbl accent" x="258" y="101.9">d(&#956;)</text>
+          <text class="lbl" text-anchor="middle" x="160" y="30">d* = p*</text>
         </svg>
-        <figcaption>$d(\mu)=\mu-\mu^2/2$: concave, never above $p^\star$ (weak duality), touching it at $\mu^\star=1$ (strong duality).</figcaption>
+        <figcaption>$d(\mu)=\mu-\mu^2/2$ stays below $p^\star$ (weak duality); the gap closes at $\mu^\star=1$ (strong duality).</figcaption>
       </figure>
 
       <h2>Why the dual is useful</h2>
@@ -125,7 +132,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

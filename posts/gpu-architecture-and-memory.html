@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Inside a GPU: SMs, warps, and memory - Deep Learning Notes</title>
+  <meta name="description" content="A GPU is about a hundred streaming multiprocessors running warps of 32 threads in lockstep, fed by a memory hierarchy from registers down to HBM. Divergence and coalescing decide whether that machinery runs at full speed.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Inside a GPU: SMs, warps, and memory</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Inside a GPU: SMs, warps, and memory</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">memory-hierarchy</span><span class="tag">warps</span><span class="tag">simt</span><span class="tag">coalescing</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="why-gpus.html">Why GPUs: latency vs. throughput</a> &middot; <strong>Leads to:</strong> <a href="roofline-and-arithmetic-intensity.html">Arithmetic intensity and the roofline</a></p>
+      <p class="idea">A GPU is ~100 copies of one processor (the SM). Each runs threads in groups of 32 that share one instruction, and all of them pull data through a stack of memories, small and fast on top, big and slow below.</p>
+
+      <h2>The SM: the unit that repeats</h2>
+      <p class="idea">A streaming multiprocessor (SM) has its own lanes, tensor cores, registers and fast scratch memory. The chip is many SMs plus shared L2 and HBM.</p>
+      <table>
+        <tr><td></td><td><strong>A100</strong></td><td><strong>H100 SXM</strong></td></tr>
+        <tr><td>SMs</td><td>108</td><td>132</td></tr>
+        <tr><td>FP32 lanes per SM</td><td>64</td><td>128</td></tr>
+        <tr><td>max resident threads per SM</td><td>2048</td><td>2048</td></tr>
+      </table>
+
+      <h2>Warps: 32 threads, one instruction</h2>
+      <p class="idea">Threads run in warps of 32 that execute the same instruction at the same time on different data (SIMT). If they disagree on a branch, the warp runs both sides, masking off the threads that did not take each one.</p>
+      <pre><code>if (threadIdx.x % 2 == 0) y = a(x);   // odd threads masked, wait
+else                      y = b(x);   // even threads masked, wait</code></pre>
+      <p>$$\text{divergent warp: } t=t_a+t_b, \qquad \text{uniform warp: } t=t_a \text{ or } t_b.$$</p>
+      <p class="example-label">Example</p>
+      <p><code>if (threadIdx.x &lt; 32)</code> keeps whole warps together: no divergence. <code>if (threadIdx.x % 2)</code> splits every warp in half.</p>
+
+      <h2>The memory hierarchy</h2>
+      <p class="idea">Fast memory is small and close to the lanes; big memory is far and slow. Good kernels fetch from HBM once and reuse the data from higher up.</p>
+      <figure class="figure">
+        <svg width="510" viewBox="0 0 600 180" role="img" aria-label="A four-level pyramid for the A100: registers at the narrow top, then shared memory and L1, then L2 cache, then HBM at the wide bottom, with sizes and bandwidths listed beside each level.">
+          <polygon class="outline" points="132,24 188,24 213.5,58 106.5,58"/>
+          <text class="lbl" x="160" y="46" text-anchor="middle">registers</text>
+          <text class="lbl" x="320" y="38">256 KB per SM</text>
+          <text class="lbl muted" x="320" y="55">private to each thread, fastest</text>
+          <polygon class="area" points="103.5,62 216.5,62 242,96 78,96"/>
+          <polygon class="outline" points="103.5,62 216.5,62 242,96 78,96"/>
+          <text class="lbl accent" x="160" y="84" text-anchor="middle">shared / L1</text>
+          <text class="lbl" x="320" y="76">192 KB per SM</text>
+          <text class="lbl muted" x="320" y="93">shared by a block, ~19 TB/s total</text>
+          <polygon class="outline" points="75,100 245,100 270.5,134 49.5,134"/>
+          <text class="lbl" x="160" y="122" text-anchor="middle">L2 cache</text>
+          <text class="lbl" x="320" y="114">40 MB</text>
+          <text class="lbl muted" x="320" y="131">whole GPU, several TB/s</text>
+          <polygon class="area-2" points="46.5,138 273.5,138 299,172 21,172"/>
+          <polygon class="outline" points="46.5,138 273.5,138 299,172 21,172"/>
+          <text class="lbl accent-2" x="160" y="160" text-anchor="middle">HBM</text>
+          <text class="lbl" x="320" y="152">80 GB</text>
+          <text class="lbl muted" x="320" y="169">whole GPU, ~2 TB/s</text>
+        </svg>
+        <figcaption>A100, roughly. Up the pyramid: smaller, faster, more private. HBM is big but is the bottleneck.</figcaption>
+      </figure>
+
+      <h2>Coalescing: read whole sectors</h2>
+      <p class="idea">HBM delivers 32-byte sectors, never single values. If a warp's threads read consecutive addresses, their loads merge into a few full sectors; scattered reads each drag in a sector for a few useful bytes.</p>
+      <p>$$\text{thread } t \text{ reads } x[t]:\quad 32\times4\text{ B}=128\text{ B}=4\text{ sectors, every byte used}.$$</p>
+      <figure class="figure">
+        <svg width="476" viewBox="0 0 560 160" role="img" aria-label="Two panels of eight threads reading floats. Coalesced: threads read eight consecutive floats, filling one 32-byte sector. Stride 2: threads read every other float, touching two sectors and using only half of each.">
+          <defs>
+            <marker id="gam2-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="head"/></marker>
+          </defs>
+          <text class="lbl accent" x="30" y="18">coalesced: 1 sector</text>
+          <text class="lbl muted" x="37" y="40" text-anchor="middle">t0</text>
+          <text class="lbl muted" x="135" y="40" text-anchor="middle">t7</text>
+          <circle class="pt" cx="37" cy="52" r="3.5"/>
+          <line class="axis" x1="37" y1="58" x2="37" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="51" cy="52" r="3.5"/>
+          <line class="axis" x1="51" y1="58" x2="51" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="65" cy="52" r="3.5"/>
+          <line class="axis" x1="65" y1="58" x2="65" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="79" cy="52" r="3.5"/>
+          <line class="axis" x1="79" y1="58" x2="79" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="93" cy="52" r="3.5"/>
+          <line class="axis" x1="93" y1="58" x2="93" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="107" cy="52" r="3.5"/>
+          <line class="axis" x1="107" y1="58" x2="107" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="121" cy="52" r="3.5"/>
+          <line class="axis" x1="121" y1="58" x2="121" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="135" cy="52" r="3.5"/>
+          <line class="axis" x1="135" y1="58" x2="135" y2="104" marker-end="url(#gam2-arr)"/>
+          <rect class="area" x="30" y="110" width="14" height="20"/>
+          <rect class="outline" x="30" y="110" width="14" height="20"/>
+          <rect class="area" x="44" y="110" width="14" height="20"/>
+          <rect class="outline" x="44" y="110" width="14" height="20"/>
+          <rect class="area" x="58" y="110" width="14" height="20"/>
+          <rect class="outline" x="58" y="110" width="14" height="20"/>
+          <rect class="area" x="72" y="110" width="14" height="20"/>
+          <rect class="outline" x="72" y="110" width="14" height="20"/>
+          <rect class="area" x="86" y="110" width="14" height="20"/>
+          <rect class="outline" x="86" y="110" width="14" height="20"/>
+          <rect class="area" x="100" y="110" width="14" height="20"/>
+          <rect class="outline" x="100" y="110" width="14" height="20"/>
+          <rect class="area" x="114" y="110" width="14" height="20"/>
+          <rect class="outline" x="114" y="110" width="14" height="20"/>
+          <rect class="area" x="128" y="110" width="14" height="20"/>
+          <rect class="outline" x="128" y="110" width="14" height="20"/>
+          <rect class="outline" x="142" y="110" width="14" height="20"/>
+          <rect class="outline" x="156" y="110" width="14" height="20"/>
+          <rect class="outline" x="170" y="110" width="14" height="20"/>
+          <rect class="outline" x="184" y="110" width="14" height="20"/>
+          <rect class="outline" x="198" y="110" width="14" height="20"/>
+          <rect class="outline" x="212" y="110" width="14" height="20"/>
+          <rect class="outline" x="226" y="110" width="14" height="20"/>
+          <rect class="outline" x="240" y="110" width="14" height="20"/>
+          <rect class="accent" rx="3" x="30" y="106" width="112" height="28"/>
+          <text class="lbl muted" x="86" y="152" text-anchor="middle">32 B sector</text>
+          <rect class="faint" fill="none" rx="3" x="142" y="106" width="112" height="28"/>
+          <text class="lbl muted" x="198" y="152" text-anchor="middle">32 B sector</text>
+          <text class="lbl accent-2" x="310" y="18">stride 2: 2 sectors, half wasted</text>
+          <text class="lbl muted" x="317" y="40" text-anchor="middle">t0</text>
+          <text class="lbl muted" x="513" y="40" text-anchor="middle">t7</text>
+          <circle class="pt" cx="317" cy="52" r="3.5"/>
+          <line class="axis" x1="317" y1="58" x2="317" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="345" cy="52" r="3.5"/>
+          <line class="axis" x1="345" y1="58" x2="345" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="373" cy="52" r="3.5"/>
+          <line class="axis" x1="373" y1="58" x2="373" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="401" cy="52" r="3.5"/>
+          <line class="axis" x1="401" y1="58" x2="401" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="429" cy="52" r="3.5"/>
+          <line class="axis" x1="429" y1="58" x2="429" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="457" cy="52" r="3.5"/>
+          <line class="axis" x1="457" y1="58" x2="457" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="485" cy="52" r="3.5"/>
+          <line class="axis" x1="485" y1="58" x2="485" y2="104" marker-end="url(#gam2-arr)"/>
+          <circle class="pt" cx="513" cy="52" r="3.5"/>
+          <line class="axis" x1="513" y1="58" x2="513" y2="104" marker-end="url(#gam2-arr)"/>
+          <rect class="area-2" x="310" y="110" width="14" height="20"/>
+          <rect class="outline" x="310" y="110" width="14" height="20"/>
+          <rect class="outline" x="324" y="110" width="14" height="20"/>
+          <rect class="area-2" x="338" y="110" width="14" height="20"/>
+          <rect class="outline" x="338" y="110" width="14" height="20"/>
+          <rect class="outline" x="352" y="110" width="14" height="20"/>
+          <rect class="area-2" x="366" y="110" width="14" height="20"/>
+          <rect class="outline" x="366" y="110" width="14" height="20"/>
+          <rect class="outline" x="380" y="110" width="14" height="20"/>
+          <rect class="area-2" x="394" y="110" width="14" height="20"/>
+          <rect class="outline" x="394" y="110" width="14" height="20"/>
+          <rect class="outline" x="408" y="110" width="14" height="20"/>
+          <rect class="area-2" x="422" y="110" width="14" height="20"/>
+          <rect class="outline" x="422" y="110" width="14" height="20"/>
+          <rect class="outline" x="436" y="110" width="14" height="20"/>
+          <rect class="area-2" x="450" y="110" width="14" height="20"/>
+          <rect class="outline" x="450" y="110" width="14" height="20"/>
+          <rect class="outline" x="464" y="110" width="14" height="20"/>
+          <rect class="area-2" x="478" y="110" width="14" height="20"/>
+          <rect class="outline" x="478" y="110" width="14" height="20"/>
+          <rect class="outline" x="492" y="110" width="14" height="20"/>
+          <rect class="area-2" x="506" y="110" width="14" height="20"/>
+          <rect class="outline" x="506" y="110" width="14" height="20"/>
+          <rect class="outline" x="520" y="110" width="14" height="20"/>
+          <rect class="accent-2" rx="3" x="310" y="106" width="112" height="28"/>
+          <text class="lbl muted" x="366" y="152" text-anchor="middle">32 B sector</text>
+          <rect class="accent-2" rx="3" x="422" y="106" width="112" height="28"/>
+          <text class="lbl muted" x="478" y="152" text-anchor="middle">32 B sector</text>
+        </svg>
+        <figcaption>Each cell is one fp32 value; memory moves whole 32-byte sectors. Same useful data, twice the traffic.</figcaption>
+      </figure>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>A warp reads one column of a row-major $1024\times1024$ fp32 matrix: thread $t$ reads <code>A[t*1024 + j]</code>. Coalesced? How many sectors, and what fraction of the fetched bytes is used?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>No. Neighbouring threads are $1024\cdot4=4096$ B apart, so each lands in its own sector: $32$ sectors ($1024$ B) for $128$ useful bytes. Efficiency $1/8$, i.e. $8\times$ the traffic of reading a row.</p>
+          <p>Fix: let consecutive threads walk along a row (<code>A[i*1024 + t]</code>), or stage the tile through shared memory and transpose it there.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

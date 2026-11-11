@@ -13,7 +13,7 @@
   </script>
   <title>Convexity and Jensen's inequality - Deep Learning Notes</title>
   <meta name="description" content="Convex means bowl-shaped: chords above, tangents below, Hessian PSD. Why a convex function&#x27;s stationary point is a global minimum, and Jensen&#x27;s inequality f(E[X]) &lt;= E[f(X)] in two lines.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -56,20 +56,30 @@
       <p class="idea">Any chord lies above the graph; any tangent lies below it.</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 640 215" role="img" aria-label="A convex curve with a chord above it and a tangent below it; the chord midpoint E[f(X)] sits above the curve value f(E[X]).">
-          <path class="outline" d="M40,30 Q320,330 600,30"/>
-          <line class="axis" x1="152" y1="126" x2="488" y2="126"/>
-          <line class="faint" x1="190" y1="180" x2="450" y2="180"/>
-          <circle class="pt" cx="152" cy="126" r="4.5"/>
-          <circle class="pt" cx="488" cy="126" r="4.5"/>
-          <circle class="origin" cx="320" cy="126" r="4"/>
-          <circle class="pt" cx="320" cy="180" r="4.5"/>
-          <text class="lbl" x="500" y="122">chord (above)</text>
-          <text class="lbl" x="460" y="184">tangent (below)</text>
-          <text class="lbl" x="330" y="116">E[f(X)]</text>
-          <text class="lbl" x="330" y="204">f(E[X])</text>
+        <svg width="340" viewBox="0 0 400 235" role="img" aria-label="The convex curve y = x squared with the chord between x = -1 and x = 2 above it and the tangent at E[X] = 0.5 below it; a vertical gap separates the chord midpoint E[f(X)] from the curve value f(E[X]).">
+          <defs><marker id="cvx1-a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker></defs>
+          <line class="faint" x1="36.8" y1="200.0" x2="362.4" y2="200.0"/>
+          <line class="faint" x1="140.4" y1="195.5" x2="306.9" y2="128"/>
+          <polyline class="axis" fill="none" points="47.9,94.3 50.4,97.7 53,100.9 55.5,104.2 58,107.3 60.5,110.4 63.1,113.4 65.6,116.3 68.1,119.1 70.7,121.9 73.2,124.6 75.7,127.3 78.2,129.9 80.8,132.4 83.3,134.8 85.8,137.2 88.4,139.5 90.9,141.7 93.4,143.9 95.9,145.9 98.5,148 101,149.9 103.5,151.8 106.1,153.6 108.6,155.3 111.1,157 113.6,158.6 116.2,160.1 118.7,161.6 121.2,163 123.8,164.3 126.3,165.5 128.8,166.7 131.3,167.8 133.9,168.8 136.4,169.8 138.9,170.7 141.4,171.5 144,172.3 146.5,173 149,173.6 151.6,174.1 154.1,174.6 156.6,175 159.1,175.4 161.7,175.6 164.2,175.8 166.7,175.9 169.3,176 171.8,176 174.3,175.9 176.8,175.7 179.4,175.5 181.9,175.2 184.4,174.9 187,174.4 189.5,173.9 192,173.3 194.5,172.7 197.1,172 199.6,171.2 202.1,170.3 204.7,169.4 207.2,168.4 209.7,167.4 212.2,166.2 214.8,165 217.3,163.7 219.8,162.4 222.4,161 224.9,159.5 227.4,157.9 229.9,156.3 232.5,154.6 235,152.9 237.5,151 240.1,149.1 242.6,147.1 245.1,145.1 247.6,143 250.2,140.8 252.7,138.5 255.2,136.2 257.8,133.8 260.3,131.3 262.8,128.8 265.3,126.2 267.9,123.5 270.4,120.8 272.9,118 275.4,115.1 278,112.1 280.5,109.1 283,106 285.6,102.8 288.1,99.6 290.6,96.3 293.1,92.9 295.7,89.5 298.2,86 300.7,82.4 303.3,78.7 305.8,75 308.3,71.2 310.8,67.3 313.4,63.4 315.9,59.4 318.4,55.3 321,51.2 323.5,46.9 326,42.6 328.5,38.3 331.1,33.9 333.6,29.4 336.1,24.8 338.7,20.2 341.2,15.5 343.7,10.7 346.2,5.8 348.8,0.9 351.3,-4.1"/>
+          <line class="axis" x1="96" y1="146" x2="318" y2="56"/>
+          <line class="accent" x1="207" y1="101" x2="207" y2="168.5"/>
+          <line class="axis" x1="96" y1="196.0" x2="96" y2="204.0"/>
+          <line class="axis" x1="207" y1="196.0" x2="207" y2="204.0"/>
+          <line class="axis" x1="318" y1="196.0" x2="318" y2="204.0"/>
+          <circle class="pt" cx="96" cy="146" r="4"/>
+          <circle class="pt" cx="318" cy="56" r="4"/>
+          <circle class="accent-fill" cx="207" cy="101" r="4"/>
+          <circle class="accent-fill" cx="207" cy="168.5" r="4"/>
+          <text class="lbl" x="131" y="93">E[f(X)]</text>
+          <text class="lbl" x="217" y="184.5">f(E[X])</text>
+          <text class="lbl accent" x="215" y="139.8">gap</text>
+          <text class="lbl muted" x="310.9" y="132">tangent</text>
+          <text class="lbl muted" x="258" y="54">chord</text>
+          <text class="lbl muted" x="87" y="220.0">&#8722;1</text>
+          <text class="lbl muted" x="191" y="220.0">E[X]</text>
+          <text class="lbl muted" x="314" y="220.0">2</text>
         </svg>
-        <figcaption>$X$ is one of the two dark points, each with probability $\tfrac12$. Averaging outputs (the chord) lands above the output of the average (the curve).</figcaption>
+        <figcaption>$f=x^2$, $X=-1$ or $2$ (probability $\tfrac12$ each): $\mathbb{E}f(X)=2.5$ sits above $f(\mathbb{E}X)=0.25$, and the gap is $\operatorname{Var}X$.</figcaption>
       </figure>
 
       <table>
@@ -109,7 +119,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

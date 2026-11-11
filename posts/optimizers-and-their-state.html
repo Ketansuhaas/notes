@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Optimizers and their memory - Deep Learning Notes</title>
+  <meta name="description" content="SGD, momentum and Adam update rules, the state each keeps per parameter, and the memory bill for training: weights, gradients and Adam&#x27;s two moments come to about 16 bytes per parameter in fp32, before activations.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Optimizers and their memory</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Optimizers and their memory</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">pytorch</span><span class="tag">optimizers</span><span class="tag">adam</span><span class="tag">memory</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="modules-and-the-training-loop.html">Modules and the training loop</a>, <a href="gradient-descent-on-a-quadratic.html">Gradient descent on a quadratic</a> &middot; <strong>Leads to:</strong> <a href="datasets-and-dataloaders.html">Datasets and DataLoaders</a></p>
+      <p class="idea">An optimizer turns <code>p.grad</code> into a step. Smarter steps remember the past, and that memory is a full-size tensor per parameter.</p>
+
+      <h2>SGD: step downhill</h2>
+      <p class="idea">Move against the gradient. Nothing to remember.</p>
+      <p>$$\theta\leftarrow\theta-\eta\,g. \qquad \text{State: none.}$$</p>
+
+      <h2>Momentum: a running direction</h2>
+      <p class="idea">Keep a velocity that sums recent gradients. Consistent directions build speed; the zig-zag across a narrow valley (<a href="gradient-descent-on-a-quadratic.html">GD on a quadratic</a>) cancels out.</p>
+      <p>$$v\leftarrow\mu v+g,\qquad \theta\leftarrow\theta-\eta\,v. \qquad \text{State: } v\ (\text{one tensor}).$$</p>
+
+      <h2>Adam: momentum plus a per-coordinate step size</h2>
+      <p class="idea">Also track the average squared gradient. Coordinates with big, noisy gradients get small steps; quiet ones get big steps: a cheap diagonal preconditioner.</p>
+      <p>$$m\leftarrow\beta_1m+(1-\beta_1)g,\qquad v\leftarrow\beta_2v+(1-\beta_2)g^2,$$ $$\theta\leftarrow\theta-\eta\,\frac{\hat m}{\sqrt{\hat v}+\epsilon},\qquad \hat m=\frac{m}{1-\beta_1^t},\ \hat v=\frac{v}{1-\beta_2^t}.$$</p>
+      <p>Defaults $\beta_1=0.9$, $\beta_2=0.999$, $\epsilon=10^{-8}$. AdamW adds decoupled weight decay $\theta\leftarrow\theta-\eta\lambda\theta$. The hats undo the bias of starting $m,v$ at $0$.</p>
+<pre><code>opt = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=0.1)
+loss_fn(model(x), y).backward()
+opt.step()                       # state is created on the first step
+p = next(model.parameters())
+opt.state[p].keys()              # dict_keys(['step', 'exp_avg', 'exp_avg_sq'])
+opt.state[p]['exp_avg'].shape == p.shape    # True: m, v are full-size</code></pre>
+      <table>
+        <tr><td><strong>Optimizer</strong></td><td><strong>State per parameter</strong></td><td><strong>Extra memory</strong></td></tr>
+        <tr><td>SGD</td><td>none</td><td>$0$</td></tr>
+        <tr><td>SGD + momentum</td><td>$v$</td><td>$1\times$ weights</td></tr>
+        <tr><td>Adam / AdamW</td><td>$m$, $v$</td><td>$2\times$ weights</td></tr>
+      </table>
+
+      <h2>The memory bill</h2>
+      <p class="idea">Training holds far more than the weights. In fp32: 4 bytes weight + 4 grad + 8 for Adam's $m,v$ = 16 bytes per parameter, $4\times$ the model. Activations come on top.</p>
+      <figure class="figure">
+        <svg width="400" viewBox="0 0 470 140" role="img" aria-label="Memory per optimizer for a 1B-parameter fp32 model: SGD holds weights and grads, 8 GB; momentum adds v, 12 GB; Adam adds m and v, 16 GB.">
+          <text class="lbl muted" x="130" y="18">1B params, fp32: each block = 4 GB</text>
+          <text class="lbl" x="118" y="49" text-anchor="end">SGD</text>
+          <text class="lbl" x="118" y="85" text-anchor="end">momentum</text>
+          <text class="lbl" x="118" y="121" text-anchor="end">Adam</text>
+          <rect class="area" x="130" y="30" width="70" height="28"/><rect class="outline" x="130" y="30" width="70" height="28"/>
+          <rect class="outline" x="200" y="30" width="70" height="28"/>
+          <text class="lbl" x="165" y="49" text-anchor="middle">W</text><text class="lbl" x="235" y="49" text-anchor="middle">∇</text>
+          <text class="lbl muted" x="280" y="49">8 GB</text>
+          <rect class="area" x="130" y="66" width="70" height="28"/><rect class="outline" x="130" y="66" width="70" height="28"/>
+          <rect class="outline" x="200" y="66" width="70" height="28"/>
+          <rect class="area-2" x="270" y="66" width="70" height="28"/><rect class="outline" x="270" y="66" width="70" height="28"/>
+          <text class="lbl" x="165" y="85" text-anchor="middle">W</text><text class="lbl" x="235" y="85" text-anchor="middle">∇</text><text class="lbl" x="305" y="85" text-anchor="middle">v</text>
+          <text class="lbl muted" x="350" y="85">12 GB</text>
+          <rect class="area" x="130" y="102" width="70" height="28"/><rect class="outline" x="130" y="102" width="70" height="28"/>
+          <rect class="outline" x="200" y="102" width="70" height="28"/>
+          <rect class="area-2" x="270" y="102" width="70" height="28"/><rect class="outline" x="270" y="102" width="70" height="28"/>
+          <rect class="area-2" x="340" y="102" width="70" height="28"/><rect class="outline" x="340" y="102" width="70" height="28"/>
+          <text class="lbl" x="165" y="121" text-anchor="middle">W</text><text class="lbl" x="235" y="121" text-anchor="middle">∇</text><text class="lbl" x="305" y="121" text-anchor="middle">m</text><text class="lbl" x="375" y="121" text-anchor="middle">v</text>
+          <text class="lbl muted" x="420" y="121">16 GB</text>
+        </svg>
+        <figcaption>The model itself (blue) is a quarter of Adam's bill; optimizer state (orange) is half.</figcaption>
+      </figure>
+      <table>
+        <tr><td><strong>1B params, fp32 + Adam</strong></td><td><strong>Memory</strong></td></tr>
+        <tr><td>weights</td><td>4 GB</td></tr>
+        <tr><td>gradients</td><td>4 GB</td></tr>
+        <tr><td>Adam $m$ and $v$</td><td>8 GB</td></tr>
+        <tr><td>total, before activations</td><td>16 GB</td></tr>
+        <tr><td>activations</td><td>grow with batch &times; sequence length &times; layers</td></tr>
+        <tr><td>inference only, bf16 weights</td><td>2 GB</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>A 7B-parameter model trained with Adam. Memory before activations (a) all in fp32; (b) bf16 weights and grads, fp32 $m$ and $v$. Does either fit on one 80 GB GPU?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>(a) $16$ bytes $\times\,7\cdot10^9=112$ GB.</p>
+          <p>(b) $2+2+4+4=12$ bytes: $84$ GB. In practice mixed precision also keeps an fp32 master copy of the weights, since bf16 (about 3 significant digits) rounds tiny updates away: $+4$ bytes, back to $16$ bytes $=112$ GB. Mixed precision saves activation memory and time, not this bill.</p>
+          <p>Neither fits in 80 GB even before activations. Hence sharding weights, grads and optimizer state across GPUs (ZeRO, FSDP).</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

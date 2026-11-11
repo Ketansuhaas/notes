@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Arithmetic intensity and the roofline - Deep Learning Notes</title>
+  <meta name="description" content="Arithmetic intensity (FLOPs per byte moved) decides whether a kernel is limited by memory bandwidth or by compute. The roofline turns this into one picture: elementwise ops sit on the bandwidth slope, large matmuls on the compute roof.">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Arithmetic intensity and the roofline</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Arithmetic intensity and the roofline</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">gpu</span><span class="tag">roofline</span><span class="tag">arithmetic-intensity</span><span class="tag">matmul</span><span class="tag">performance</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="gpu-architecture-and-memory.html">Inside a GPU: SMs, warps, and memory</a>, <a href="four-views-of-matrix-multiplication.html">Four views of matrix multiplication</a> &middot; <strong>Leads to:</strong> <a href="cuda-programming-model.html">The CUDA programming model</a></p>
+      <p class="idea">Every kernel needs math and bytes. Whichever takes longer sets the speed, and one ratio tells you which.</p>
+
+      <h2>Arithmetic intensity</h2>
+      <p class="idea">How much math you do per byte fetched from HBM. Low intensity: the lanes starve, waiting for data.</p>
+      <p>$$I=\frac{\text{FLOPs}}{\text{bytes moved to and from HBM}}.$$</p>
+      <p class="example-label">Example: ReLU in bf16</p>
+      <p>Per element: 1 FLOP (a max), read 2 B, write 2 B. $I=1/4=0.25$ FLOP/B. In fp32 it halves to $0.125$.</p>
+      <table>
+        <tr><td><strong>op</strong></td><td><strong>FLOPs</strong></td><td><strong>values moved</strong></td><td><strong>$I$</strong></td></tr>
+        <tr><td>elementwise on $N$ values</td><td>$\sim N$</td><td>$\sim2N$</td><td>constant, below 1</td></tr>
+        <tr><td>matmul $(n\times n)(n\times n)$</td><td>$2n^3$</td><td>$3n^2$ (read $A,B$, write $C$)</td><td>grows like $n$</td></tr>
+      </table>
+
+      <h2>The roofline</h2>
+      <p class="idea">Two pipes, and the narrower one wins. Below some intensity, bandwidth caps you; above it, peak math does.</p>
+      <p>$$\text{attainable FLOP/s}=\min\big(P_{\text{peak}},\ B\cdot I\big), \qquad I^\ast=\frac{P_{\text{peak}}}{B}\ \ \text{(ridge point)}.$$</p>
+      <table>
+        <tr><td></td><td><strong>peak (bf16 dense)</strong></td><td><strong>HBM</strong></td><td><strong>ridge $I^\ast$</strong></td></tr>
+        <tr><td>A100</td><td>~312 TFLOP/s</td><td>~2 TB/s</td><td>~156 FLOP/B</td></tr>
+        <tr><td>H100 SXM</td><td>~990 TFLOP/s</td><td>~3.35 TB/s</td><td>~300 FLOP/B</td></tr>
+      </table>
+      <figure class="figure">
+        <svg width="459" viewBox="0 0 540 240" role="img" aria-label="Log-log roofline for an A100 in bf16: attainable TFLOP/s rises along a bandwidth slope of 2 TB/s until the ridge at about 156 FLOP per byte, then stays flat at the 312 TFLOP/s peak. ReLU sits far down the slope, a small matmul higher on the slope, a big matmul on the flat roof.">
+          <line class="axis" x1="60" y1="190" x2="510" y2="190"/>
+          <line class="axis" x1="60" y1="190" x2="60" y2="30"/>
+          <line class="axis" x1="60" y1="190" x2="60" y2="195"/>
+          <text class="lbl muted" x="60" y="210" text-anchor="middle">0.1</text>
+          <line class="axis" x1="150" y1="190" x2="150" y2="195"/>
+          <text class="lbl muted" x="150" y="210" text-anchor="middle">1</text>
+          <line class="axis" x1="240" y1="190" x2="240" y2="195"/>
+          <text class="lbl muted" x="240" y="210" text-anchor="middle">10</text>
+          <line class="axis" x1="330" y1="190" x2="330" y2="195"/>
+          <text class="lbl muted" x="330" y="210" text-anchor="middle">100</text>
+          <line class="axis" x1="420" y1="190" x2="420" y2="195"/>
+          <text class="lbl muted" x="420" y="210" text-anchor="middle">1000</text>
+          <line class="axis" x1="510" y1="190" x2="510" y2="195"/>
+          <text class="lbl muted" x="510" y="210" text-anchor="middle">10⁴</text>
+          <line class="axis" x1="55" y1="190" x2="60" y2="190"/>
+          <text class="lbl muted" x="51" y="195" text-anchor="end">0.1</text>
+          <line class="axis" x1="55" y1="150" x2="60" y2="150"/>
+          <text class="lbl muted" x="51" y="155" text-anchor="end">1</text>
+          <line class="axis" x1="55" y1="110" x2="60" y2="110"/>
+          <text class="lbl muted" x="51" y="115" text-anchor="end">10</text>
+          <line class="axis" x1="55" y1="70" x2="60" y2="70"/>
+          <text class="lbl muted" x="51" y="75" text-anchor="end">100</text>
+          <line class="axis" x1="55" y1="30" x2="60" y2="30"/>
+          <text class="lbl muted" x="51" y="35" text-anchor="end">1000</text>
+          <text class="lbl muted" x="510" y="230" text-anchor="end">intensity (FLOP / byte)</text>
+          <text class="lbl muted" x="68" y="34">TFLOP/s</text>
+          <line class="faint" x1="347.4" y1="50.2" x2="347.4" y2="190"/>
+          <line class="accent-2" x1="60" y1="178" x2="347.4" y2="50.2"/>
+          <line class="accent" x1="347.4" y1="50.2" x2="510" y2="50.2"/>
+          <text class="lbl accent" x="510" y="42.2" text-anchor="end">peak ≈ 312</text>
+          <text class="lbl accent-2" x="177.1" y="149.9">slope = 2 TB/s</text>
+          <text class="lbl muted" x="353.4" y="182">ridge ≈ 156</text>
+          <circle class="pt" cx="95.8" cy="162" r="4.5"/>
+          <text class="lbl" x="103.8" y="180" text-anchor="start">ReLU</text>
+          <circle class="pt" cx="296.7" cy="72.8" r="4.5"/>
+          <text class="lbl" x="288.7" y="64.8" text-anchor="end">small matmul</text>
+          <circle class="pt" cx="432.2" cy="50.2" r="4.5"/>
+          <text class="lbl" x="432.2" y="72.2" text-anchor="middle">big matmul</text>
+        </svg>
+        <figcaption>A100 bf16 roofline (log-log). Left of the ridge, bandwidth sets the speed; right of it, compute does.</figcaption>
+      </figure>
+      <p class="example-label">Example: ReLU on an A100</p>
+      <p>$0.25\times2\text{ TB/s}=0.5$ TFLOP/s, about $0.2\%$ of peak. Its runtime is just bytes ÷ bandwidth; the math is free.</p>
+
+      <h2>What to do about it</h2>
+      <table>
+        <tr><td>memory-bound ($I\lt I^\ast$)</td><td>move fewer bytes: fuse ops, use smaller dtypes, reuse data from shared memory</td></tr>
+        <tr><td>compute-bound ($I\gt I^\ast$)</td><td>do math faster: tensor cores, lower-precision math</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Work it out yourself</h2>
+        <p>An $(n\times n)(n\times n)$ fp16 matmul reads $A$ and $B$ once and writes $C$ once. Find $I(n)$. At what $n$ does it cross the A100 ridge? The H100 ridge? And a matrix-vector product?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>FLOPs $2n^3$; bytes $3n^2\cdot2=6n^2$; so $I=n/3$ FLOP/B.</p>
+          <p>A100: $n/3=156\Rightarrow n\approx470$. H100: $n/3\approx300\Rightarrow n\approx900$. LLM layers ($n$ in the thousands) are compute-bound.</p>
+          <p>Matrix-vector: $2n^2$ FLOPs over $\approx2n^2$ bytes (the matrix), so $I\approx1$: deeply memory-bound. This is why generating one token at a time is limited by bandwidth.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

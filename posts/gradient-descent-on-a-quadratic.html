@@ -13,7 +13,7 @@
   </script>
   <title>Gradient descent on a quadratic - Deep Learning Notes</title>
   <meta name="description" content="Near a minimum every loss is a bowl, and gradient descent on a bowl splits into independent 1-D problems along the eigenvectors: each shrinks by (1 - eta lambda) per step. Step-size limits, zig-zagging, and the condition number.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -69,20 +69,44 @@
       </table>
 
       <figure class="figure">
-        <svg viewBox="0 0 640 300" role="img" aria-label="Elliptical contours of a quadratic bowl and the gradient descent path from (4,0) zig-zagging into the minimum.">
-          <ellipse class="outline" cx="320" cy="150" rx="169.7" ry="98" transform="rotate(45 320 150)"/>
-          <ellipse class="outline" cx="320" cy="150" rx="84.9" ry="49" transform="rotate(45 320 150)"/>
-          <ellipse class="outline" cx="320" cy="150" rx="42.4" ry="24.5" transform="rotate(45 320 150)"/>
-          <polyline class="axis" fill="none" points="440,150 320,210 350,150 320,165 327.5,150 320,153.75"/>
-          <circle class="pt" cx="440" cy="150" r="4.5"/>
-          <circle class="pt" cx="320" cy="210" r="3.5"/>
-          <circle class="pt" cx="350" cy="150" r="3.5"/>
-          <circle class="origin" cx="320" cy="150" r="3"/>
-          <text class="lbl" x="448" y="146">start (4, 0)</text>
-          <text class="lbl" x="250" y="226">(0, &#8722;2)</text>
-          <text class="lbl" x="232" y="146">minimum</text>
+        <svg width="425" viewBox="0 0 500 240" role="img" aria-label="Two panels of the same elliptical bowl. With step size 0.2 the gradient descent path from (4,0) curves smoothly into the long flat axis; with step size 0.5 it zig-zags across the steep axis: (4,0), (0,-2), (1,0), (0,-0.5).">
+          <ellipse class="outline" cx="118" cy="128" rx="107.5" ry="62.1" transform="rotate(45 118 128)"/>
+          <ellipse class="outline" cx="118" cy="128" rx="53.7" ry="31" transform="rotate(45 118 128)"/>
+          <ellipse class="outline" cx="118" cy="128" rx="26.9" ry="15.5" transform="rotate(45 118 128)"/>
+          <line class="faint" x1="67.4" y1="178.6" x2="168.6" y2="77.4"/>
+          <line class="faint" x1="36.6" y1="46.6" x2="199.4" y2="209.4"/>
+          <text class="lbl muted" x="170.6" y="75.4">q&#8321; steep</text>
+          <text class="lbl muted" x="201.4" y="221.4">q&#8322; flat</text>
+          <polyline class="accent" points="194,128 163.6,143.2 148.4,146.2 139.9,145 134.5,142.6 130.8,140.1 128.1,137.8 126,135.9 124.4,134.4 123.1,133.1 122.1,132.1 121.3,131.3 120.6,130.6 120.1,130.1 119.7,129.7 119.3,129.3 119.1,129.1 118.9,128.9 118.7,128.7 118.5,128.5 118.4,128.4 118.4,128.4 118.3,128.3 118.2,128.2 118.2,128.2 118.1,128.1"/>
+          <circle class="accent-fill" cx="163.6" cy="143.2" r="2.5"/>
+          <circle class="accent-fill" cx="148.4" cy="146.2" r="2.5"/>
+          <circle class="accent-fill" cx="139.9" cy="145" r="2.5"/>
+          <circle class="accent-fill" cx="134.5" cy="142.6" r="2.5"/>
+          <circle class="accent-fill" cx="130.8" cy="140.1" r="2.5"/>
+          <circle class="accent-fill" cx="128.1" cy="137.8" r="2.5"/>
+          <circle class="pt" cx="194" cy="128" r="4"/>
+          <circle class="origin" cx="118" cy="128" r="3"/>
+          <text class="lbl" x="84" y="20">&#951; = 0.2</text>
+          <ellipse class="outline" cx="372" cy="128" rx="107.5" ry="62.1" transform="rotate(45 372 128)"/>
+          <ellipse class="outline" cx="372" cy="128" rx="53.7" ry="31" transform="rotate(45 372 128)"/>
+          <ellipse class="outline" cx="372" cy="128" rx="26.9" ry="15.5" transform="rotate(45 372 128)"/>
+          <line class="faint" x1="321.4" y1="178.6" x2="422.6" y2="77.4"/>
+          <line class="faint" x1="290.6" y1="46.6" x2="453.4" y2="209.4"/>
+          <polyline class="accent" points="448,128 372,166 391,128 372,137.5 376.8,128 372,130.4 373.2,128 372,128.6 372.3,128 372,128.1 372.1,128 372,128 372,128"/>
+          <circle class="accent-fill" cx="372" cy="166" r="2.5"/>
+          <circle class="accent-fill" cx="391" cy="128" r="2.5"/>
+          <circle class="accent-fill" cx="372" cy="137.5" r="2.5"/>
+          <circle class="accent-fill" cx="376.8" cy="128" r="2.5"/>
+          <circle class="accent-fill" cx="372" cy="130.4" r="2.5"/>
+          <circle class="accent-fill" cx="373.2" cy="128" r="2.5"/>
+          <circle class="pt" cx="448" cy="128" r="4"/>
+          <circle class="origin" cx="372" cy="128" r="3"/>
+          <text class="lbl" x="338" y="20">&#951; = 0.5</text>
+          <text class="lbl" x="200" y="146">(4, 0)</text>
+          <text class="lbl" x="454" y="146">(4, 0)</text>
+          <text class="lbl accent" text-anchor="middle" x="368" y="186">(0, &#8722;2)</text>
         </svg>
-        <figcaption>$\eta=0.5$ from $(4,0)$: $(4,0)\to(0,-2)\to(1,0)\to(0,-\tfrac12)\to\cdots$ The sign flips along the steep axis every step.</figcaption>
+        <figcaption>Left: smooth, but slow along flat $q_2$. Right: the factor $-0.5$ flips the sign along steep $q_1$ every step.</figcaption>
       </figure>
 
       <h2>The step-size limit</h2>
@@ -116,7 +140,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

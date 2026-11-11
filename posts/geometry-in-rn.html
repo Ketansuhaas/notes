@@ -13,7 +13,7 @@
   </script>
   <title>Lines, planes, and spheres in R^n - Deep Learning Notes</title>
   <meta name="description" content="Lines and hyperplanes in R^n, plus spheres: the geometry behind linear algebra, before rank and subspaces.">
-  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="../assets/style.css?v=16">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -71,25 +71,36 @@
       <p class="example-label">Example</p>
       <p>$$p=\begin{pmatrix}0\\0\\1\end{pmatrix},\ w=\begin{pmatrix}1\\1\\1\end{pmatrix} \ \Rightarrow\ x+y+z=1. \qquad (0,0,1),\ (1,0,0) \text{ both lie on it.}$$</p>
 
+      <figure class="figure">
+        <svg width="255" viewBox="0 0 300 200" role="img" aria-label="A hyperplane drawn as a line, with its normal vector w perpendicular to it at a point p; a point x0 off the plane connects to it by a perpendicular segment, the shortest distance.">
+          <defs>
+            <marker id="geo1-arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" class="accent-fill"/></marker>
+          </defs>
+          <g transform="translate(15,0)">
+            <line class="axis" x1="85.8" y1="30.8" x2="234.2" y2="179.2"/>
+            <text class="lbl" x="98" y="28">w&#7488;x = c</text>
+            <text class="lbl muted" x="205" y="60">w&#7488;x &gt; c</text>
+            <text class="lbl muted" x="0" y="185">w&#7488;x &lt; c</text>
+            <polyline class="outline" points="198.2,143.2 204.5,136.8 198.2,130.4"/>
+            <line class="accent" x1="191.8" y1="136.8" x2="230.7" y2="97.9" marker-end="url(#geo1-arr)"/>
+            <text class="lbl accent" x="236" y="100">w</text>
+            <circle class="pt" cx="191.8" cy="136.8" r="3.5"/>
+            <text class="lbl" x="176" y="158">p</text>
+            <polyline class="outline" points="125.3,83.1 131.7,89.4 138.1,83.1"/>
+            <line class="accent-2" x1="75.1" y1="133.3" x2="131.7" y2="76.7" stroke-dasharray="5 3"/>
+            <text class="lbl accent-2" x="96" y="99" text-anchor="end">distance</text>
+            <circle class="pt" cx="75.1" cy="133.3" r="3.5"/>
+            <text class="lbl" x="56" y="150">x&#8320;</text>
+          </g>
+        </svg>
+        <figcaption>$w$ sticks straight out of the plane, so the shortest path from $x_0$ runs along $w$ (see the exercise).</figcaption>
+      </figure>
+
       <h2>Spheres</h2>
       <p class="idea">All points at distance $r$ from a center $c$. Now $x$ appears twice, so the equation is quadratic: the first curved shape.</p>
       <p>$$\|x-c\|=r \iff \underbrace{(x-c)^T}_{1\times n}\underbrace{(x-c)}_{n\times1}=r^2.$$</p>
       <p class="example-label">Example</p>
       <p>$c=0,\ r=1$: $x^2+y^2=1$, the unit circle. Check $(1,0)$: $1^2+0^2=1$. &#10003;</p>
-
-      <figure class="figure">
-        <svg viewBox="0 0 300 260" role="img" aria-label="A circle of radius r centered at c, with a point x on the boundary and the radius drawn between them">
-          <circle class="outline" cx="150" cy="130" r="80"/>
-          <circle class="origin" cx="150" cy="130" r="3"/>
-          <text class="lbl muted" x="132" y="150">c</text>
-          <line class="axis" x1="150" y1="130" x2="230" y2="130"/>
-          <text class="lbl" x="182" y="122">r</text>
-          <circle class="pt" cx="230" cy="130" r="4.5"/>
-          <text class="lbl" x="238" y="126">x</text>
-          <text class="lbl muted" x="104" y="240">&#8741;x&#8722;c&#8741; = r</text>
-        </svg>
-        <figcaption>Every point $x$ on the sphere sits exactly $r$ from $c$.</figcaption>
-      </figure>
 
       <table>
         <tr><td>Line</td><td>$x=p+td$</td><td>linear, 1 free dial</td></tr>
@@ -115,7 +126,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=4"></script>
+  <script src="../assets/sidebar.js?v=5"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
