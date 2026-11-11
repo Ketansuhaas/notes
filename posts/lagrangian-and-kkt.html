@@ -13,7 +13,7 @@
   </script>
   <title>The Lagrangian and KKT conditions - Deep Learning Notes</title>
   <meta name="description" content="Why a gradient is normal to a level set, how that forces the Lagrange tangency condition for equality constraints, and the KKT conditions for inequality constraints.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,53 +43,27 @@
 
   <main>
     <article>
-      <h1>The Lagrangian and KKT conditions</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">optimization</span><span class="tag">lagrangian</span><span class="tag">constrained-optimization</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>The Lagrangian and KKT conditions</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">optimization</span><span class="tag">lagrangian</span><span class="tag">constrained-optimization</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a>, <a href="convexity-and-jensen.html">Convexity and Jensen's inequality</a> &middot; <strong>Leads to:</strong> <a href="primal-and-dual-problems.html">Primal and dual problems</a></p>
+
+      <p class="idea">At a constrained minimum you can't slide along the constraint and go lower. That forces $f$'s contour to touch the constraint, and the Lagrangian turns this into "set a gradient to zero".</p>
 
       <h2>Gradients are normal to level sets</h2>
-      <p>A level set of $f$ is $\{x : f(x)=c\}$, a contour. Walking along it in a tangent direction $v$ doesn't change $f$ at all, so the directional derivative must vanish:</p>
-      <p>
-        $$
-        \nabla f(x)\cdot v = 0 \quad \text{for every tangent direction } v \text{ of the level set through } x.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $\nabla f$ points where $f$ increases fastest; a level set is exactly the directions where $f$ doesn't change, so the two must be perpendicular.</em></p>
+      <p class="idea">Walking along a contour doesn't change $f$, so the slope along it is zero: $\nabla f$ is perpendicular to the contour.</p>
+      <p>$$v \text{ tangent to } \{f=c\} \ \Rightarrow\ \nabla f(x)^Tv=0.$$</p>
       <p class="example-label">Example</p>
-      <p>$f(x,y)=x^2+y^2$, level set $x^2+y^2=4$ (a circle). At $(2,0)$: $\nabla f=(4,0)$, and the circle's tangent there is $(0,1)$. $(4,0)\cdot(0,1)=0.$ &#10003;</p>
+      <p>$f=x^2+y^2$, contour $f=4$ (a circle). At $(2,0)$: $\nabla f=(4,0)$, tangent $(0,1)$, dot product $0$. &#10003;</p>
 
-      <figure class="figure">
-        <svg viewBox="0 0 300 260" role="img" aria-label="A circle level set of f(x,y)=x^2+y^2 with the gradient at (2,0) pointing radially outward, perpendicular to the tangent direction">
-          <defs>
-            <marker id="lag-arrow1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
-            </marker>
-          </defs>
-          <circle fill="none" class="axis" cx="150" cy="140" r="90"/>
-          <circle class="origin" cx="150" cy="140" r="3"/>
-          <text class="lbl muted" x="158" y="152">0</text>
-          <circle class="pt" cx="240" cy="140" r="4.5"/>
-          <text class="lbl" x="246" y="128">x = (2,0)</text>
-          <line class="axis" x1="240" y1="140" x2="285" y2="140" marker-end="url(#lag-arrow1)"/>
-          <text class="lbl" x="248" y="116">&#8711;f = (4,0)</text>
-          <line class="faint" x1="240" y1="106" x2="240" y2="174"/>
-          <text class="lbl muted" x="246" y="190">tangent v</text>
-          <text class="lbl muted" x="40" y="26">level set: f(x,y) = 4</text>
-        </svg>
-        <figcaption>At $(2,0)$ on the circle $x^2+y^2=4$, the gradient $\nabla f=(4,0)$ points straight outward, perpendicular to the tangent direction $(0,1)$.</figcaption>
-      </figure>
-
-      <h2>Constrained optimization: a tangency condition</h2>
-      <p>Minimize $f(x)$ subject to $g(x)=0$. At an optimum $x^*$ on the constraint surface, moving along any tangent direction $v$ of that surface (so $\nabla g(x^*)\cdot v=0$) can't improve $f$ to first order either, so $\nabla f(x^*)\cdot v=0$ for the same $v$'s. Both gradients are normal to the same tangent space, in $\mathbb{R}^2$ that forces them to be parallel:</p>
-      <p>
-        $$
-        \nabla f(x^*) = \lambda\, \nabla g(x^*) \quad \text{for some scalar } \lambda.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: at the optimum, $f$'s contour must be tangent to the constraint surface; if they crossed instead, sliding along the constraint would still change $f$, so you couldn't be at an optimum yet.</em></p>
+      <h2>One equality constraint: tangency</h2>
+      <p class="idea">At the optimum, sliding along the constraint can't change $f$ to first order. So $\nabla f$ and $\nabla g$ are normal to the same surface: they are parallel.</p>
+      <p>$$\min_x f(x)\ \text{ s.t. } g(x)=0: \qquad \nabla f(x^*)+\lambda\,\nabla g(x^*)=0 \ \text{ for some } \lambda\in\mathbb{R} \qquad (\text{if } \nabla g(x^*)\ne0).$$</p>
       <p class="example-label">Example</p>
-      <p>Minimize $f(x,y)=x^2+y^2$ subject to $g(x,y)=x+y-1=0$. $\nabla f=(2x,2y)$, $\nabla g=(1,1)$. Setting $\nabla f=\lambda\nabla g$ gives $x=y$, and $x+y=1$ then gives $x=y=\tfrac12$, $\lambda=1$.</p>
-
       <figure class="figure">
         <svg viewBox="0 0 300 300" role="img" aria-label="A circular level curve of f tangent to the constraint line g=0 at the optimum, where the gradients of f and g point in the same direction">
           <defs>
@@ -108,84 +82,38 @@
           <line class="axis" x1="140" y1="160" x2="180" y2="120" marker-end="url(#lag-arrow2)"/>
           <text class="lbl" x="184" y="112">&#8711;f = &#8711;g = (1,1)</text>
         </svg>
-        <figcaption>At the optimum, $f$'s level curve is tangent to the constraint line, so $\nabla f$ and $\nabla g$ point the same way ($\lambda=1$ here).</figcaption>
+        <figcaption>$\min x^2+y^2$ on the line $x+y=1$: the contour $f=\tfrac12$ just touches the line at $(\tfrac12,\tfrac12)$, where $\nabla f=\nabla g=(1,1)$, so $\lambda=-1$.</figcaption>
       </figure>
 
       <h2>The Lagrangian</h2>
-      <p>$L(x,\lambda) := f(x) + \lambda g(x)$ packages the tangency condition as a single unconstrained stationarity condition:</p>
-      <p>
-        $$
-        \nabla_x L = \nabla f(x) + \lambda\nabla g(x) = 0, \qquad \nabla_\lambda L = g(x) = 0.
-        $$
-      </p>
-      <p>With $m$ equality constraints $g_1,\dots,g_m$: $L(x,\lambda) = f(x) + \sum_i \lambda_ig_i(x)$, stationary in both $x$ and every $\lambda_i$.</p>
-      <p class="intuition"><em>Intuition: the Lagrangian turns a constrained problem into an unconstrained one, each multiplier $\lambda_i$ is just the bookkeeping that enforces $g_i(x)=0$.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>With $x\in\mathbb{R}^n$ and $m$ constraints $g:\mathbb{R}^n\to\mathbb{R}^m$ (Jacobian $J_g$ is $m\times n$), the $m$ multipliers form a vector $\lambda\in\mathbb{R}^m$, and stationarity is one vector equation in $\mathbb{R}^n$:</p>
-      <p>
-        $$
-        \underbrace{\nabla f(x)}_{n\times1}+\underbrace{J_g(x)^T}_{n\times m}\underbrace{\lambda}_{m\times1}=0,
-        \qquad J_g^T\lambda=\begin{pmatrix}\vert&&\vert\\\nabla g_1&\cdots&\nabla g_m\\\vert&&\vert\end{pmatrix}\begin{pmatrix}\lambda_1\\\vdots\\\lambda_m\end{pmatrix}=\sum_i\lambda_i\nabla g_i.
-        $$
-      </p>
-      <p>The columns of $J_g^T$ are the constraint gradients; $\lambda$ says how much of each to combine so that their sum cancels $\nabla f$. That is $\nabla f\in\operatorname{span}(\nabla g_1,\dots,\nabla g_m)$, the multi-constraint version of "parallel".</p>
+      <p class="idea">Fold each constraint into the objective with its own multiplier. Asking $L$ to be flat in every variable gives tangency and feasibility at once.</p>
+      <p>$$L(x,\lambda)=f(x)+\lambda^Tg(x), \qquad \nabla_xL=\underbrace{\nabla f}_{n\times1}+\underbrace{J_g^T}_{n\times m}\underbrace{\lambda}_{m\times1}=0, \qquad \nabla_\lambda L=g(x)=0.$$</p>
+      <p>$J_g^T\lambda=\sum_i\lambda_i\nabla g_i$: with $m$ constraints, $\nabla f$ must lie in the span of the constraint normals.</p>
       <p class="example-label">Example</p>
-      <p>Same problem: $L=x^2+y^2+\lambda(x+y-1)$. $\partial L/\partial x = 2x+\lambda=0$, $\partial L/\partial y=2y+\lambda=0$, $\partial L/\partial\lambda=x+y-1=0$. Solving: $x=y=\tfrac12$, $\lambda=-1$, the same point as above (the sign of $\lambda$ is just a convention).</p>
+      <p>$$L=x^2+y^2+\lambda(x+y-1):$$ $$2x+\lambda=0,\ \ 2y+\lambda=0,\ \ x+y=1 \ \Rightarrow\ x=y=\tfrac12,\ \lambda=-1.$$</p>
 
-      <h2>Inequality constraints and KKT</h2>
-      <p>Minimize $f(x)$ subject to $h(x)\leq0$. Two cases at the optimum $x^*$:</p>
-      <ul>
-        <li><strong>Inactive</strong> ($h(x^*)<0$): the constraint doesn't touch the optimum, so plainly $\nabla f(x^*)=0$.</li>
-        <li><strong>Active</strong> ($h(x^*)=0$): same tangency argument as before, but now you can only move into the feasible side $h\leq0$, not any direction, so the multiplier's sign is pinned down: $\nabla f(x^*) = -\mu\,\nabla h(x^*)$ with $\mu\geq0$.</li>
-      </ul>
-      <p class="intuition"><em>Intuition: an inequality constraint only pushes back once you're pressed against it; $\mu\geq0$ says that push can only block you from leaving the feasible region, never pull you into it.</em></p>
-      <p>Both cases are captured together by the <strong>KKT conditions</strong>, for $f$ minimized subject to $h_j(x)\leq0$ and $g_i(x)=0$:</p>
-      <p>
-        $$
-        \nabla f(x^*) + \sum_j \mu_j\nabla h_j(x^*) + \sum_i \lambda_i\nabla g_i(x^*) = 0 \quad \text{(stationarity)}
-        $$
-      </p>
-      <p class="example-label">Shapes</p>
-      <p>With $p$ inequality constraints $h:\mathbb{R}^n\to\mathbb{R}^p$ (Jacobian $J_h$, $p\times n$) and $m$ equality constraints $g$ (Jacobian $J_g$, $m\times n$) as before:</p>
-      <p>
-        $$
-        \underbrace{\nabla f(x^*)}_{n\times1} + \underbrace{J_h(x^*)^T}_{n\times p}\underbrace{\mu}_{p\times1} + \underbrace{J_g(x^*)^T}_{n\times m}\underbrace{\lambda}_{m\times1} = 0.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: same cancellation as the equality-only case, now with two groups of constraint gradients feeding into the same $n$-dimensional sum; complementary slackness is what zeroes out the multiplier of every inequality constraint that isn't actually touching the optimum.</em></p>
-      <p>
-        $$
-        h_j(x^*)\leq0,\ \ g_i(x^*)=0 \quad \text{(primal feasibility)}, \qquad \mu_j\geq0 \quad \text{(dual feasibility)}
-        $$
-      </p>
-      <p>
-        $$
-        \mu_j\, h_j(x^*) = 0 \quad \text{(complementary slackness: inactive} \Rightarrow \mu_j=0\text{, active} \Rightarrow h_j=0\text{)}.
-        $$
-      </p>
+      <h2>Inequalities: the KKT conditions</h2>
+      <p class="idea">An inequality is either slack (ignore it) or tight (treat it as an equality). A wall can only push you back toward the feasible side, so its multiplier is $\mu\ge0$.</p>
+      <p>$$\min_x f(x)\ \text{ s.t. } h_j(x)\le0\ (p \text{ of them}),\ \ g_i(x)=0\ (m \text{ of them}):$$</p>
+      <table>
+        <tr><td>Stationarity</td><td>$\underbrace{\nabla f}_{n\times1}+\underbrace{J_h^T}_{n\times p}\underbrace{\mu}_{p\times1}+\underbrace{J_g^T}_{n\times m}\underbrace{\lambda}_{m\times1}=0$</td></tr>
+        <tr><td>Primal feasibility</td><td>$h_j(x^*)\le0,\ \ g_i(x^*)=0$</td></tr>
+        <tr><td>Dual feasibility</td><td>$\mu_j\ge0$</td></tr>
+        <tr><td>Complementary slackness</td><td>$\mu_j\,h_j(x^*)=0$: a slack constraint gets $\mu_j=0$</td></tr>
+      </table>
+      <p>Necessary at a minimum (under mild regularity). For convex $f,h_j$ and affine $g_i$ they are also sufficient: any KKT point is a global minimum.</p>
       <p class="example-label">Example</p>
-      <p>Minimize $f(x,y)=x^2+y^2$ subject to $h(x,y)=1-x-y\leq0$ (i.e. $x+y\geq1$). The unconstrained minimum of $f$ is the origin, which has $h(0,0)=1>0$: infeasible, so the constraint is active at the optimum.</p>
-      <p>Same computation as the equality case gives $x^*=y^*=\tfrac12$. Checking the multiplier's sign: $\nabla f(x^*)=(1,1)$, $\nabla h(x^*)=(-1,-1)$, and $\nabla f=-\mu\nabla h$ gives $\mu=1\geq0$. &#10003; Complementary slackness holds since $h(x^*)=0$ (active).</p>
+      <p>$\min x^2+y^2$ s.t. $h=1-x-y\le0$. The unconstrained minimum $(0,0)$ has $h=1\gt0$: infeasible, so the wall is tight. At $x^*=(\tfrac12,\tfrac12)$:</p>
+      <p>$$\underbrace{(1,1)}_{\nabla f}+\mu\,\underbrace{(-1,-1)}_{\nabla h}=0 \ \Rightarrow\ \mu=1\ge0, \qquad \mu\,h(x^*)=1\cdot0=0. \ \checkmark$$</p>
 
-      <figure class="figure">
-        <svg viewBox="0 0 300 300" role="img" aria-label="The unconstrained minimum at the origin is infeasible, so the constrained optimum sits on the active boundary of the feasible region, with the gradient pushed back from leaving it">
-          <defs>
-            <marker id="lag-arrow3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="currentColor"/>
-            </marker>
-          </defs>
-          <line class="axis" x1="60" y1="80" x2="220" y2="240"/>
-          <text class="lbl muted" x="168" y="90">feasible: x+y &#8805; 1</text>
-          <text class="lbl muted" x="60" y="260">infeasible: x+y &lt; 1</text>
-          <circle class="origin" cx="90" cy="210" r="3"/>
-          <text class="lbl" x="98" y="222">unconstrained min (0,0), h=1&gt;0</text>
-          <circle class="pt" cx="140" cy="160" r="4.5"/>
-          <text class="lbl" x="104" y="150">x* = (&#189;,&#189;), h=0 (active)</text>
-          <line class="axis" x1="140" y1="160" x2="180" y2="120" marker-end="url(#lag-arrow3)"/>
-          <text class="lbl" x="184" y="112">&#8711;f = &#8722;&#956;&#8711;h, &#956;=1&#8805;0</text>
-        </svg>
-        <figcaption>The unconstrained minimum is infeasible ($h>0$), so the optimum is pushed to the boundary $h=0$, where $\nabla f$ points back against the outward normal $\nabla h$.</figcaption>
-      </figure>
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Project the origin onto a half-space: minimize $\tfrac12\|x\|^2$ s.t. $a^Tx\ge b$, with $b\gt0$, $a\ne0$. Use KKT to find $x^*$ and $\mu$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$h=b-a^Tx\le0$. At $x=0$, $h=b\gt0$: infeasible, so the constraint is tight. Stationarity: $x-\mu a=0$, so $x=\mu a$. Tight: $a^Tx=\mu\|a\|^2=b$, so $\mu=b/\|a\|^2\ge0$ &#10003; and $x^*=\dfrac{b}{\|a\|^2}\,a$. With $a=(1,1)$, $b=1$: $x^*=(\tfrac12,\tfrac12)$, matching the example ($\mu=\tfrac12$ because $f$ is halved).</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -196,7 +124,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

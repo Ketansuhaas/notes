@@ -13,7 +13,7 @@
   </script>
   <title>Lebesgue measure, densities, and KL divergence - Deep Learning Notes</title>
   <meta name="description" content="Sigma-algebras and measurable sets, why P(X=x)=0 yet p(x)>0, Lebesgue measure, the Dirichlet function as a worked example, densities as Radon-Nikodym derivatives, then KL divergence and forward vs. reverse KL.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,97 +43,57 @@
 
   <main>
     <article>
-      <h1>Lebesgue measure, densities, and KL divergence</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">probability</span><span class="tag">measure-theory</span><span class="tag">information-theory</span><span class="tag">kl-divergence</span><span class="tag">densities</span><span class="tag">sigma-algebra</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Lebesgue measure, densities, and KL divergence</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">measure-theory</span><span class="tag">information-theory</span><span class="tag">kl-divergence</span><span class="tag">densities</span><span class="tag">sigma-algebra</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="entropy-and-cross-entropy.html">Entropy and cross-entropy</a>, <a href="convexity-and-jensen.html">Convexity and Jensen</a> &middot; <strong>Leads to:</strong> <a href="supervised-learning-as-kl-minimization.html">Supervised learning as KL minimization</a>, <a href="generative-modeling-and-kl-divergence.html">Generative modeling</a></p>
 
-      <h2>The measurable sets: a &sigma;-algebra</h2>
-      <p>A measure cannot consistently assign a size to <em>every</em> subset of $\Omega$ (the Vitali set, built with the axiom of choice, has no well-defined length). So fix in advance which subsets are allowed to be measured: a <strong>&sigma;-algebra</strong> $\mathcal{F}$ on $\Omega$ is a collection of subsets with:</p>
-      <p>
-        $$
-        \Omega\in\mathcal{F}, \qquad A\in\mathcal{F}\Rightarrow A^c\in\mathcal{F}, \qquad A_1,A_2,\dots\in\mathcal{F}\Rightarrow\bigcup_{i=1}^\infty A_i\in\mathcal{F}.
-        $$
-      </p>
-      <p>Elements of $\mathcal{F}$ are the <em>events</em>, the only sets $P$ or $\lambda$ ever measure. On $\mathbb{R}$, the standard choice is the <strong>Borel &sigma;-algebra</strong> $\mathcal{B}(\mathbb{R})$: the smallest &sigma;-algebra containing every open interval.</p>
-      <p class="intuition"><em>Intuition: not "can this set be measured" but "is it even eligible": closure under complement and countable union is exactly what countable additivity requires.</em></p>
-      <p>A measure is $\mu:\mathcal{F}\to[0,\infty]$ with $\mu(\varnothing)=0$ and countable additivity on disjoint sets; the triple $(\Omega,\mathcal{F},\mu)$ (or $(\Omega,\mathcal{F},P)$, a probability space) is a <strong>measure space</strong>. $\lambda$ lives on (the completion of) $\mathcal{B}(\mathbb{R})$, never on all of $2^{\mathbb{R}}$.</p>
+      <h2>A point has no length</h2>
+      <p class="idea">Uncountably many points can't each carry positive mass: the total would be infinite. So measure sets by extent. A point has none.</p>
+      <p>$$\lambda([a,b])=b-a, \qquad \lambda(\{x\})=0.$$</p>
+      <p>Countable additivity: $\lambda(\mathbb Q)=\sum_i\lambda(\{q_i\})=0$, though $\mathbb Q$ is dense.</p>
+      <p class="example-label">Example: the Dirichlet function $D=\mathbb 1[x\in\mathbb Q]$</p>
+      <p>$\int_0^1D\,d\lambda=1\cdot\lambda(\mathbb Q\cap[0,1])=0$. Riemann fails: every upper sum is $1$, every lower sum $0$.</p>
 
-      <h2>Why measure theory at all</h2>
-      <p>Discrete: a mass $p(x)\geq0$ per point, $\sum_x p(x)=1$, $P(A)=\sum_{x\in A}p(x)$.</p>
-      <p>Continuous: uncountably many points, so any positive per-point mass sums to $\infty$. Fix: weigh sets by extent, not points. The <strong>Lebesgue measure</strong> $\lambda$ gives $[a,b]$ the measure $b-a$, and:</p>
-      <p>
-        $$
-        \lambda(\{x\}) = 0 \quad \text{for every single point } x.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $\lambda$ measures extent, and a point has none.</em></p>
-      <p>A probability measure is a density $p$ relative to $\lambda$:</p>
-      <p>
-        $$
-        P(A) = \int_A p(x)\,d\lambda(x), \qquad p = \frac{dP}{d\lambda} \ \ \text{(the Radon-Nikodym derivative).}
-        $$
-      </p>
+      <h2>Which sets count: a &sigma;-algebra</h2>
+      <p class="idea">No length works consistently on <em>every</em> subset of $\mathbb R$ (the Vitali set). So fix the eligible sets in advance: the events.</p>
+      <p>$$\Omega\in\mathcal F, \qquad A\in\mathcal F\Rightarrow A^c\in\mathcal F, \qquad A_1,A_2,\ldots\in\mathcal F\Rightarrow\textstyle\bigcup_iA_i\in\mathcal F.$$</p>
+      <p>On $\mathbb R$: the Borel sets (generated by intervals). A probability space is $(\Omega,\mathcal F,P)$.</p>
 
-      <h2>Worked example: the Dirichlet function</h2>
-      <p>$\mathbb{Q}$ is countable, $\mathbb{Q}=\{q_1,q_2,\dots\}$, so countable additivity gives:</p>
-      <p>
-        $$
-        \lambda(\mathbb{Q}) = \sum_{i=1}^\infty\lambda(\{q_i\}) = \sum_{i=1}^\infty 0 = 0.
-        $$
-      </p>
-      <p>Take $D(x)=\mathbb{1}[x\in\mathbb{Q}]$, the Dirichlet function (nowhere continuous: every interval holds both rationals and irrationals). Its Lebesgue integral is immediate:</p>
-      <p>
-        $$
-        \int_0^1 D(x)\,d\lambda(x) = 1\cdot\lambda(\mathbb{Q}\cap[0,1]) + 0\cdot\lambda(\mathbb{Q}^c\cap[0,1]) = 0.
-        $$
-      </p>
-      <p>Its Riemann integral does not exist: every upper sum is $1$, every lower sum is $0$, and refining the partition never closes that gap.</p>
-      <p class="intuition"><em>Intuition: a dense set can still weigh nothing: Lebesgue sees straight through a pathology Riemann cannot handle.</em></p>
-
-      <h2>$P(X=x)=0$, yet $p(x)>0$</h2>
-      <p>Same mechanism as $\lambda(\mathbb{Q})=0$, applied to one point:</p>
-      <p>
-        $$
-        P(X=x) = \int_{\{x\}}p\,d\lambda = p(x)\cdot\lambda(\{x\}) = p(x)\cdot0 = 0,
-        $$
-      </p>
-      <p>regardless of how large $p(x)$ is: it can exceed $1$ (e.g. $\mathcal{N}(0,0.01)$ at $x=0$, Common distributions).</p>
-      <p class="intuition"><em>Intuition: $P$ is mass, $p$ is a rate; zero width always gives zero mass, whatever the rate.</em></p>
+      <h2>$P(X=x)=0$, yet $p(x)\gt0$</h2>
+      <p class="idea">$P$ is mass, the density $p$ is a rate (mass per unit length). Zero width gives zero mass, whatever the rate.</p>
+      <p>$$P(A)=\int_Ap\,d\lambda, \quad p=\frac{dP}{d\lambda}, \qquad P(X=x)=p(x)\cdot\lambda(\{x\})=0.$$</p>
+      <p class="example-label">Example</p>
+      <p>$\mathcal N(0,0.01)$ at $0$: $p(0)=1/\sqrt{2\pi\cdot0.01}\approx3.99\gt1$. Fine: it's a rate, not a probability.</p>
 
       <h2>One formula, two cases</h2>
-      <p>Discrete and continuous differ only in the base measure: $\lambda$ for continuous, counting measure $\nu$ for discrete ($\nu(\{x\})=1$):</p>
-      <p>
-        $$
-        P(A) = \int_A p\,d\mu \ \ \Longrightarrow\ \
-        \begin{cases}
-        \sum_{x\in A}p(x), & \mu=\nu \ \text{(discrete)} \\[2pt]
-        \int_A p(x)\,dx, & \mu=\lambda \ \text{(continuous)}
-        \end{cases}
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $\int\!\cdot\,d\mu$ refuses to commit to discrete or continuous; swap $\mu$, get the right formula for free.</em></p>
+      <p class="idea">Discrete and continuous differ only in the base measure $\mu$.</p>
+      <table>
+        <tr><td>$P(A)=\int_Ap\,d\mu$</td><td>$\mu=$ counting ($\mu(\{x\})=1$)</td><td>$\sum_{x\in A}p(x)$</td></tr>
+        <tr><td></td><td>$\mu=\lambda$ (length)</td><td>$\int_Ap(x)\,dx$</td></tr>
+      </table>
 
-      <h2>KL divergence</h2>
-      <p>
-        $$
-        KL(p\|q) = \mathbb{E}_{x\sim p}\!\left[\log\frac{p(x)}{q(x)}\right] = \int p(x)\log\frac{p(x)}{q(x)}\,d\mu(x).
-        $$
-      </p>
-      <p>Non-negative, by Jensen on the convex $-\log$:</p>
-      <p>
-        $$
-        KL(p\|q) = \mathbb{E}_{x\sim p}\!\left[-\log\frac{q(x)}{p(x)}\right] \geq -\log\mathbb{E}_{x\sim p}\!\left[\frac{q(x)}{p(x)}\right] = -\log\!\int q\,d\mu = -\log 1 = 0.
-        $$
-      </p>
-      <p>$KL(p\|q)\neq KL(q\|p)$ and no triangle inequality: a divergence, not a distance.</p>
-      <p class="intuition"><em>Intuition: averaging $\log(p/q)$ under $p$ makes $p$'s own frequent places dominate the score.</em></p>
+      <h2>KL for densities</h2>
+      <p class="idea">Same definition as in <a href="entropy-and-cross-entropy.html">the entropy note</a>, with $\int\cdot\,d\mu$. Only the ratio $p/q$ enters, so KL stays $\ge0$ (Jensen) even though densities can exceed $1$.</p>
+      <p>$$\mathrm{KL}(p\|q)=\int p(x)\log\frac{p(x)}{q(x)}\,d\mu(x)\ \ge0, \qquad =\infty \text{ if } q=0 \text{ where } p\gt0.$$</p>
+      <p class="example-label">Example: $p=\mathcal N(0,1)$, $q=\mathcal N(0,4)$ (nats)</p>
+      <table>
+        <tr><td>$\mathrm{KL}(p\|q)$</td><td>$\ln2+\tfrac18-\tfrac12=0.32$</td></tr>
+        <tr><td>$\mathrm{KL}(q\|p)$</td><td>$-\ln2+2-\tfrac12=0.81$</td></tr>
+      </table>
+      <p>Not symmetric: a divergence, not a distance.</p>
 
       <h2>Forward vs. reverse KL</h2>
-      <ul>
-        <li><strong>Forward, $KL(p\|q)$, mode-covering.</strong> Averaged under $p$: $q(x)\to0$ where $p(x)>0$ blows up the integrand, so $q$ must cover every mode of $p$.</li>
-        <li><strong>Reverse, $KL(q\|p)$, mode-seeking.</strong> Averaged under $q$: ignoring a mode of $p$ costs nothing, but mass where $p(x)\to0$ is punished, so $q$ locks onto one mode.</li>
-      </ul>
-      <p class="intuition"><em>Intuition: forward KL fears zeros in $q$; reverse KL fears its own mass landing where $p$ is zero.</em></p>
+      <p class="idea">The expectation is taken under the first argument, so that distribution decides where errors cost.</p>
+      <table>
+        <tr><td></td><td>averaged under</td><td>punishes</td><td>result</td></tr>
+        <tr><td>Forward $\mathrm{KL}(p\|q)$</td><td>$p$</td><td>$q\approx0$ where $p\gt0$</td><td>mass-covering</td></tr>
+        <tr><td>Reverse $\mathrm{KL}(q\|p)$</td><td>$q$</td><td>$q\gt0$ where $p\approx0$</td><td>mode-seeking</td></tr>
+      </table>
 
       <figure class="figure">
         <svg viewBox="0 0 640 220" role="img" aria-label="A bimodal target density with two fitting curves: a wide curve covering both modes, typical of minimizing forward KL, and a narrow curve sitting on only the left mode, typical of minimizing reverse KL">
@@ -149,10 +109,18 @@
           <path class="axis" style="stroke-dasharray:2 2" d="M90,190 C115,190 125,85 150,85 C175,85 185,190 210,190" fill="none"/>
           <text class="lbl" x="30" y="205">reverse KL(q&#8741;p): narrow, picks one</text>
         </svg>
-        <figcaption>Fitting a unimodal $q$ to a bimodal $p$: forward $KL(p\|q)$ spreads $q$ to avoid missing either mode; reverse $KL(q\|p)$ lets $q$ collapse onto one mode.</figcaption>
+        <figcaption>Fitting a one-bump $q$ to a two-bump $p$.</figcaption>
       </figure>
+      <p>Forward KL is maximum likelihood (next note). Reverse KL drives variational inference (<a href="generative-modeling-and-kl-divergence.html">generative modeling</a>).</p>
 
-      <p>Forward KL is MLE (Supervised learning as KL minimization); reverse KL drives variational methods (Generative modeling).</p>
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Show $\mathrm{KL}\big(\mathcal N(\mu_1,\sigma^2)\,\|\,\mathcal N(\mu_2,\sigma^2)\big)=\dfrac{(\mu_1-\mu_2)^2}{2\sigma^2}$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>The normalizers cancel: $\log\frac pq=\frac{(x-\mu_2)^2-(x-\mu_1)^2}{2\sigma^2}$. Under $p$: $\mathbb{E}[(x-\mu_1)^2]=\sigma^2$ and $\mathbb{E}[(x-\mu_2)^2]=\sigma^2+(\mu_1-\mu_2)^2$ (variance plus squared bias). Subtract: $\frac{(\mu_1-\mu_2)^2}{2\sigma^2}$. Symmetric here, but only because the variances match.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -163,7 +131,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

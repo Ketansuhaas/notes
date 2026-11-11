@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Matrix calculus with differentials - Deep Learning Notes</title>
+  <meta name="description" content="Never index: nudge the input, keep the part linear in the nudge, and read the gradient off. The trace trick, gradients of x^T A x and of a linear layer, and two identities you&#x27;ll meet in papers.">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Matrix calculus with differentials</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Matrix calculus with differentials</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">calculus</span><span class="tag">matrix-calculus</span><span class="tag">gradients</span><span class="tag">linear-algebra</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a>, <a href="four-views-of-matrix-multiplication.html">Four views of matrix multiplication</a> &middot; <strong>Leads to:</strong> <a href="backpropagation-via-jvps.html">Backpropagation via JVPs</a></p>
+
+      <p class="idea">Don't differentiate entry by entry. Nudge the input, keep only the part of the change that's linear in the nudge, and read the gradient off it.</p>
+
+      <h2>The reading rule</h2>
+      <p>
+        $$
+        df=\underbrace{\nabla f^T}_{1\times n}\underbrace{dx}_{n\times1} \ \Rightarrow\ \nabla f, \qquad
+        df=\operatorname{tr}\big(G^T\,dX\big)=\textstyle\sum_{ij}G_{ij}\,dX_{ij} \ \Rightarrow\ \frac{\partial f}{\partial X}=G.
+        $$
+      </p>
+      <p class="idea">The gradient with respect to $X$ always has the same shape as $X$.</p>
+
+      <h2>Toolkit</h2>
+      <table>
+        <tr><td>Product rule</td><td>$d(XY)=dX\,Y+X\,dY$</td></tr>
+        <tr><td>Constants pass through</td><td>$d(AXB)=A\,dX\,B$</td></tr>
+        <tr><td>A scalar is its own trace</td><td>$s=\operatorname{tr}(s)$</td></tr>
+        <tr><td>Trace is cyclic</td><td>$\operatorname{tr}(ABC)=\operatorname{tr}(CAB)$</td></tr>
+      </table>
+
+      <h2>Example: $f=\tfrac12x^TAx$, $A$ symmetric</h2>
+      <p>$$df=\tfrac12(dx^TAx+x^TA\,dx)=x^TA\,dx \ \Rightarrow\ \nabla f=Ax.$$</p>
+      <p>At $(1,1)$ with $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: $(3,3)$, matching Gradients, Jacobians, and Hessians. &#10003;</p>
+
+      <h2>Example: a linear layer</h2>
+      <p class="idea">The weight gradient is an outer product: error times input.</p>
+      <p>
+        $$
+        L=\tfrac12\|Wx-y\|^2,\ r=Wx-y: \quad dL=r^T\,dW\,x=\operatorname{tr}(x\,r^T\,dW) \ \Rightarrow\ \underbrace{\frac{\partial L}{\partial W}}_{k\times d}=\underbrace{r}_{k\times1}\underbrace{x^T}_{1\times d}.
+        $$
+      </p>
+
+      <h2>Two you'll meet in papers</h2>
+      <p>
+        $$
+        d(X^{-1})=-X^{-1}\,dX\,X^{-1}\ \ (\text{differentiate } XX^{-1}=I), \qquad d\log\det X=\operatorname{tr}(X^{-1}dX).
+        $$
+      </p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Least squares: $L(w)=\tfrac12\|Xw-y\|^2$. Find $\nabla L$ and set it to zero.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$r=Xw-y$, $dL=r^TX\,dw$, so $\nabla L=X^T(Xw-y)$. Zero gives $X^TXw=X^Ty$: the normal equations from Rank, subspaces, and projections.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

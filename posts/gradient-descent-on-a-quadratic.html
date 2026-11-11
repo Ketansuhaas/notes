@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Gradient descent on a quadratic - Deep Learning Notes</title>
+  <meta name="description" content="Near a minimum every loss is a bowl, and gradient descent on a bowl splits into independent 1-D problems along the eigenvectors: each shrinks by (1 - eta lambda) per step. Step-size limits, zig-zagging, and the condition number.">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Gradient descent on a quadratic</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Gradient descent on a quadratic</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">gradient-descent</span><span class="tag">eigenvalues</span><span class="tag">hessian</span><span class="tag">condition-number</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="taylor-expansion.html">Taylor expansion</a>, <a href="dynamics-in-the-eigenbasis.html">Dynamics in the eigenbasis</a>, <a href="quadratic-forms-and-positive-definiteness.html">Quadratic forms</a> &middot; <strong>Leads to:</strong> momentum and Adam (coming)</p>
+
+      <p class="idea">Near a minimum every loss is a bowl (Taylor). On a bowl, gradient descent splits into independent 1-D problems, one per eigenvector of the curvature.</p>
+
+      <h2>The update</h2>
+      <p>$$f(x)=\tfrac12x^TAx,\quad \nabla f=Ax \quad\Rightarrow\quad x_{k+1}=x_k-\eta Ax_k=(I-\eta A)\,x_k.$$</p>
+      <p>Running example: $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, so $f=x_1^2+x_1x_2+x_2^2$, with $\lambda_1=3$ along $q_1=\tfrac1{\sqrt2}(1,1)$ and $\lambda_2=1$ along $q_2=\tfrac1{\sqrt2}(1,-1)$.</p>
+
+      <h2>One factor per direction</h2>
+      <p class="idea">$I-\eta A$ has the same eigenvectors as $A$. Each coordinate gets multiplied by its own factor every step.</p>
+      <p>$$x=\textstyle\sum_ic_iq_i: \qquad c_i\ \leftarrow\ (1-\eta\lambda_i)\,c_i.$$</p>
+      <table>
+        <tr><td>$\eta$</td><td>steep $q_1$: $1-3\eta$</td><td>flat $q_2$: $1-\eta$</td><td>behaviour</td></tr>
+        <tr><td>$0.2$</td><td>$0.4$</td><td>$0.8$</td><td>smooth, slow along $q_2$</td></tr>
+        <tr><td>$0.5$</td><td>$-0.5$</td><td>$0.5$</td><td>zig-zags along $q_1$</td></tr>
+        <tr><td>$0.7$</td><td>$-1.1$</td><td>$0.3$</td><td>diverges along $q_1$</td></tr>
+      </table>
+
+      <figure class="figure">
+        <svg viewBox="0 0 640 300" role="img" aria-label="Elliptical contours of a quadratic bowl and the gradient descent path from (4,0) zig-zagging into the minimum.">
+          <ellipse class="outline" cx="320" cy="150" rx="169.7" ry="98" transform="rotate(45 320 150)"/>
+          <ellipse class="outline" cx="320" cy="150" rx="84.9" ry="49" transform="rotate(45 320 150)"/>
+          <ellipse class="outline" cx="320" cy="150" rx="42.4" ry="24.5" transform="rotate(45 320 150)"/>
+          <polyline class="axis" fill="none" points="440,150 320,210 350,150 320,165 327.5,150 320,153.75"/>
+          <circle class="pt" cx="440" cy="150" r="4.5"/>
+          <circle class="pt" cx="320" cy="210" r="3.5"/>
+          <circle class="pt" cx="350" cy="150" r="3.5"/>
+          <circle class="origin" cx="320" cy="150" r="3"/>
+          <text class="lbl" x="448" y="146">start (4, 0)</text>
+          <text class="lbl" x="250" y="226">(0, &#8722;2)</text>
+          <text class="lbl" x="232" y="146">minimum</text>
+        </svg>
+        <figcaption>$\eta=0.5$ from $(4,0)$: $(4,0)\to(0,-2)\to(1,0)\to(0,-\tfrac12)\to\cdots$ The sign flips along the steep axis every step.</figcaption>
+      </figure>
+
+      <h2>The step-size limit</h2>
+      <p class="idea">Every factor must shrink, and the steepest direction breaks first.</p>
+      <p>$$|1-\eta\lambda_i|\lt1\ \ \forall i \iff 0\lt\eta\lt\frac2{\lambda_{\max}}. \qquad \text{Here: } \eta\lt\tfrac23.$$</p>
+
+      <h2>The condition number sets the speed</h2>
+      <p class="idea">$\eta$ must be small for the steep direction, which leaves the flat direction crawling. The ratio $\kappa=\lambda_{\max}/\lambda_{\min}$ decides how bad that is.</p>
+      <p>$$\text{best } \eta=\frac2{\lambda_{\max}+\lambda_{\min}}, \qquad \text{rate}=\frac{\kappa-1}{\kappa+1}.$$</p>
+      <table>
+        <tr><td>$\kappa=3$ (here)</td><td>rate $0.5$</td><td>about 3 steps per digit</td></tr>
+        <tr><td>$\kappa=100$</td><td>rate $0.98$</td><td>about 115 steps per digit</td></tr>
+      </table>
+      <p>This is why momentum, Adam, normalization and good initialization exist: they fight a large $\kappa$.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Precondition: $x_{k+1}=x_k-\eta\,PAx_k$ with $P=A^{-1}$ and $\eta=1$. What happens, and what is the new $\kappa$?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$x_{k+1}=(I-A^{-1}A)x_k=0$: the minimum in one step. Effectively $PA=I$, all eigenvalues $1$, so $\kappa=1$. This is Newton's method; Adam is a cheap diagonal approximation of $P$.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -13,7 +13,7 @@
   </script>
   <title>Probability notation and random variables - Deep Learning Notes</title>
   <meta name="description" content="Random variables vs. realizations, P(X=x) vs p(x), random vectors, expectation notation, and the data-generating distribution p_data that all of machine learning is trying to approximate.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,39 +43,33 @@
 
   <main>
     <article>
-      <h1>Probability notation and random variables</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">random-variables</span><span class="tag">expectation</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Probability notation and random variables</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">random-variables</span><span class="tag">expectation</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="notation-survival-guide.html">Reading the notation in papers</a> &middot; <strong>Leads to:</strong> <a href="expectation-and-variance-algebra.html">Expectation and variance algebra</a>, <a href="common-distributions.html">Common distributions</a>, <a href="lebesgue-measure-and-kl-divergence.html">Lebesgue measure and KL divergence</a></p>
+
+      <p class="idea">A handful of symbols carry all of probability in papers. Read each one precisely and the formulas stop being cryptic.</p>
 
       <h2>Random variable vs. realization</h2>
-      <p>
-        $$
-        X : \Omega \to \mathbb{R}^d, \qquad x = X(\omega) \ \text{ for a specific outcome } \omega.
-        $$
-      </p>
-      <p>$X$ is the map; $x$ is one realized output.</p>
-      <p class="intuition"><em>Intuition: $X$ is a number not yet seen, $x$ is one already seen.</em></p>
+      <p class="idea">$X$ is a number not yet seen; $x$ is one already seen.</p>
+      <p>$$X:\Omega\to\mathbb{R}^d, \qquad x=X(\omega) \ \text{ for one outcome } \omega.$$</p>
       <p class="example-label">Example</p>
-      <p>Flip a coin: $\Omega=\{H,T\}$, $X(H)=1$, $X(T)=0$. $X$ is the variable; $x=1$ is what happened on a given flip.</p>
+      <p>Coin: $\Omega=\{H,T\}$, $X(H)=1$, $X(T)=0$. On today's flip, $x=1$.</p>
 
-      <h2>Events vs. values: $P(X=x)$ vs. $p(x)$</h2>
-      <p>$P(\cdot)$ always eats an <em>event</em>, a subset of outcomes, and returns a probability: a number in $[0,1]$. $\{X=x\}$ and $\{X\in A\}$ are events, so $P(X=x)$ and $P(X\in A)$ are well-formed; $P(x)$ on its own is not, since $x$ is a number, not an event.</p>
-      <p>$p(\cdot)$, lowercase, is a different object: the probability mass function (pmf, discrete $X$) or probability density function (pdf, continuous $X$), a function of a value:</p>
-      <p>
-        $$
-        \text{discrete: } p(x) := P(X=x), \qquad
-        \text{continuous: } P(X\in A) = \int_A p(x)\,dx.
-        $$
-      </p>
-      <p>
-        $$
-        \text{discrete: } \textstyle\sum_x p(x)=1 \ \text{(itself a probability)}, \qquad \text{continuous: } \int p(x)\,dx=1, \ p(x) \text{ can exceed } 1.
-        $$
-      </p>
-      <p>A continuous density gives relative likelihood: $p(x)\,dx\approx P(X\in[x,x+dx])$, and $P(X=x)=0$ for every point $x$.</p>
-      <p class="intuition"><em>Intuition: $P$ measures sets, $p$ measures local concentration (made rigorous in Lebesgue measure and KL divergence).</em></p>
-      <p class="example-label">Example</p>
-      <p>Fair coin: $p(1)=p(0)=\tfrac12$, each a genuine probability. Standard uniform $X\sim\text{Unif}[0,2]$: $p(x)=\tfrac12$ for $x\in[0,2]$, a density, and $P(X=1)=0$ even though $p(1)=\tfrac12>0$.</p>
+      <h2>$P$ eats events, $p$ eats values</h2>
+      <p class="idea">$P$ measures a set of outcomes. $p$ measures how concentrated probability is at a single value.</p>
+      <table>
+        <tr><td></td><td>discrete (pmf)</td><td>continuous (pdf)</td></tr>
+        <tr><td>$p(x)$</td><td>$=P(X=x)$</td><td>density: $P(X\in A)=\int_Ap(x)\,dx$</td></tr>
+        <tr><td>normalized</td><td>$\sum_xp(x)=1$</td><td>$\int p(x)\,dx=1$</td></tr>
+        <tr><td>$p(x)\gt1$?</td><td>never</td><td>allowed</td></tr>
+        <tr><td>$P(X=x)$</td><td>$p(x)$</td><td>$0$</td></tr>
+      </table>
+      <p>$P(x)$ alone is ill-formed: $x$ is a number, not an event. Write $P(X=x)$.</p>
 
       <figure class="figure">
         <svg viewBox="0 0 560 190" role="img" aria-label="Left, a discrete probability mass function shown as bars whose heights are probabilities summing to one. Right, a continuous probability density function shown as a smooth curve whose area, not height, integrates to one">
@@ -97,55 +91,46 @@
           <line class="faint" x1="430" y1="150" x2="430" y2="70"/>
           <text class="lbl muted" x="436" y="100">p(x) can exceed 1</text>
         </svg>
-        <figcaption>A pmf's bar heights are probabilities and must sum to 1; a pdf's curve height is a density (can be greater than 1) and only its area must integrate to 1.</figcaption>
+        <figcaption>Bar heights are probabilities. Curve height is a density; only the area is a probability.</figcaption>
       </figure>
+      <p class="example-label">Example</p>
+      <p>$X\sim\text{Unif}[0,\tfrac12]$: $p(x)=2$ on the interval, yet $P(X=\tfrac14)=0$ and $P(X\le\tfrac14)=2\cdot\tfrac14=\tfrac12$.</p>
 
       <h2>Random vectors: joint, marginal, conditional</h2>
-      <p>Everything above extends to a random vector $X=(X_1,\dots,X_d)\in\mathbb{R}^d$, with a joint density $p(x)=p(x_1,\dots,x_d)$ over all $d$ coordinates at once.</p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{x}_{d\times1}=(x_1,\dots,x_d), \qquad \underbrace{p(x)}_{\text{scalar}}=\underbrace{p(x_1,\dots,x_d)}_{\text{one joint density, }d\text{ arguments}}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $p$ takes the whole vector at once and hands back a single number; it is one function of $d$ variables, not $d$ separate functions.</em></p>
-      <p>Three operations connect a joint to smaller pieces:</p>
-      <p>
-        $$
-        \text{marginal: } p(x_1)=\sum_{x_2}p(x_1,x_2) \text{ or } \int p(x_1,x_2)\,dx_2, \qquad
-        \text{conditional: } p(y\mid x)=\frac{p(x,y)}{p(x)}, \qquad
-        \text{independence: } p(x,y)=p(x)\,p(y).
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: marginal sums a variable away, conditional restricts and renormalizes, independence means conditioning changes nothing.</em></p>
-      <p>Repeated conditioning gives the chain rule, true for any ordering of the variables:</p>
-      <p>
-        $$
-        p(x_1,\dots,x_n) = \prod_{i=1}^n p(x_i\mid x_1,\dots,x_{i-1}).
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: generate one coordinate at a time, each conditioned on what came before: the mechanism behind autoregressive models.</em></p>
+      <p class="idea">$p$ takes the whole vector and returns one number. Three moves shrink a joint into smaller pieces.</p>
+      <p>$$\underbrace{x}_{d\times1}=(x_1,\dots,x_d), \qquad \underbrace{p(x)}_{\text{scalar}}=p(x_1,\dots,x_d).$$</p>
+      <table>
+        <tr><td>marginal</td><td>$p(x)=\int p(x,y)\,dy$</td><td>sum a variable away</td></tr>
+        <tr><td>conditional</td><td>$p(y\mid x)=\dfrac{p(x,y)}{p(x)}$</td><td>restrict, renormalize</td></tr>
+        <tr><td>independence</td><td>$p(x,y)=p(x)\,p(y)$</td><td>conditioning changes nothing</td></tr>
+      </table>
+      <p>Chain rule (any ordering), the engine of autoregressive models:</p>
+      <p>$$p(x_1,\dots,x_n)=\prod_{i=1}^np(x_i\mid x_{\lt i}).$$</p>
       <p class="example-label">Example</p>
-      <p>Two coin flips, independent: $p(x_1,x_2)=p(x_1)p(x_2)=\tfrac14$ for every outcome. If instead $x_2$ always copies $x_1$: $p(x_2\mid x_1)=1$ when $x_2=x_1$ and $0$ otherwise, so $p(x_1,x_2)=p(x_1)p(x_2\mid x_1)=\tfrac12$ exactly when $x_1=x_2$, and $0$ otherwise; no independence, but the chain rule factorization still holds.</p>
+      <p>Two coins, $x_2$ copies $x_1$: $p(x_1,x_2)=p(x_1)\,p(x_2\mid x_1)=\tfrac12\cdot1$ if $x_1=x_2$, else $0$. Not independent ($\tfrac12\ne\tfrac14$), but the chain rule holds.</p>
 
-      <h2>Expectation notation</h2>
-      <p>$\mathbb{E}_{x\sim p}[f(x)]$ averages $f$ over $x$ drawn from $p$:</p>
-      <p>
-        $$
-        \mathbb{E}_{x\sim p}[f(x)] = \sum_x p(x)f(x) \quad \text{or} \quad \int p(x)f(x)\,dx.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: the subscript names which distribution the randomness runs under: never drop it once two distributions are in play.</em></p>
+      <h2>Expectation: name the distribution</h2>
+      <p class="idea">The subscript says whose randomness you average over. Once two distributions appear, never drop it.</p>
+      <p>$$\mathbb{E}_{x\sim p}[f(x)]=\sum_xp(x)f(x) \quad\text{or}\quad \int p(x)f(x)\,dx.$$</p>
+      <p class="example-label">Example</p>
+      <p>$\mathbb{E}_{x\sim p}[-\log q(x)]$ (cross-entropy) and $\mathbb{E}_{x\sim q}[-\log q(x)]$ (entropy of $q$) differ only in the subscript.</p>
 
-      <h2>The data-generating distribution</h2>
-      <p>Machine learning starts from a dataset, $\{x_i\}_{i=1}^n$ or $\{(x_i,y_i)\}_{i=1}^n$, and the standard working assumption is that these are i.i.d. (independent, identically distributed) samples from some fixed but unknown true distribution:</p>
-      <p>
-        $$
-        x_i \overset{\text{i.i.d.}}{\sim} p_{\text{data}}(x), \qquad \text{or} \qquad (x_i,y_i)\overset{\text{i.i.d.}}{\sim} p_{\text{data}}(x,y).
-        $$
-      </p>
-      <p>$p_{\text{data}}$ is observed only through finitely many samples. A classifier approximates $p_{\text{data}}(y\mid x)$; a generative model approximates $p_{\text{data}}(x)$ itself.</p>
-      <p class="intuition"><em>Intuition: $p_{\text{data}}$ is the target; the dataset is a flashlight shining a few samples of light on it.</em></p>
+      <h2>The data distribution</h2>
+      <p class="idea">There is one unknown true distribution; the dataset is a few samples of it. Every model approximates some piece.</p>
+      <p>$$x_i\overset{\text{iid}}{\sim}p_{\text{data}}(x) \quad\text{or}\quad (x_i,y_i)\overset{\text{iid}}{\sim}p_{\text{data}}(x,y).$$</p>
+      <table>
+        <tr><td>classifier</td><td>approximates $p_{\text{data}}(y\mid x)$</td></tr>
+        <tr><td>generative model</td><td>approximates $p_{\text{data}}(x)$</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Using only the definitions above, derive Bayes' rule: $p(x\mid y)=\dfrac{p(y\mid x)\,p(x)}{\sum_{x'}p(y\mid x')\,p(x')}$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Conditional, both ways: $p(x,y)=p(y\mid x)\,p(x)=p(x\mid y)\,p(y)$. Divide by $p(y)$. Marginalize the denominator: $p(y)=\sum_{x'}p(x',y)=\sum_{x'}p(y\mid x')\,p(x')$.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -156,7 +141,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

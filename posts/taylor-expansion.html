@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Taylor expansion in many variables - Deep Learning Notes</title>
+  <meta name="description" content="Zoom in on any smooth function and it looks like a plane, then a bowl: f(x+Delta) ~ f + grad^T Delta + 1/2 Delta^T H Delta, derived by walking along a line, with what each term tells you.">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Taylor expansion in many variables</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Taylor expansion in many variables</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">calculus</span><span class="tag">taylor</span><span class="tag">gradients</span><span class="tag">hessian</span><span class="tag">optimization</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a>, <a href="quadratic-forms-and-positive-definiteness.html">Quadratic forms</a> &middot; <strong>Leads to:</strong> <a href="convexity-and-jensen.html">Convexity and Jensen</a>, <a href="gradient-descent-on-a-quadratic.html">Gradient descent on a quadratic</a></p>
+
+      <p class="idea">Zoom in close enough and any smooth function looks like a tilted plane (first order), then like a bowl or saddle (second order). Most "to first order" arguments in papers are this.</p>
+
+      <h2>One variable</h2>
+      <p>$$f(x+h)\approx f(x)+f'(x)\,h+\tfrac12f''(x)\,h^2, \qquad e^{h}\approx1+h+\tfrac12h^2.$$</p>
+
+      <h2>Many variables: walk along a line</h2>
+      <p class="idea">Reduce to one variable: walk from $x$ in direction $\Delta$, $\ g(t)=f(x+t\Delta)$, and apply the 1-D formula at $t=1$.</p>
+      <p>
+        $$
+        g'(0)=\nabla f^T\Delta, \quad g''(0)=\Delta^TH\Delta
+        \quad\Rightarrow\quad
+        f(x+\Delta)\approx\underbrace{f(x)}_{1\times1}+\underbrace{\nabla f^T}_{1\times n}\underbrace{\Delta}_{n\times1}+\tfrac12\underbrace{\Delta^T}_{1\times n}\underbrace{H}_{n\times n}\underbrace{\Delta}_{n\times1}.
+        $$
+      </p>
+      <p class="example-label">Example</p>
+      <p>$f=x_1^2+x_1x_2+x_2^2$ at $(1,1)$: $f=3$, $\nabla f=(3,3)$, $H=\begin{pmatrix}2&1\\1&2\end{pmatrix}$. Step $\Delta=(0.1,0)$:</p>
+      <p>$$3+0.3+\tfrac12(0.02)=3.31=f(1.1,1). \ \checkmark \ \ (\text{exact, since } f \text{ is quadratic})$$</p>
+
+      <h2>What each term tells you</h2>
+      <table>
+        <tr><td>$\nabla f^T\Delta$</td><td>slope: step $\Delta=-\eta\nabla f$ lowers $f$ by $\eta\|\nabla f\|^2$</td><td>gradient descent</td></tr>
+        <tr><td>$\tfrac12\Delta^TH\Delta$</td><td>curvature: bowl, dome, or saddle</td><td>step size, stability</td></tr>
+        <tr><td>both</td><td>minimize the bowl: $\nabla f+H\Delta=0$</td><td>Newton: $\Delta=-H^{-1}\nabla f$</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Take one Newton step from $(1,1)$ on the $f$ above. Where do you land, and why exactly there?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$H\Delta=-\nabla f=-(3,3)$. Since $H(1,1)^T=(3,3)$, $\Delta=-(1,1)$: you land at $(0,0)$, the minimum. For a quadratic the bowl model <em>is</em> $f$, so one Newton step is exact.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

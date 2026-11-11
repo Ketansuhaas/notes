@@ -13,7 +13,7 @@
   </script>
   <title>Dynamics in the eigenbasis - Deep Learning Notes</title>
   <meta name="description" content="What A^k x and dx/dt=Ax look like once x is written in the eigenbasis, and why the dominant eigenvalue always wins.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,69 +43,35 @@
 
   <main>
     <article>
-      <h1>Dynamics in the eigenbasis</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">eigenbasis</span><span class="tag">dynamical-systems</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Dynamics in the eigenbasis</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">eigenbasis</span><span class="tag">dynamical-systems</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="eigenvalues-and-defectiveness.html">Eigenvalues, eigenvectors, and defectiveness</a>, <a href="spectral-theorem.html">The spectral theorem</a> &middot; <strong>Leads to:</strong> <a href="quadratic-forms-and-positive-definiteness.html">Quadratic forms and positive definiteness</a>, <a href="gradient-descent-on-a-quadratic.html">Gradient descent on a quadratic</a></p>
 
-      <h2>Expanding in the eigenbasis</h2>
-      <p>If $A$ is diagonalizable with eigenvectors $v_1,\dots,v_n$, write any $x_0$ as a combination of them:</p>
-      <p>
-        $$
-        x_0 = c_1v_1 + \cdots + c_nv_n.
-        $$
-      </p>
-      <p class="example-label">Shapes</p>
-      <p>Stacking the eigenvectors as columns of $V$ turns the sum into one matrix-vector product; solving for the coordinates uses $V^{-1}$:</p>
-      <p>
-        $$
-        \underbrace{x_0}_{n\times1}=\underbrace{\begin{pmatrix}\vert&&\vert\\v_1&\cdots&v_n\\\vert&&\vert\end{pmatrix}}_{V,\ n\times n}\underbrace{\begin{pmatrix}c_1\\\vdots\\c_n\end{pmatrix}}_{c,\ n\times1}
-        \quad\Longleftrightarrow\quad c=V^{-1}x_0.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: the eigenvectors are a new coordinate system; the $c_i$ are $x_0$'s coordinates in it.</em></p>
+      <p class="idea">Applying $A$ over and over is hard to picture. In the eigenbasis it splits into $n$ independent 1-D problems: each coordinate just gets multiplied by its own $\lambda_i$.</p>
+
+      <h2>Coordinates in the eigenbasis</h2>
+      <p class="idea">The eigenvectors form a new coordinate system; $c$ holds $x_0$'s coordinates in it.</p>
+      <p>$$\underbrace{x_0}_{n\times1}=c_1v_1+\cdots+c_nv_n=\underbrace{V}_{n\times n}\underbrace{c}_{n\times1} \iff c=V^{-1}x_0.$$</p>
       <p class="example-label">Example</p>
-      <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$, eigenvectors $v_1=(1,1), v_2=(1,-1)$ (from Diagonalization):</p>
-      <p>
-        $$
-        x_0 = \begin{pmatrix}4\\0\end{pmatrix} = 2v_1 + 2v_2.
-        $$
-      </p>
+      <p>$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $v_1=(1,1)$, $v_2=(1,-1)$: $\ x_0=\begin{pmatrix}4\\0\end{pmatrix}=2v_1+2v_2$.</p>
 
       <h2>Repeated multiplication</h2>
-      <p>Since $Av_i = \lambda_iv_i$, also $A^kv_i = \lambda_i^kv_i$, so by linearity:</p>
-      <p>
-        $$
-        A^kx_0 = c_1\lambda_1^kv_1 + \cdots + c_n\lambda_n^kv_n.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: each eigen-direction grows or shrinks completely on its own, at its own geometric rate $\lambda_i$.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>In matrix form, $A^k=V\Lambda^kV^{-1}$: change to eigen-coordinates, scale each coordinate independently, change back. The middle matrix only needs its diagonal entries raised to the $k$-th power:</p>
-      <p>
-        $$
-        \underbrace{A^kx_0}_{n\times1}=\underbrace{V}_{n\times n}\underbrace{\begin{pmatrix}\lambda_1^k&&\\&\ddots&\\&&\lambda_n^k\end{pmatrix}}_{\Lambda^k,\ n\times n}\underbrace{V^{-1}x_0}_{n\times1}
-        =V\begin{pmatrix}\lambda_1^kc_1\\\vdots\\\lambda_n^kc_n\end{pmatrix}.
-        $$
-      </p>
+      <p class="idea">Each eigen-direction grows or shrinks on its own, by a factor $\lambda_i$ per step.</p>
+      <p>$$A^kx_0=\sum_ic_i\lambda_i^kv_i=\underbrace{V}_{n\times n}\underbrace{\begin{pmatrix}\lambda_1^k&&\\&\ddots&\\&&\lambda_n^k\end{pmatrix}}_{\Lambda^k}\underbrace{V^{-1}x_0}_{c}.$$</p>
       <p class="example-label">Example</p>
-      <p>With $\lambda_1=3, \lambda_2=1$: $A^kx_0 = 2\cdot3^k v_1 + 2\cdot1^k v_2$. Check against direct multiplication:</p>
-      <p>
-        $$
-        Ax_0 = \begin{pmatrix}8\\4\end{pmatrix}, \quad A^2x_0 = \begin{pmatrix}20\\16\end{pmatrix}, \quad A^3x_0 = \begin{pmatrix}56\\52\end{pmatrix}.
-        $$
-      </p>
-      <p>Formula at $k=1$: $2\cdot3\cdot(1,1) + 2\cdot1\cdot(1,-1) = (8,4)$. &#10003;</p>
+      <p>$A^kx_0=2\cdot3^k(1,1)+2(1,-1)=(2\cdot3^k+2,\ 2\cdot3^k-2)$. For $k=1,2,3$: $(8,4),\ (20,16),\ (56,52)$, matching direct multiplication. &#10003;</p>
 
       <h2>The dominant eigenvalue wins</h2>
-      <p>As $k\to\infty$, the largest $|\lambda_i|$ (with $c_i\neq0$) swamps every other term:</p>
-      <p>
-        $$
-        A^kx_0 \approx c_1\lambda_1^kv_1 \quad (\lambda_1 \text{ the dominant eigenvalue}).
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: repeatedly applying $A$ to almost any vector points it toward the dominant eigenvector, this is power iteration.</em></p>
+      <p class="idea">The largest $|\lambda|$ outgrows the rest, so repeated multiplication turns almost any vector toward the top eigenvector. That is power iteration.</p>
+      <p>$$A^kx_0=\lambda_1^k\Big(c_1v_1+\sum_{i\ge2}c_i\big(\tfrac{\lambda_i}{\lambda_1}\big)^kv_i\Big)\ \approx\ c_1\lambda_1^kv_1 \qquad(|\lambda_1|\gt|\lambda_i|,\ c_1\neq0).$$</p>
+      <p>The ratio $|\lambda_2/\lambda_1|$ sets how fast the other terms die.</p>
       <p class="example-label">Example</p>
-      <p>Direction of $A^kx_0$ above: $(8,4)$, $(20,16)$, $(56,52)$, i.e. ratios $0.5, 0.8, 0.929,\dots \to 1$, converging to $v_1=(1,1)$.</p>
+      <p>Second/first component: $0.5,\ 0.8,\ 0.929,\dots\to1$, so the direction approaches $v_1=(1,1)$, with the gap shrinking by about $|\lambda_2/\lambda_1|=\tfrac13$ per step.</p>
 
       <figure class="figure">
         <svg viewBox="0 0 320 260" role="img" aria-label="Successive points x0, Ax0, A squared x0, A cubed x0 drawn as rays from the origin, each closer in angle to the dominant eigenvector v1 than the last">
@@ -126,25 +92,20 @@
           <circle class="pt" cx="184" cy="125" r="4"/>
           <text class="lbl" x="188" y="118">A&#179;x&#8320;</text>
         </svg>
-        <figcaption>Each multiplication by $A$ stretches the point by roughly $\lambda_1=3$ along its own direction, but since the $v_2$ part only grows at $\lambda_2=1$, the ray swings closer to $v_1=(1,1)$ every time.</figcaption>
+        <figcaption>The $v_1$ part triples each step, the $v_2$ part stays put, so the ray swings toward $v_1$ (lengths not to scale).</figcaption>
       </figure>
 
       <h2>Continuous time</h2>
-      <p>The same expansion solves $\dot x = Ax$:</p>
-      <p>
-        $$
-        x(t) = c_1e^{\lambda_1t}v_1 + \cdots + c_ne^{\lambda_nt}v_n.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $\lambda_i>0$ grows, $\lambda_i<0$ decays, $\lambda_i$ complex rotates; same picture, continuous time instead of steps.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>Exactly the discrete formula with $\Lambda^k$ replaced by the matrix exponential $e^{\Lambda t}$, which for a diagonal matrix just exponentiates each entry:</p>
-      <p>
-        $$
-        \underbrace{x(t)}_{n\times1}=\underbrace{V}_{n\times n}\underbrace{\begin{pmatrix}e^{\lambda_1t}&&\\&\ddots&\\&&e^{\lambda_nt}\end{pmatrix}}_{e^{\Lambda t},\ n\times n}\underbrace{V^{-1}x_0}_{n\times1}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: same change-of-basis story as $A^k=V\Lambda^kV^{-1}$, with "raise to the $k$-th power" swapped for "exponentiate," since that is what solves $\dot y=\lambda y$ in each eigen-coordinate.</em></p>
+      <p class="idea">Same story for $\dot x=Ax$. Each coordinate solves $\dot y=\lambda y$, so powers $\lambda^k$ become exponentials $e^{\lambda t}$.</p>
+      <p>$$x(t)=\sum_ic_ie^{\lambda_it}v_i=V\underbrace{\begin{pmatrix}e^{\lambda_1t}&&\\&\ddots&\\&&e^{\lambda_nt}\end{pmatrix}}_{e^{\Lambda t}}V^{-1}x_0.$$</p>
+      <table>
+        <tr><td></td><td>steps $\lambda^k$</td><td>flow $e^{\lambda t}$</td></tr>
+        <tr><td>decays</td><td>$|\lambda|\lt1$</td><td>$\operatorname{Re}\lambda\lt0$</td></tr>
+        <tr><td>grows</td><td>$|\lambda|\gt1$</td><td>$\operatorname{Re}\lambda\gt0$</td></tr>
+        <tr><td>also spins</td><td>$\lambda$ complex (spirals; $|\lambda|$ decides in or out)</td><td>$\operatorname{Im}\lambda\neq0$ (spirals; $\operatorname{Re}\lambda$ decides)</td></tr>
+      </table>
+      <p class="example-label">Example</p>
+      <p>$x(t)=2e^{3t}(1,1)+2e^{t}(1,-1)$: the $e^{3t}$ term swamps the other, so $x(t)$ bends toward $v_1$.</p>
 
       <figure class="figure">
         <svg viewBox="0 0 320 260" role="img" aria-label="A smooth curve from x of 0 bending toward the dominant eigenvector direction as t grows, approaching but never crossing it">
@@ -162,16 +123,25 @@
           <text class="lbl" x="134" y="246">x(0)</text>
           <text class="lbl muted" x="150" y="202">t &#8594; &#8734;</text>
         </svg>
-        <figcaption>As $t\to\infty$, $x(t)$ aligns with $v_1$: the faster-growing term $e^{\lambda_1t}v_1$ eventually swamps $e^{\lambda_2t}v_2$.</figcaption>
+        <figcaption>$e^{3t}v_1$ outgrows $e^{t}v_2$, so $x(t)$ aligns with $v_1$.</figcaption>
       </figure>
 
       <h2>Why this matters</h2>
-      <p>
-        Power iteration (and PageRank) repeatedly multiplies by $A$ to find the dominant eigenvector.
-        A Markov chain is $x_{k+1}=Px_k$ with dominant eigenvalue $1$, so it converges to the stationary
-        distribution. A deep network applies something like $A^k$ across its layers: eigenvalues (or
-        singular values) far from $1$ are exactly why activations and gradients blow up or vanish with depth.
-      </p>
+      <table>
+        <tr><td>Power iteration, PageRank</td><td>repeat $A$, read off the top eigenvector</td></tr>
+        <tr><td>Markov chain $x_{k+1}=Px_k$</td><td>dominant $\lambda=1$: converges to the stationary distribution</td></tr>
+        <tr><td>Deep networks</td><td>layers act like $A^k$: $|\lambda|$ (or singular values) far from $1$ means exploding or vanishing signals</td></tr>
+        <tr><td>Gradient descent</td><td>$x_{k+1}=(I-\eta A)x_k$: factor $1-\eta\lambda_i$ per direction</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>For diagonalizable $A$, prove: $A^kx_0\to0$ for every $x_0$ $\iff$ every $|\lambda_i|\lt1$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>($\Leftarrow$) $A^kx_0=\sum_ic_i\lambda_i^kv_i$ and each $\lambda_i^k\to0$. ($\Rightarrow$) If some $|\lambda_j|\ge1$, start at $x_0=v_j$: $\|A^kv_j\|=|\lambda_j|^k\|v_j\|\ge\|v_j\|\gt0$, which never reaches $0$. Applied to $I-\eta A$, this is the step-size rule for gradient descent.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -182,7 +152,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

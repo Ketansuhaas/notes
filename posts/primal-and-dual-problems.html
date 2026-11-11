@@ -13,7 +13,7 @@
   </script>
   <title>Primal and dual problems - Deep Learning Notes</title>
   <meta name="description" content="The Lagrangian dual function, weak and strong duality, why the dual is always concave, and where duality shows up: shadow prices, the SVM kernel trick, max-flow min-cut.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,106 +43,78 @@
 
   <main>
     <article>
-      <h1>Primal and dual problems</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">optimization</span><span class="tag">lagrangian</span><span class="tag">constrained-optimization</span><span class="tag">duality</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Primal and dual problems</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">optimization</span><span class="tag">lagrangian</span><span class="tag">constrained-optimization</span><span class="tag">duality</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="lagrangian-and-kkt.html">The Lagrangian and KKT conditions</a>, <a href="convexity-and-jensen.html">Convexity and Jensen's inequality</a> &middot; <strong>Leads to:</strong> the SVM dual and kernel methods (beyond these notes)</p>
 
-      <h2>The primal problem</h2>
-      <p>The original constrained problem (The Lagrangian and KKT conditions), with optimal value $p^\star$:</p>
-      <p>
-        $$
-        p^\star = \min_x\ f(x) \quad \text{s.t.}\quad h_j(x)\leq0,\ \ g_i(x)=0.
-        $$
-      </p>
-      <p>Its Lagrangian: $L(x,\mu,\lambda) = f(x) + \sum_j\mu_jh_j(x) + \sum_i\lambda_ig_i(x)$, $\mu_j\geq0$.</p>
+      <p class="idea">Every choice of multipliers gives a lower bound on the constrained minimum. The dual problem hunts for the best bound; for convex problems it is exact.</p>
+
+      <h2>The primal</h2>
+      <p class="idea">The original constrained problem. Its Lagrangian charges a price for each constraint: $\mu_j\ge0$ per inequality, $\lambda_i$ per equality.</p>
+      <p>$$p^\star=\min_x f(x)\ \text{ s.t. } h_j(x)\le0,\ g_i(x)=0, \qquad L(x,\mu,\lambda)=f(x)+\mu^Th(x)+\lambda^Tg(x).$$</p>
+      <p class="example-label">Running example</p>
+      <p>$\min x^2+y^2$ s.t. $h=1-x-y\le0$. From KKT: $x^\star=(\tfrac12,\tfrac12)$, $p^\star=\tfrac12$, $\mu^\star=1$.</p>
 
       <h2>The dual function</h2>
-      <p>Minimize $L$ over $x$ alone, with $\mu,\lambda$ held fixed. No constraints on $x$ in this minimization:</p>
-      <p>
-        $$
-        g(\mu,\lambda) := \min_x\ L(x,\mu,\lambda).
-        $$
-      </p>
-      <p>$g$ is a pointwise minimum, over $x$, of functions that are affine (linear plus a constant) in $(\mu,\lambda)$. A pointwise minimum of affine functions is always concave, no matter what $f,h,g$ are:</p>
-      <p>
-        $$
-        g(\mu,\lambda) \text{ is concave in } (\mu,\lambda), \quad \text{always}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: concavity of $g$ costs nothing and assumes nothing about the original problem; it comes free from taking a minimum over $x$ of a family of straight lines in $(\mu,\lambda)$.</em></p>
+      <p class="idea">Fix the prices, then minimize over $x$ with no constraints at all. The result is always concave, whatever $f$ is: a minimum of straight lines bends down.</p>
+      <p>$$d(\mu,\lambda)=\min_x L(x,\mu,\lambda) \qquad (\text{a min over } x \text{ of functions affine in } (\mu,\lambda)\ \Rightarrow\ \text{concave}).$$</p>
+      <p class="example-label">Example</p>
+      <p>$$L=x^2+y^2+\mu(1-x-y), \quad \nabla_{x,y}L=0:\ x=y=\tfrac\mu2$$ $$\Rightarrow\ d(\mu)=\tfrac{\mu^2}4+\tfrac{\mu^2}4+\mu(1-\mu)=\mu-\tfrac{\mu^2}2.$$</p>
 
-      <h2>The dual problem</h2>
-      <p>Maximize the dual function over the multipliers, with optimal value $d^\star$:</p>
-      <p>
-        $$
-        d^\star = \max_{\mu\geq0,\ \lambda}\ g(\mu,\lambda).
-        $$
-      </p>
-      <p>Maximizing a concave function is always tractable (The Lagrangian and KKT conditions, run in the other direction), so the dual is a well-behaved problem even when the primal is not.</p>
+      <h2>Weak duality: $d^\star\le p^\star$, always</h2>
+      <p class="idea">On the feasible set the penalty terms are $\le0$, so $L$ underestimates $f$. Every $\mu\ge0$ gives a lower bound; the dual asks for the best one.</p>
+      <p>$$x \text{ feasible},\ \mu\ge0: \qquad d(\mu,\lambda)\le L(x,\mu,\lambda)=f(x)+\underbrace{\mu^Th(x)}_{\le0}+\underbrace{\lambda^Tg(x)}_{=0}\le f(x)$$</p>
+      <p>$$\Rightarrow\quad d^\star=\max_{\mu\ge0,\,\lambda}\ d(\mu,\lambda)\ \le\ p^\star.$$</p>
+      <p class="example-label">Example</p>
+      <table>
+        <tr><td>$\mu$</td><td>$0$</td><td>$0.5$</td><td>$1$</td><td>$2$</td></tr>
+        <tr><td>$d(\mu)$</td><td>$0$</td><td>$0.375$</td><td>$0.5$</td><td>$0$</td></tr>
+      </table>
+      <p>Every bound is $\le p^\star=\tfrac12$.</p>
 
-      <h2>Weak duality: $d^\star\leq p^\star$, always</h2>
-      <p>For any feasible $x$ (meaning $h_j(x)\leq0$, $g_i(x)=0$) and any $\mu\geq0$:</p>
-      <p>
-        $$
-        L(x,\mu,\lambda) = f(x) + \underbrace{\sum_j\mu_jh_j(x)}_{\leq0} + \underbrace{\sum_i\lambda_ig_i(x)}_{=0} \ \leq\ f(x).
-        $$
-      </p>
-      <p>Taking the minimum over $x$ on the left only shrinks it further, so $g(\mu,\lambda)\leq L(x,\mu,\lambda)\leq f(x)$ for every feasible $x$. Maximizing the left side over $(\mu,\lambda)$ and minimizing the right side over feasible $x$ preserves the inequality:</p>
-      <p>
-        $$
-        d^\star \ \leq\ p^\star.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: the dual is a machine for generating lower bounds on $p^\star$ without ever solving the primal; every feasible $(\mu,\lambda)$ gives one such bound, and the dual problem just asks for the best one.</em></p>
-
-      <h2>Strong duality: when the gap closes</h2>
-      <p>$p^\star - d^\star\geq0$ is the <strong>duality gap</strong>. For a convex problem ($f,h_j$ convex, $g_i$ affine) satisfying <strong>Slater's condition</strong> (a point strictly feasible, $h_j(x)<0$ for all $j$, exists), the gap is exactly zero:</p>
-      <p>
-        $$
-        d^\star = p^\star \quad \text{(strong duality).}
-        $$
-      </p>
-      <p>At a pair $(x^\star,\mu^\star,\lambda^\star)$ achieving strong duality, the KKT conditions hold, including complementary slackness $\mu_j^\star h_j(x^\star)=0$.</p>
-      <p class="intuition"><em>Intuition: strong duality says solving the easy (concave, unconstrained-in-$x$) dual problem is exactly as good as solving the hard primal one; Slater's condition rules out the one pathology (the feasible region being flat against a constraint everywhere) that can leave a gap.</em></p>
-
-      <h2>Worked example</h2>
-      <p>Reusing the running problem from The Lagrangian and KKT conditions: minimize $f(x,y)=x^2+y^2$ subject to $h(x,y)=1-x-y\leq0$.</p>
-      <p>
-        $$
-        L(x,y,\mu) = x^2+y^2+\mu(1-x-y).
-        $$
-      </p>
-      <p>Minimize over $x,y$ (unconstrained): $\partial L/\partial x = 2x-\mu=0$, $\partial L/\partial y=2y-\mu=0$, so $x=y=\mu/2$. Substituting back:</p>
-      <p>
-        $$
-        g(\mu) = 2\Big(\frac{\mu}{2}\Big)^2 + \mu\Big(1-\mu\Big) = \mu - \frac{\mu^2}{2}.
-        $$
-      </p>
-      <p>Maximizing over $\mu\geq0$: $g'(\mu)=1-\mu=0\ \Rightarrow\ \mu^\star=1$, $d^\star=g(1)=\tfrac12$. The primal optimum found earlier was $x^\star=y^\star=\tfrac12$, $p^\star=\tfrac12$, $\mu^\star=1$: an exact match, $d^\star=p^\star$, as strong duality predicts (the problem is convex and $x=y=1$ is strictly feasible).</p>
+      <h2>Strong duality: the gap closes</h2>
+      <p class="idea">For a convex problem with one strictly feasible point, the best lower bound is exact. The optimal $(x^\star,\mu^\star,\lambda^\star)$ then satisfy KKT.</p>
+      <p>$$f,h_j \text{ convex},\ g_i \text{ affine},\ \exists x:\ h_j(x)\lt0\ \forall j\ \ (\text{Slater}) \quad\Rightarrow\quad d^\star=p^\star.$$</p>
+      <p class="example-label">Example</p>
+      <p>$d'(\mu)=1-\mu=0$: $\mu^\star=1$, $d^\star=\tfrac12=p^\star$. Slater holds: $(1,1)$ has $h=-1\lt0$.</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 320 200" role="img" aria-label="The concave dual function g of mu, peaking exactly at the primal optimal value, illustrating weak duality as the curve staying below that value everywhere and strong duality as it touching the value at the peak">
+        <svg viewBox="0 0 320 200" role="img" aria-label="The concave dual function d of mu, staying below the primal optimal value everywhere and touching it at its peak mu equals 1">
           <line class="axis" x1="30" y1="160" x2="290" y2="160"/>
           <text class="lbl muted" x="294" y="164">&mu;</text>
-          <text class="lbl muted" x="30" y="30">g(&mu;)</text>
+          <text class="lbl muted" x="30" y="30">d(&mu;)</text>
           <line class="faint" x1="40" y1="50" x2="280" y2="50"/>
           <text class="lbl muted" x="284" y="46">p* = 1/2</text>
           <polyline style="fill:none;stroke:currentColor;stroke-width:2"
             points="40,160 70,111.9 100,77.5 130,56.9 160,50 190,56.9 220,77.5 250,111.9 280,160"/>
           <circle class="pt" cx="160" cy="50" r="4.5"/>
-          <text class="lbl" x="168" y="40">d* = g(&mu;*) = 1/2, &mu;* = 1</text>
+          <text class="lbl" x="168" y="40">d* = d(1) = 1/2</text>
           <text class="lbl muted" x="36" y="175">0</text>
         </svg>
-        <figcaption>$g(\mu)=\mu-\mu^2/2$: concave, below $p^\star=\tfrac12$ everywhere (weak duality), touching it exactly at $\mu^\star=1$ (strong duality).</figcaption>
+        <figcaption>$d(\mu)=\mu-\mu^2/2$: concave, never above $p^\star$ (weak duality), touching it at $\mu^\star=1$ (strong duality).</figcaption>
       </figure>
 
-      <h2>Where duality is used</h2>
-      <ul>
-        <li><strong>Shadow prices.</strong> Replace the fixed $1$ in the constraint above with a parameter $b$ ($x+y\geq b$): the same computation gives $p^\star(b)=b^2/2$, and $dp^\star/db = b$, which equals $\mu^\star$ exactly at $b=1$. In general $\mu_j^\star$ measures the marginal change in the optimal value per unit relaxation of constraint $j$: the constraint's "price."</li>
-        <li><strong>The SVM dual and the kernel trick.</strong> The support vector machine's dual problem depends on the data only through inner products $x_i\cdot x_j$. Replacing that inner product with a kernel $k(x_i,x_j)$ (an inner product in some other, possibly infinite-dimensional, feature space) fits a nonlinear boundary without ever forming that feature space explicitly; this is only available because the dual, not the primal, is what gets solved.</li>
-        <li><strong>LP duality.</strong> For linear programs, strong duality always holds (no Slater's condition needed, beyond feasibility). Two classical results are special cases: max-flow equals min-cut, and the value of a zero-sum game (minimax theorem) is the shared optimum of a primal-dual LP pair.</li>
-      </ul>
-      <p class="intuition"><em>Intuition: the dual is not just a proof device; its multipliers are prices, its structure enables kernels, and in the linear case its equality with the primal is itself the theorem being used.</em></p>
+      <h2>Why the dual is useful</h2>
+      <p class="idea">The multipliers are prices, and the dual is sometimes the problem you can actually solve.</p>
+      <table>
+        <tr><td>Shadow prices</td><td>$\mu_j^\star$ = how fast $p^\star$ rises as constraint $j$ tightens. With $x+y\ge b\gt0$: $p^\star(b)=\tfrac{b^2}2$, $\ \tfrac{dp^\star}{db}=b=\mu^\star$.</td></tr>
+        <tr><td>SVMs</td><td>The dual sees the data only through $x_i^Tx_j$. Swap in a kernel $k(x_i,x_j)$ and get a nonlinear boundary for free.</td></tr>
+        <tr><td>Linear programs</td><td>Strong duality holds whenever an optimum exists: max-flow = min-cut, the minimax theorem.</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>$A$ is $m\times n$ with independent rows. Derive the dual of $\min\tfrac12\|x\|^2$ s.t. $Ax=b$, solve it, and check $d^\star=p^\star$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$L=\tfrac12\|x\|^2+\lambda^T(Ax-b)$. $\nabla_xL=x+A^T\lambda=0$, so $x=-A^T\lambda$ and $d(\lambda)=-\tfrac12\lambda^TAA^T\lambda-b^T\lambda$ (concave, since $AA^T\succ0$). Setting $\nabla d=0$: $\lambda^\star=-(AA^T)^{-1}b$, so $x^\star=A^T(AA^T)^{-1}b$ and $d^\star=\tfrac12b^T(AA^T)^{-1}b=\tfrac12\|x^\star\|^2=p^\star$. &#10003; This $x^\star$ is the pseudoinverse solution $A^+b$ from the SVD.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -153,7 +125,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

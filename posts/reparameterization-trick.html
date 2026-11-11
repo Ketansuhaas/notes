@@ -13,7 +13,7 @@
   </script>
   <title>The reparameterization trick - Deep Learning Notes</title>
   <meta name="description" content="The reparameterization trick: rewriting a sample as a deterministic function of a fixed noise source, so a gradient of an expectation over a parameterized distribution can move inside the expectation.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,31 +43,65 @@
 
   <main>
     <article>
-      <h1>The reparameterization trick</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">deep-learning</span><span class="tag">generative-modeling</span><span class="tag">reparameterization-trick</span><span class="tag">gradients</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>The reparameterization trick</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">deep-learning</span><span class="tag">generative-modeling</span><span class="tag">reparameterization-trick</span><span class="tag">gradients</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="generative-modeling-and-kl-divergence.html">Generative modeling</a>, <a href="automatic-differentiation.html">Automatic differentiation</a>, <a href="expectation-and-variance-algebra.html">Expectation and variance algebra</a> &middot; <strong>Leads to:</strong> VAEs and diffusion (coming)</p>
 
-      <h2>The formulation</h2>
-      <p>Goal: $\nabla_\phi\,\mathbb{E}_{z\sim q_\phi(z\mid x)}\big[f(z)\big]$, a gradient of an expectation over a $\phi$-dependent distribution. Write $z$ instead as a deterministic function of $\phi$ and a separate noise variable $\epsilon$ drawn from a fixed distribution with no $\phi$ in it:</p>
+      <p class="idea">A VAE's loss averages over random samples whose distribution depends on the parameters. Move the randomness into fixed noise, and the gradient flows straight through the sample.</p>
+
+      <h2>The problem</h2>
+      <p class="idea">$\theta$ lives in the distribution, not in $f$. A sampled $z$ is just a number: autodiff sees no path from it back to $\theta$.</p>
       <p>
         $$
-        z = g_\phi(\epsilon,x), \qquad \epsilon\sim p(\epsilon) \quad\text{(fixed, independent of $\phi$)}.
+        \nabla_\theta\,\mathbb{E}_{z\sim q_\theta}[f(z)]=\int f(z)\,\nabla_\theta q_\theta(z)\,dz \quad\ne\quad \mathbb{E}_{z\sim q_\theta}[\nabla_\theta f(z)]=0.
         $$
       </p>
-      <p>The expectation over $q_\phi$ becomes an expectation over the fixed $p(\epsilon)$:</p>
+      <p>The left integral is not an average under $q_\theta$, so sampling $z$ and averaging doesn't estimate it.</p>
+
+      <h2>The trick: $z=\mu+\sigma\epsilon$</h2>
+      <p class="idea">Write the sample as a deterministic function of $\theta$ and noise with no $\theta$ in it. The randomness moves to $\epsilon$; $\theta$ moves into the function.</p>
+      <p>$$z=\mu+\sigma\epsilon,\quad \epsilon\sim\mathcal N(0,1) \quad\Rightarrow\quad z\sim\mathcal N(\mu,\sigma^2), \qquad \theta=(\mu,\sigma).$$</p>
       <p>
         $$
-        \mathbb{E}_{z\sim q_\phi(z\mid x)}\big[f(z)\big] = \mathbb{E}_{\epsilon\sim p(\epsilon)}\big[f(g_\phi(\epsilon,x))\big].
+        \nabla_\theta\,\mathbb{E}_{z\sim q_\theta}[f(z)]=\nabla_\theta\,\mathbb{E}_{\epsilon}[f(\mu+\sigma\epsilon)]=\mathbb{E}_{\epsilon}\big[\nabla_\theta f(\mu+\sigma\epsilon)\big]\approx\frac1S\sum_{s=1}^S\nabla_\theta f(\mu+\sigma\epsilon_s).
         $$
       </p>
-      <p>$\phi$ now sits only inside the function being averaged, not in the distribution being averaged over, so $\nabla_\phi$ can move inside:</p>
-      <p>
-        $$
-        \nabla_\phi\,\mathbb{E}_{\epsilon\sim p(\epsilon)}\big[f(g_\phi(\epsilon,x))\big] = \mathbb{E}_{\epsilon\sim p(\epsilon)}\big[\nabla_\phi f(g_\phi(\epsilon,x))\big]
-        \ \approx\ \frac1S\sum_{s=1}^S\nabla_\phi f\big(g_\phi(\epsilon_s,x)\big), \quad \epsilon_s\sim p(\epsilon).
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: the randomness did not disappear, it moved to $\epsilon$, a part of the computation $\phi$ has no say over; everything downstream of $\epsilon$ is an ordinary differentiable function of $\phi$ again.</em></p>
+      <p>Chain rule through the sample: $\ \dfrac{\partial f}{\partial\mu}=f'(z),\quad \dfrac{\partial f}{\partial\sigma}=f'(z)\,\epsilon$.</p>
+      <p>In a VAE the encoder outputs $\mu,\sigma$: $\ \underbrace{z}_{d\times1}=\underbrace{\mu_\phi(x)}_{d\times1}+\underbrace{\sigma_\phi(x)}_{d\times1}\odot\underbrace{\epsilon}_{d\times1}$.</p>
+      <p>General recipe: any $z=g_\theta(\epsilon)$ with $\epsilon\sim p(\epsilon)$ free of $\theta$.</p>
+      <table>
+        <tr><td>$\mathcal N(\mu,\sigma^2)$</td><td>$z=\mu+\sigma\epsilon$, $\ \epsilon\sim\mathcal N(0,1)$</td></tr>
+        <tr><td>$\mathcal N(\mu,\Sigma)$, $\Sigma=LL^T$</td><td>$z=\mu+L\epsilon$, $\ \epsilon\sim\mathcal N(0,I)$</td></tr>
+        <tr><td>$\text{Exponential}(\lambda)$</td><td>$z=-\tfrac1\lambda\log u$, $\ u\sim\mathcal U(0,1)$</td></tr>
+      </table>
+
+      <p class="example-label">Example: $f(z)=z^2$</p>
+      <p>$$\text{Exact: } \mathbb{E}[z^2]=\mu^2+\sigma^2\ \Rightarrow\ \frac{\partial}{\partial\mu}=2\mu. \qquad \text{Pathwise: } \frac{\partial}{\partial\mu}(\mu+\sigma\epsilon)^2=2(\mu+\sigma\epsilon),\ \ \text{mean } 2\mu.$$</p>
+      <p>One sample at $\mu=1,\ \sigma=0.5,\ \epsilon=0.4$: estimate $2.4$, true $2$. Noisy, but unbiased. &#10003;</p>
+
+      <h2>The alternative: score function (REINFORCE)</h2>
+      <p class="idea">Without a reparameterization, differentiate the density instead, using $\nabla q=q\,\nabla\log q$.</p>
+      <p>$$\nabla_\theta\,\mathbb{E}_{q_\theta}[f(z)]=\mathbb{E}_{z\sim q_\theta}\big[f(z)\,\nabla_\theta\log q_\theta(z)\big].$$</p>
+      <table>
+        <tr><td></td><td><strong>Pathwise (reparam.)</strong></td><td><strong>Score function</strong></td></tr>
+        <tr><td>Needs</td><td>$f$ differentiable, $z=g_\theta(\epsilon)$</td><td>only $\log q_\theta$</td></tr>
+        <tr><td>Discrete $z$</td><td>no</td><td>yes</td></tr>
+        <tr><td>Variance</td><td>low (uses $f'$)</td><td>high (uses only $f$)</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Same example: $f(z)=z^2$, $z=\mu+\sigma\epsilon$. Find the pathwise estimator of $\partial\,\mathbb{E}[f]/\partial\sigma$ and show it is unbiased.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$\frac{\partial}{\partial\sigma}(\mu+\sigma\epsilon)^2=2(\mu+\sigma\epsilon)\,\epsilon$. Mean: $2\mu\,\mathbb{E}[\epsilon]+2\sigma\,\mathbb{E}[\epsilon^2]=0+2\sigma$. Exact: $\frac{\partial}{\partial\sigma}(\mu^2+\sigma^2)=2\sigma$. &#10003;</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -78,7 +112,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

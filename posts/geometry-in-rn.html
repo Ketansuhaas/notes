@@ -13,7 +13,7 @@
   </script>
   <title>Lines, planes, and spheres in R^n - Deep Learning Notes</title>
   <meta name="description" content="Lines and hyperplanes in R^n, plus spheres: the geometry behind linear algebra, before rank and subspaces.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,94 +43,68 @@
 
   <main>
     <article>
-      <h1>Lines, planes, and spheres in $\mathbb{R}^n$</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">vectors</span><span class="tag">geometry</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Lines, planes, and spheres in $\mathbb{R}^n$</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">vectors</span><span class="tag">geometry</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="notation-survival-guide.html">Reading the notation in papers</a> &middot; <strong>Leads to:</strong> <a href="four-views-of-matrix-multiplication.html">Four views of matrix multiplication</a>, <a href="linear-algebra-fundamentals.html">Rank, subspaces, and projections</a>, <a href="quadratic-forms-and-positive-definiteness.html">Quadratic forms and positive definiteness</a></p>
 
-      <h2>Points and lines</h2>
-      <p>A point in $\mathbb{R}^n$ is just a vector $x = (x_1,\dots,x_n)$. A line through $p$ in direction $d \neq 0$:</p>
-      <p>
-        $$
-        x = p + td, \quad t \in \mathbb{R}.
-        $$
-      </p>
-      <p>$d$ is the direction $x$ travels; $p$ is the point $x$ passes through at $t=0$. That is all this equation says.</p>
-      <p class="intuition"><em>Intuition: one free parameter $t$ sweeps out a straight, 1-dimensional path.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{x}_{n\times1}=\underbrace{p}_{n\times1}+t\,\underbrace{d}_{n\times1}, \qquad t\in\mathbb{R}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $x$, $p$, and $d$ are all columns of the same height $n$; $t$ is just a single dial that slides the point along the fixed direction $d$.</em></p>
+      <p class="idea">Three shapes show up everywhere: a line (one free dial), a hyperplane (one constraint), a sphere (one fixed distance). The first two are flat, the third is curved.</p>
+
+      <h2>Lines</h2>
+      <p class="idea">A starting point plus a direction, and one dial $t$ that slides you along it. One free parameter, so a 1-D path.</p>
+      <p>$$\underbrace{x}_{n\times1}=\underbrace{p}_{n\times1}+t\,\underbrace{d}_{n\times1}, \qquad t\in\mathbb{R},\ d\neq0.$$</p>
       <p class="example-label">Example</p>
-      <p>
-        $$
-        p = \begin{pmatrix}1\\0\end{pmatrix}, \ d = \begin{pmatrix}1\\1\end{pmatrix} \;\Rightarrow\; x(t) = \begin{pmatrix}1+t\\t\end{pmatrix}.
-        \quad x(0) = \begin{pmatrix}1\\0\end{pmatrix}, \ x(1) = \begin{pmatrix}2\\1\end{pmatrix}.
-        $$
-      </p>
+      <p>$$p=\begin{pmatrix}1\\0\end{pmatrix},\ d=\begin{pmatrix}1\\1\end{pmatrix} \ \Rightarrow\ x(t)=\begin{pmatrix}1+t\\t\end{pmatrix}, \quad x(0)=\begin{pmatrix}1\\0\end{pmatrix},\ x(1)=\begin{pmatrix}2\\1\end{pmatrix}.$$</p>
 
       <h2>Hyperplanes</h2>
-      <p>Choose a point $p$ on the hyperplane. The normal vector $n \neq 0$ is perpendicular to every vector $x - p$ lying in the hyperplane, for any other point $x$ on it:</p>
-      <p>
-        $$
-        n \cdot (x - p) = 0 \quad \iff \quad n \cdot x = n \cdot p =: c.
-        $$
-      </p>
-      <p>One linear equation removes one degree of freedom, so a hyperplane in $\mathbb{R}^n$ is $(n{-}1)$-dimensional: a line when $n=2$, an ordinary plane when $n=3$.</p>
-      <p class="intuition"><em>Intuition: a hyperplane is "everything at a fixed distance along one direction," flat, and one dimension smaller than the space it sits in.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{n^T}_{1\times n}\underbrace{x}_{n\times1}=\underbrace{c}_{1\times1}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $n\cdot x$ is secretly a $1\times n$ row times an $n\times1$ column, collapsing $n$ numbers down to one; every dot product in this post has this same row-times-column shape.</em></p>
+      <p class="idea">All points with the same dot product against one normal vector $w$. One equation removes one dimension, so it is flat and $(n-1)$-dimensional. A linear classifier's decision boundary $w^Tx+b=0$ is one.</p>
+      <p>$$w^T(x-p)=0 \iff \underbrace{w^T}_{1\times n}\underbrace{x}_{n\times1}=\underbrace{c}_{1\times1}, \qquad c=w^Tp.$$</p>
+      <table>
+        <tr><td>$n=2$</td><td>a line</td></tr>
+        <tr><td>$n=3$</td><td>an ordinary plane</td></tr>
+        <tr><td>$n=784$ (MNIST)</td><td>a flat 783-dimensional wall</td></tr>
+      </table>
       <p class="example-label">Example</p>
-      <p>
-        $$
-        p = \begin{pmatrix}0\\0\\1\end{pmatrix}, \ n = \begin{pmatrix}1\\1\\1\end{pmatrix} \;\Rightarrow\; x+y+z = 1.
-        \quad (0,0,1) \text{ and } (1,0,0) \text{ both satisfy it.}
-        $$
-      </p>
+      <p>$$p=\begin{pmatrix}0\\0\\1\end{pmatrix},\ w=\begin{pmatrix}1\\1\\1\end{pmatrix} \ \Rightarrow\ x+y+z=1. \qquad (0,0,1),\ (1,0,0) \text{ both lie on it.}$$</p>
 
       <h2>Spheres</h2>
-      <p>Points at a fixed distance from a center: the first <em>curved</em> (non-flat) object here.</p>
-      <p>
-        $$
-        \|x - c\| = r \quad \iff \quad (x-c)\cdot(x-c) = r^2.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: lines and hyperplanes are linear equations (flat); a sphere is a quadratic one (curved), a genuinely different shape.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{(x-c)^T}_{1\times n}\underbrace{(x-c)}_{n\times1} = \underbrace{r^2}_{1\times1}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: squared distance is the same row-times-column shape as every dot product above, just applied to $x-c$ with itself; it's quadratic in $x$ because $x$ now appears twice.</em></p>
+      <p class="idea">All points at distance $r$ from a center $c$. Now $x$ appears twice, so the equation is quadratic: the first curved shape.</p>
+      <p>$$\|x-c\|=r \iff \underbrace{(x-c)^T}_{1\times n}\underbrace{(x-c)}_{n\times1}=r^2.$$</p>
       <p class="example-label">Example</p>
-      <p>
-        $$
-        c = \begin{pmatrix}0\\0\end{pmatrix}, \ r = 1 \;\Rightarrow\; x^2+y^2=1 \quad \text{(unit circle)}.
-        \quad (1,0): \ 1^2+0^2=1. \ \checkmark
-        $$
-      </p>
+      <p>$c=0,\ r=1$: $x^2+y^2=1$, the unit circle. Check $(1,0)$: $1^2+0^2=1$. &#10003;</p>
 
       <figure class="figure">
-        <svg viewBox="0 0 300 300" role="img" aria-label="A circle of radius r centered at c, with a point x on the boundary and the radius drawn between them">
-          <circle cx="150" cy="150" r="80" style="fill:none;stroke:currentColor;stroke-width:1.5"/>
-          <circle class="origin" cx="150" cy="150" r="3"/>
-          <text class="lbl muted" x="132" y="170">c</text>
-          <line class="axis" x1="150" y1="150" x2="230" y2="150"/>
-          <text class="lbl" x="182" y="142">r</text>
-          <circle class="pt" cx="230" cy="150" r="4.5"/>
-          <text class="lbl" x="238" y="146">x</text>
-          <text class="lbl muted" x="104" y="252">&#8741;x&#8722;c&#8741; = r</text>
+        <svg viewBox="0 0 300 260" role="img" aria-label="A circle of radius r centered at c, with a point x on the boundary and the radius drawn between them">
+          <circle class="outline" cx="150" cy="130" r="80"/>
+          <circle class="origin" cx="150" cy="130" r="3"/>
+          <text class="lbl muted" x="132" y="150">c</text>
+          <line class="axis" x1="150" y1="130" x2="230" y2="130"/>
+          <text class="lbl" x="182" y="122">r</text>
+          <circle class="pt" cx="230" cy="130" r="4.5"/>
+          <text class="lbl" x="238" y="126">x</text>
+          <text class="lbl muted" x="104" y="240">&#8741;x&#8722;c&#8741; = r</text>
         </svg>
-        <figcaption>The circle $\|x-c\|=r$: every point $x$ on the boundary sits at exactly distance $r$ from the center $c$.</figcaption>
+        <figcaption>Every point $x$ on the sphere sits exactly $r$ from $c$.</figcaption>
       </figure>
+
+      <table>
+        <tr><td>Line</td><td>$x=p+td$</td><td>linear, 1 free dial</td></tr>
+        <tr><td>Hyperplane</td><td>$w^Tx=c$</td><td>linear, 1 constraint</td></tr>
+        <tr><td>Sphere</td><td>$(x-c)^T(x-c)=r^2$</td><td>quadratic, curved</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Show the distance from a point $x_0$ to the hyperplane $w^Tx=c$ is $\dfrac{|c-w^Tx_0|}{\|w\|}$. (Hint: the shortest path runs along the normal, a line $x_0+sw$.)</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Plug the line into the plane: $w^T(x_0+sw)=c \Rightarrow s=\dfrac{c-w^Tx_0}{\|w\|^2}$. The distance travelled is $|s|\,\|w\|=\dfrac{|c-w^Tx_0|}{\|w\|}$. Example: origin to $x+y+z=1$ is $\tfrac1{\sqrt3}$. &#10003;</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -141,7 +115,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

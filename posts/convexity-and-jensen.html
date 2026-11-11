@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Convexity and Jensen's inequality - Deep Learning Notes</title>
+  <meta name="description" content="Convex means bowl-shaped: chords above, tangents below, Hessian PSD. Why a convex function&#x27;s stationary point is a global minimum, and Jensen&#x27;s inequality f(E[X]) &lt;= E[f(X)] in two lines.">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Convexity and Jensen's inequality</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Convexity and Jensen's inequality</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">convexity</span><span class="tag">optimization</span><span class="tag">jensen</span><span class="tag">probability</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="taylor-expansion.html">Taylor expansion</a>, <a href="expectation-and-variance-algebra.html">Expectation and variance algebra</a> &middot; <strong>Leads to:</strong> <a href="entropy-and-cross-entropy.html">Entropy and cross-entropy</a>, <a href="primal-and-dual-problems.html">Primal and dual problems</a></p>
+
+      <h2>Convex = bowl-shaped</h2>
+      <p class="idea">Any chord lies above the graph; any tangent lies below it.</p>
+
+      <figure class="figure">
+        <svg viewBox="0 0 640 215" role="img" aria-label="A convex curve with a chord above it and a tangent below it; the chord midpoint E[f(X)] sits above the curve value f(E[X]).">
+          <path class="outline" d="M40,30 Q320,330 600,30"/>
+          <line class="axis" x1="152" y1="126" x2="488" y2="126"/>
+          <line class="faint" x1="190" y1="180" x2="450" y2="180"/>
+          <circle class="pt" cx="152" cy="126" r="4.5"/>
+          <circle class="pt" cx="488" cy="126" r="4.5"/>
+          <circle class="origin" cx="320" cy="126" r="4"/>
+          <circle class="pt" cx="320" cy="180" r="4.5"/>
+          <text class="lbl" x="500" y="122">chord (above)</text>
+          <text class="lbl" x="460" y="184">tangent (below)</text>
+          <text class="lbl" x="330" y="116">E[f(X)]</text>
+          <text class="lbl" x="330" y="204">f(E[X])</text>
+        </svg>
+        <figcaption>$X$ is one of the two dark points, each with probability $\tfrac12$. Averaging outputs (the chord) lands above the output of the average (the curve).</figcaption>
+      </figure>
+
+      <table>
+        <tr><td>Chord</td><td>$f(\lambda x+(1-\lambda)y)\le\lambda f(x)+(1-\lambda)f(y)$</td></tr>
+        <tr><td>Tangent</td><td>$f(y)\ge f(x)+\nabla f(x)^T(y-x)$</td></tr>
+        <tr><td>Curvature</td><td>$H(x)\succeq0$ everywhere (every direction curves up)</td></tr>
+      </table>
+      <p class="example-label">Examples</p>
+      <p>Convex: $x^2$, $e^x$, $-\log x$, $\|x\|$, $x_1^2+x_1x_2+x_2^2$ ($H$ has eigenvalues $3,1$). Not convex: $\sin x$, almost every neural-network loss.</p>
+
+      <h2>Local is global</h2>
+      <p class="idea">The tangent is a floor under the whole function. A flat tangent means nothing anywhere is lower.</p>
+      <p>$$\nabla f(x)=0 \ \Rightarrow\ f(y)\ge f(x)+0 \ \ \text{for every } y.$$</p>
+
+      <h2>Jensen's inequality</h2>
+      <p class="idea">For a bowl, the average of outputs beats the output of the average.</p>
+      <p>$$f \text{ convex}: \quad f(\mathbb{E}X)\le\mathbb{E}f(X). \qquad \log \text{ concave}: \quad \log\mathbb{E}X\ge\mathbb{E}\log X.$$</p>
+      <p>Proof: tangent at $\mu=\mathbb{E}X$ gives $f(X)\ge f(\mu)+f'(\mu)(X-\mu)$. Take $\mathbb{E}$; the last term averages to $0$.</p>
+      <p class="example-label">Example</p>
+      <p>$f(x)=x^2$: $(\mathbb{E}X)^2\le\mathbb{E}X^2$, i.e. $\operatorname{Var}X\ge0$.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Prove $\mathrm{KL}(p\|q)=\sum_xp(x)\log\frac{p(x)}{q(x)}\ge0$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$-\mathrm{KL}=\mathbb{E}_p\big[\log\tfrac{q}{p}\big]\le\log\mathbb{E}_p\big[\tfrac qp\big]=\log\sum_xq(x)=\log1=0$. Jensen, with $\log$ concave.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

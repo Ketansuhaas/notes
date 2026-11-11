@@ -13,7 +13,7 @@
   </script>
   <title>Weight initialization and variance propagation - Deep Learning Notes</title>
   <meta name="description" content="Why a deep network needs constant activation variance layer to layer, the exact variance-propagation computation, and how LeCun, Xavier/Glorot, and He initialization are each derived from forcing that per-layer factor to 1.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,63 +43,70 @@
 
   <main>
     <article>
-      <h1>Weight initialization and variance propagation</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">deep-learning</span><span class="tag">variance</span><span class="tag">weight-initialization</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Weight initialization and variance propagation</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">deep-learning</span><span class="tag">variance</span><span class="tag">weight-initialization</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="expectation-and-variance-algebra.html">Expectation and variance algebra</a>, <a href="backpropagation-via-jvps.html">Backpropagation via JVPs</a>, <a href="dynamics-in-the-eigenbasis.html">Dynamics in the eigenbasis</a> &middot; <strong>Leads to:</strong> normalization layers (coming)</p>
 
-      <h2>The problem: variance drifts layer to layer</h2>
-      <p>One linear layer, $y=Wx$, $x\in\mathbb{R}^{n_{\text{in}}}$, $W\in\mathbb{R}^{n_{\text{out}}\times n_{\text{in}}}$ with i.i.d. entries, mean $0$, variance $\sigma_W^2$, independent of $x$. For independent, mean-$0$ $A,B$: $\operatorname{Var}(AB)=\operatorname{Var}(A)\operatorname{Var}(B)$ exactly (both cross terms in $\mathbb{E}[A^2B^2]-(\mathbb{E}[AB])^2$ factor cleanly). So, for $x_i$ i.i.d. with variance $\sigma_x^2$:</p>
-      <p>
-        $$
-        \operatorname{Var}(y_j) = \operatorname{Var}\Big(\sum_{i=1}^{n_{\text{in}}}W_{ji}x_i\Big) = \sum_{i=1}^{n_{\text{in}}}\operatorname{Var}(W_{ji})\operatorname{Var}(x_i) = n_{\text{in}}\,\sigma_W^2\,\sigma_x^2.
-        $$
-      </p>
-      <p>Each layer multiplies variance by a fixed factor, $n_{\text{in}}\sigma_W^2$. Across $L$ layers that compounds to the $L$-th power of that factor.</p>
-      <p class="intuition"><em>Intuition: this is Dynamics in the eigenbasis again, one step removed, repeated multiplication by a factor above $1$ blows up, below $1$ collapses to $0$; here the factor is $n_{\text{in}}\sigma_W^2$ and depth plays the role of the exponent.</em></p>
+      <p class="idea">Every layer multiplies the signal's variance by the same factor. Depth raises that factor to the power $L$, so initialization sets it to $1$.</p>
 
-      <h2>The fix: force the per-layer factor to 1</h2>
-      <p>Require $\operatorname{Var}(y_j) = \operatorname{Var}(x_i)$, i.e. the factor equals $1$:</p>
+      <h2>One layer: factor $n_{\text{in}}\sigma_W^2$</h2>
+      <p class="idea">Each output sums $n_{\text{in}}$ zero-mean, uncorrelated terms, so their variances add.</p>
       <p>
         $$
-        n_{\text{in}}\,\sigma_W^2 = 1 \quad\Longrightarrow\quad \sigma_W^2 = \frac1{n_{\text{in}}}.
+        \underbrace{y}_{n_{\text{out}}\times1}=\underbrace{W}_{n_{\text{out}}\times n_{\text{in}}}\underbrace{x}_{n_{\text{in}}\times1},\quad W_{ji}\overset{\text{iid}}{\sim}(0,\sigma_W^2) \ \Rightarrow\ \operatorname{Var}(y_j)=\sum_{i=1}^{n_{\text{in}}}\mathbb{E}[W_{ji}^2]\,\mathbb{E}[x_i^2]=n_{\text{in}}\,\sigma_W^2\,\mathbb{E}[x^2].
         $$
       </p>
-      <p>This is LeCun initialization: sample each weight from a distribution with variance $1/n_{\text{in}}$ (e.g. $\mathcal{N}(0,1/n_{\text{in}})$), and the forward-pass variance neither grows nor shrinks with depth.</p>
-      <p class="intuition"><em>Intuition: wider layers (larger $n_{\text{in}}$) sum more terms, so each individual weight must be proportionally smaller to keep the total sum's variance the same.</em></p>
+      <p>Needs $W$ independent of $x$. For zero-mean $x$: $\mathbb{E}[x^2]=\operatorname{Var}(x)$.</p>
 
-      <h2>Xavier/Glorot: balancing forward and backward</h2>
-      <p>The backward pass has its own variance-propagation equation. Backprop sends a gradient through $W^T$ (Backpropagation via Jacobian-vector products), so by the same computation with the roles of $n_{\text{in}}$ and $n_{\text{out}}$ swapped:</p>
-      <p>
-        $$
-        \operatorname{Var}\big(\nabla_x\mathcal{L}\big) = n_{\text{out}}\,\sigma_W^2\,\operatorname{Var}\big(\nabla_y\mathcal{L}\big).
-        $$
-      </p>
-      <p>Matching the forward factor ($n_{\text{in}}\sigma_W^2=1$) and the backward factor ($n_{\text{out}}\sigma_W^2=1$) at once is only possible if $n_{\text{in}}=n_{\text{out}}$. Xavier/Glorot initialization compromises with their average:</p>
-      <p>
-        $$
-        \sigma_W^2 = \frac{2}{n_{\text{in}}+n_{\text{out}}}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: you cannot satisfy two different constraints on one shared parameter $\sigma_W^2$ unless they happen to agree; split the difference instead of favoring one direction and letting the other drift.</em></p>
+      <h2>Depth: the factor to the power $L$</h2>
+      <p class="idea">As in Dynamics in the eigenbasis: repeated multiplication explodes above $1$ and dies below $1$.</p>
+      <p>$$\operatorname{Var}(h_L)=(n_{\text{in}}\sigma_W^2)^L\operatorname{Var}(x) \quad\Rightarrow\quad \text{LeCun: } \sigma_W^2=\frac1{n_{\text{in}}}.$$</p>
+      <p class="example-label">Example: $n_{\text{in}}=512$, $10$ linear layers</p>
+      <table>
+        <tr><td>$\sigma_W=1$</td><td>factor $512$</td><td>$512^{10}\approx10^{27}$: explodes</td></tr>
+        <tr><td>$\sigma_W=0.01$</td><td>factor $0.05$</td><td>$\approx10^{-13}$: vanishes</td></tr>
+        <tr><td>$\sigma_W^2=1/512$</td><td>factor $1$</td><td>$1$: stable</td></tr>
+      </table>
 
-      <h2>He initialization: correcting for ReLU</h2>
-      <p>$\text{ReLU}(z)=\max(z,0)$ zeros out roughly half of a zero-mean, symmetric pre-activation. For $z$ symmetric around $0$:</p>
+      <h2>Backward pass: Xavier</h2>
+      <p class="idea">Gradients flow back through $W$ from the other side, summing over $n_{\text{out}}$ terms. One $\sigma_W^2$ can't fix both directions unless $n_{\text{in}}=n_{\text{out}}$, so average.</p>
       <p>
         $$
-        \mathbb{E}\big[\text{ReLU}(z)^2\big] = \mathbb{E}\big[z^2 \mid z>0\big]\,P(z>0) = \tfrac12\,\mathbb{E}[z^2],
+        \underbrace{g_x}_{1\times n_{\text{in}}}=\underbrace{g_y}_{1\times n_{\text{out}}}\underbrace{W}_{n_{\text{out}}\times n_{\text{in}}} \ \Rightarrow\ \operatorname{Var}(g_x)=n_{\text{out}}\,\sigma_W^2\operatorname{Var}(g_y).
         $$
       </p>
-      <p>since the positive half is left untouched and contributes exactly half of $\mathbb{E}[z^2]$ by symmetry. So ReLU halves the variance that would otherwise pass through. Doubling $\sigma_W^2$ exactly compensates:</p>
-      <p>
-        $$
-        \sigma_W^2 = \frac{2}{n_{\text{in}}}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: He initialization is LeCun initialization with the ReLU tax priced in up front, since the earlier derivation implicitly assumed the nonlinearity preserves variance, which only $\sigma_W^2=1/n_{\text{in}}$ needs, and ReLU does not.</em></p>
+      <table>
+        <tr><td>Forward stable</td><td>$\sigma_W^2=1/n_{\text{in}}$</td><td>LeCun</td></tr>
+        <tr><td>Backward stable</td><td>$\sigma_W^2=1/n_{\text{out}}$</td><td></td></tr>
+        <tr><td>Compromise</td><td>$\sigma_W^2=2/(n_{\text{in}}+n_{\text{out}})$</td><td>Xavier/Glorot</td></tr>
+      </table>
+      <p class="example-label">Example</p>
+      <p>$256\to1024$: LeCun $1/256$, Xavier $2/1280=1/640$.</p>
 
-      <h2>Why this matters: compounding over depth</h2>
-      <p>With the per-layer factor off by even a small multiplicative error $1+\epsilon$, variance after $L$ layers scales by $(1+\epsilon)^L$: exponential in depth. A network with hundreds of layers makes even a slightly wrong $\sigma_W^2$ catastrophic, pushing activations (and, by the same mechanism, backpropagated gradients) to $0$ or $\infty$ long before training can do anything useful.</p>
-      <p class="intuition"><em>Intuition: initialization is not a detail, it is the boundary condition on a multiplicative recurrence; get the per-layer factor to exactly $1$, or depth itself amplifies the error for you, in either direction.</em></p>
+      <h2>ReLU halves the second moment: He</h2>
+      <p class="idea">ReLU zeros the negative half. For a symmetric pre-activation, the kept half carries exactly half of $\mathbb{E}[z^2]$, so double $\sigma_W^2$.</p>
+      <p>
+        $$
+        \mathbb{E}[\mathrm{ReLU}(z)^2]=\mathbb{E}[z^2\,\mathbf 1_{z\gt0}]=\tfrac12\mathbb{E}[z^2] \ \Rightarrow\ \operatorname{Var}(z_{\ell+1})=n_{\text{in}}\sigma_W^2\cdot\tfrac12\operatorname{Var}(z_\ell) \ \Rightarrow\ \sigma_W^2=\frac2{n_{\text{in}}}.
+        $$
+      </p>
+      <p>ReLU outputs aren't zero-mean, which is why the layer rule uses $\mathbb{E}[x^2]$: only the second moment enters.</p>
+      <p class="example-label">Example</p>
+      <p>$n_{\text{in}}=512$: He $\sigma_W=\sqrt{2/512}=0.0625$, LeCun $\sigma_W\approx0.044$.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Frameworks often sample $W_{ji}\sim\mathcal U(-a,a)$. Find the $a$ that gives the Xavier variance $2/(n_{\text{in}}+n_{\text{out}})$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$\operatorname{Var}(W_{ji})=\mathbb{E}[W_{ji}^2]=\int_{-a}^a\frac{w^2}{2a}\,dw=\frac{a^2}3$. Set $\frac{a^2}3=\frac2{n_{\text{in}}+n_{\text{out}}}$: $\ a=\sqrt{\frac6{n_{\text{in}}+n_{\text{out}}}}$, the formula in the Glorot paper. He-uniform likewise gives $a=\sqrt{6/n_{\text{in}}}$.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -110,7 +117,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

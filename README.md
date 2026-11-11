@@ -11,9 +11,20 @@ plain HTML/CSS, deployed via GitHub Pages.
   since posts are meant to be citable.
 - Post lists are in chronological order (oldest first).
 - All posts live in one flat list on the home page (no category folders).
-  Every post has one or more **tags** (`.tag` pills under the title and in
+  Every post has one or more **tags** (`.tag` pills in a right-hand column beside the title, and in
   list entries); the home page has a `.tag-filter` button row (plain
   vanilla JS, no build step) that shows/hides list items by `data-tags`.
+
+## Writing style
+
+- Short and visual, never text-heavy: each section opens with a one- or
+  two-line `<p class="idea">` (the meaning), then the math, then a compact
+  example. Use matrix-shape annotations and small SVG figures (`.figure`).
+- Under the title, a `<p class="chain">` line says what the note builds on
+  and leads to, so the notes read as one cumulative chain.
+- End with a `<section class="exercise">` ("Derive it yourself") whose
+  solution sits in a collapsed `<details>`.
+- Add each new post to `SECTIONS` in `assets/sidebar.js`, in reading order.
 
 ## Structure
 
@@ -32,7 +43,7 @@ posts/...                               every post, flat, no subfolders
 1. Copy an existing post (e.g. `posts/linear-algebra-fundamentals.html`)
    to `posts/your-slug.html`.
 2. Update the `<title>`, `<h1>`, date, breadcrumb, and body content.
-3. Update the `<div class="tags">` under the post title.
+3. Update the `<div class="tags">` in the `.post-head` (right of the title).
 4. Update the "Cite this" block at the bottom (title, URL, year, BibTeX key).
 5. Add a `<li data-tags="...">` entry (with its own `.tags` pills) to
    `index.html`'s `#notes-list`, in chronological order. If any tag is new,

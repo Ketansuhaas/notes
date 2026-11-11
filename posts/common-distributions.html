@@ -13,7 +13,7 @@
   </script>
   <title>Common distributions, and where they come from in deep learning - Deep Learning Notes</title>
   <meta name="description" content="Bernoulli, Categorical, Gaussian, multivariate Gaussian, Laplace and Uniform: pmf/pdf, mean/variance, and exactly where each one shows up in deep learning.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,53 +43,32 @@
 
   <main>
     <article>
-      <h1>Common distributions, and where they come from in deep learning</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">distributions</span><span class="tag">gaussian</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Common distributions, and where they come from in deep learning</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">deep-learning</span><span class="tag">statistics</span><span class="tag">distributions</span><span class="tag">gaussian</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="random-variables-and-notation.html">Probability notation</a>, <a href="expectation-and-variance-algebra.html">Expectation and variance algebra</a>, <a href="covariance-matrix-intuition.html">The covariance matrix, intuitively</a> &middot; <strong>Leads to:</strong> <a href="supervised-learning-as-kl-minimization.html">Supervised learning as KL minimization</a>, <a href="reparameterization-trick.html">The reparameterization trick</a></p>
 
-      <p>A quick reference, not a course: for each distribution, its pmf/pdf, mean and variance, and the one-line reason it is the default choice for a particular kind of output (from Probability notation and random variables).</p>
+      <p class="idea">Each distribution is an assumption about one kind of output. Choose the output's distribution and $-\log p$ hands you the loss.</p>
 
       <h2>Bernoulli($p$)</h2>
-      <p>
-        $$
-        p(x) = p^x(1-p)^{1-x}, \ x\in\{0,1\}, \qquad \mathbb{E}[X]=p, \qquad \operatorname{Var}(X)=p(1-p).
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: Bernoulli is the distribution of a single yes/no outcome with no other structure, which is exactly a binary label; a classifier's sigmoid output is interpreted as the $p$ of a Bernoulli over $y$.</em></p>
+      <p class="idea">One yes/no outcome: a binary label. A sigmoid output is its $p$.</p>
+      <p>$$p(x)=p^x(1-p)^{1-x},\ x\in\{0,1\}, \qquad \mathbb{E}X=p, \qquad \operatorname{Var}X=p(1-p).$$</p>
+      <p class="example-label">Example</p>
+      <p>Model says $p=0.9$. Label $y=1$: $-\log0.9\approx0.11$. Label $y=0$: $-\log0.1\approx2.30$. That is binary cross-entropy.</p>
 
       <h2>Categorical($p_1,\dots,p_K$)</h2>
-      <p>
-        $$
-        p(x=k) = p_k, \ \textstyle\sum_{k=1}^K p_k=1, \qquad \mathbb{E}[\mathbb{1}[X=k]]=p_k.
-        $$
-      </p>
-      <p>A softmax layer $p_k=\dfrac{e^{z_k}}{\sum_j e^{z_j}}$ turns arbitrary real logits $z\in\mathbb{R}^K$ into a valid Categorical parameter vector.</p>
-      <p class="intuition"><em>Intuition: Categorical is Bernoulli generalized from 2 outcomes to $K$; softmax maps unconstrained logits onto the probability simplex.</em></p>
-
-      <figure class="figure">
-        <svg viewBox="0 0 300 160" role="img" aria-label="A categorical distribution over four classes shown as bars of different heights that sum to one">
-          <line class="axis" x1="30" y1="140" x2="270" y2="140"/>
-          <line class="axis" x1="60" y1="140" x2="60" y2="50"/>
-          <line class="axis" x1="110" y1="140" x2="110" y2="90"/>
-          <line class="axis" x1="160" y1="140" x2="160" y2="110"/>
-          <line class="axis" x1="210" y1="140" x2="210" y2="125"/>
-          <text class="lbl muted" x="52" y="155">1</text>
-          <text class="lbl muted" x="102" y="155">2</text>
-          <text class="lbl muted" x="152" y="155">3</text>
-          <text class="lbl muted" x="202" y="155">4</text>
-          <text class="lbl" x="60" y="40">p&#8321;</text>
-        </svg>
-        <figcaption>Categorical over $K=4$ classes: four bar heights, one per class, summing to 1, softmax's output shape.</figcaption>
-      </figure>
+      <p class="idea">Bernoulli with $K$ outcomes. Softmax turns any real logits into valid probabilities.</p>
+      <p>$$p(x=k)=p_k,\ \ \textstyle\sum_kp_k=1, \qquad \underbrace{p}_{K\times1}=\operatorname{softmax}(\underbrace{z}_{K\times1}),\ \ p_k=\dfrac{e^{z_k}}{\sum_je^{z_j}}.$$</p>
+      <p class="example-label">Example</p>
+      <p>$z=(2,1,0)$: $e^z\approx(7.39,\,2.72,\,1)$, sum $11.11$, so $p\approx(0.67,\,0.24,\,0.09)$.</p>
 
       <h2>Gaussian $\mathcal{N}(\mu,\sigma^2)$</h2>
-      <p>
-        $$
-        p(x) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\frac{(x-\mu)^2}{2\sigma^2}\right), \qquad \mathbb{E}[X]=\mu, \qquad \operatorname{Var}(X)=\sigma^2.
-        $$
-      </p>
-      <p>Shows up as: regression targets, weight initialization, the VAE latent prior, diffusion noise.</p>
-      <p class="intuition"><em>Intuition: the Gaussian is the max-entropy distribution for a fixed mean and variance: the least you can assume beyond "this average, this spread."</em></p>
+      <p class="idea">The least-committal choice given only a mean and a spread (maximum entropy). Regression noise, initialization, VAE priors, diffusion noise.</p>
+      <p>$$p(x)=\frac1{\sqrt{2\pi\sigma^2}}\exp\!\Big(-\frac{(x-\mu)^2}{2\sigma^2}\Big), \qquad \mathbb{E}X=\mu, \qquad \operatorname{Var}X=\sigma^2.$$</p>
 
       <figure class="figure">
         <svg viewBox="0 0 320 160" role="img" aria-label="A bell-shaped Gaussian density curve centered at its mean, with one standard deviation marked on either side">
@@ -102,31 +81,39 @@
           <text class="lbl muted" x="100" y="155">&#956;&#8722;&#963;</text>
           <text class="lbl muted" x="195" y="155">&#956;+&#963;</text>
         </svg>
-        <figcaption>$\mathcal{N}(\mu,\sigma^2)$: a single peak at $\mu$, spread set by $\sigma$: narrower for small $\sigma$, wider for large $\sigma$.</figcaption>
+        <figcaption>One peak at $\mu$; $\sigma$ sets the width.</figcaption>
       </figure>
+      <p class="example-label">Example</p>
+      <p>Predict $\mu=f(x)$ with fixed $\sigma$: $-\log p(y)=\dfrac{(y-f(x))^2}{2\sigma^2}+\text{const}$. That is MSE.</p>
 
       <h2>Multivariate Gaussian $\mathcal{N}(\mu,\Sigma)$</h2>
+      <p class="idea">Contours are ellipses with the covariance cloud's axes. Diagonal $\Sigma$ means independent coordinates.</p>
       <p>
         $$
-        p(x) = \frac{1}{\sqrt{(2\pi)^d\det\Sigma}}\exp\!\left(-\tfrac12(x-\mu)^T\Sigma^{-1}(x-\mu)\right), \qquad \underbrace{\mu}_{d\times1}, \ \underbrace{\Sigma}_{d\times d}\text{ (symmetric, PSD)}.
+        p(x)=\frac1{\sqrt{(2\pi)^d\det\Sigma}}\exp\!\Big(-\tfrac12(x-\mu)^T\Sigma^{-1}(x-\mu)\Big), \qquad \underbrace{\mu}_{d\times1},\ \underbrace{\Sigma}_{d\times d}\succeq0.
         $$
       </p>
-      <p>$(x-\mu)^T\Sigma^{-1}(x-\mu)$ is the quadratic form from Quadratic forms and positive definiteness; $\Sigma$'s eigenvectors/eigenvalues are its principal axes/variances (Principal component analysis). Usually restricted to diagonal $\Sigma$ ($d$ numbers, not $\tfrac{d(d+1)}2$):</p>
-      <p>
-        $$
-        \Sigma = \operatorname{diag}(\sigma_1^2,\dots,\sigma_d^2) \ \ \Longleftrightarrow\ \ p(x) = \prod_{i=1}^d p(x_i).
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: a multivariate Gaussian is $d$ single Gaussians coupled by a covariance matrix; dropping the off-diagonal terms is the independence assumption, traded for tractability.</em></p>
+      <p>$$\Sigma=\operatorname{diag}(\sigma_1^2,\dots,\sigma_d^2) \iff p(x)=\textstyle\prod_ip(x_i) \qquad (d \text{ parameters instead of } \tfrac{d(d+1)}2).$$</p>
+      <p class="example-label">Example</p>
+      <p>$\Sigma=\begin{pmatrix}2&1\\1&2\end{pmatrix}$, $\mu=0$. In eigen-coordinates the contour $x^T\Sigma^{-1}x=1$ reads $\tfrac{z_1^2}3+\tfrac{z_2^2}1=1$: semi-axes $\sqrt3$ along $(1,1)$ and $1$ along $(1,-1)$.</p>
 
-      <h2>A couple more, briefly</h2>
-      <p>
-        $$
-        \textbf{Laplace}(\mu,b):\ p(x)=\tfrac1{2b}e^{-|x-\mu|/b}, \qquad \textbf{Uniform}(a,b):\ p(x)=\tfrac1{b-a} \text{ on } [a,b].
-        $$
-      </p>
-      <p>Laplace: sharper peak, heavier tails than Gaussian; maximizing its log-likelihood minimizes $|x-\mu|$, so Laplace noise $\to$ L1 loss, the way Gaussian noise $\to$ L2 (MSE). Uniform: weight initialization ranges, augmentation parameters: every value a priori equally likely.</p>
-      <p class="intuition"><em>Intuition: every distribution here is a noise/shape assumption baked into a loss, made exact in Supervised learning as KL minimization.</em></p>
+      <h2>Distribution = loss</h2>
+      <table>
+        <tr><td>Bernoulli</td><td>binary label</td><td>binary cross-entropy</td></tr>
+        <tr><td>Categorical</td><td>class label</td><td>cross-entropy</td></tr>
+        <tr><td>Gaussian</td><td>real value</td><td>MSE (L2)</td></tr>
+        <tr><td>Laplace $\tfrac1{2b}e^{-|x-\mu|/b}$</td><td>real value, heavy tails</td><td>L1</td></tr>
+        <tr><td>Uniform $\tfrac1{b-a}$ on $[a,b]$</td><td>no preference</td><td>init ranges, augmentation</td></tr>
+      </table>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Show softmax ignores a shift of all logits, $z\to z+c\mathbf{1}$, and that for $K=2$ it is a sigmoid: $p_1=\sigma(z_1-z_2)$ with $\sigma(t)=\frac1{1+e^{-t}}$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$\dfrac{e^{z_k+c}}{\sum_je^{z_j+c}}=\dfrac{e^ce^{z_k}}{e^c\sum_je^{z_j}}$: the $e^c$ cancels. $K=2$: divide top and bottom by $e^{z_1}$, $p_1=\dfrac{1}{1+e^{z_2-z_1}}=\sigma(z_1-z_2)$. So Categorical with $K=2$ is Bernoulli.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -137,7 +124,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

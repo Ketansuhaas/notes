@@ -13,7 +13,7 @@
   </script>
   <title>The spectral theorem - Deep Learning Notes</title>
   <meta name="description" content="Symmetric matrices have real eigenvalues and orthogonal eigenvectors: A = QΛQ^T, and A as a sum of simple rank-1 pieces.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,28 +43,29 @@
 
   <main>
     <article>
-      <h1>The spectral theorem</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">diagonalization</span><span class="tag">symmetric-matrices</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>The spectral theorem</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">diagonalization</span><span class="tag">symmetric-matrices</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="eigenvalues-and-defectiveness.html">Eigenvalues, eigenvectors, and defectiveness</a>, <a href="linear-algebra-fundamentals.html">Rank, subspaces, and projections</a> &middot; <strong>Leads to:</strong> <a href="dynamics-in-the-eigenbasis.html">Dynamics in the eigenbasis</a>, <a href="quadratic-forms-and-positive-definiteness.html">Quadratic forms and positive definiteness</a>, <a href="covariance-matrix-intuition.html">The covariance matrix, intuitively</a></p>
+
+      <p class="idea">Symmetric matrices are the best case: rotate into perpendicular axes, stretch along each, rotate back. Covariances, Hessians, and kernels are all symmetric.</p>
 
       <h2>Statement</h2>
-      <p>If $A = A^T$ (symmetric), then its eigenvalues are real and its eigenvectors can be chosen orthonormal:</p>
-      <p>
-        $$
-        A = Q\Lambda Q^T, \quad Q^TQ = I \ (\text{so } Q^{-1} = Q^T).
-        $$
-      </p>
-      <p class="example-label">Shapes</p>
+      <p class="idea">If $A=A^T$, its eigenvalues are real and its eigenvectors can be chosen perpendicular and unit length.</p>
       <p>
         $$
         \underbrace{A}_{n\times n}=
-        \underbrace{\begin{pmatrix}\vert&&\vert\\q_1&\cdots&q_n\\\vert&&\vert\end{pmatrix}}_{Q,\ n\times n}
-        \underbrace{\begin{pmatrix}\lambda_1&&\\&\ddots&\\&&\lambda_n\end{pmatrix}}_{\Lambda,\ n\times n}
-        \underbrace{\begin{pmatrix}-\,q_1^T-\\\vdots\\-\,q_n^T-\end{pmatrix}}_{Q^T,\ n\times n}.
+        \underbrace{\begin{pmatrix}\vert&&\vert\\q_1&\cdots&q_n\\\vert&&\vert\end{pmatrix}}_{Q}
+        \underbrace{\begin{pmatrix}\lambda_1&&\\&\ddots&\\&&\lambda_n\end{pmatrix}}_{\Lambda}
+        \underbrace{\begin{pmatrix}-\,q_1^T-\\\vdots\\-\,q_n^T-\end{pmatrix}}_{Q^T}, \qquad Q^TQ=I\ \ (Q^{-1}=Q^T).
         $$
       </p>
-      <p>The columns of $Q$ are the eigenvectors; the rows of $Q^T$ are the same vectors, laid flat. Orthonormality is the statement that every row of $Q^T$ dotted with every column of $Q$ gives $1$ on the diagonal and $0$ elsewhere, i.e. $Q^TQ=I$.</p>
-      <p class="intuition"><em>Intuition: symmetric matrices are a rotation into perpendicular axes, a pure scaling along them, and a rotation back; nothing else can happen.</em></p>
+      <p class="example-label">Example</p>
+      <p>$$q_1=\tfrac1{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix},\ q_2=\tfrac1{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix},\ \Lambda=\begin{pmatrix}3&0\\0&1\end{pmatrix}: \quad Q\Lambda Q^T=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A.$$</p>
 
       <figure class="figure">
         <svg viewBox="0 0 640 260" role="img" aria-label="A acting on a point by stretching its eigenbasis coordinates by lambda 1 and lambda 2">
@@ -105,64 +106,33 @@
           <circle class="pt" cx="518.2" cy="101.8" r="3"/>
           <circle class="pt" cx="492.7" cy="152.7" r="3"/>
         </svg>
-        <figcaption>$A$ rotates into the eigenbasis $(q_1,q_2)$, stretches by $\lambda_1=3$ along $q_1$ and $\lambda_2=1$ along $q_2$, then rotates back: from $x$ to $Ax=3(x\cdot q_1)q_1+1(x\cdot q_2)q_2$.</figcaption>
+        <figcaption>The $q_1$ coordinate of $x$ is tripled, the $q_2$ coordinate is kept: $Ax=3(q_1^Tx)q_1+1(q_2^Tx)q_2$.</figcaption>
       </figure>
 
       <h2>Eigenvalues are real</h2>
-      <p>For $Av = \lambda v$ (allowing complex $\lambda, v$ for now), conjugate-transpose both sides and use $A^H = A^T = A$:</p>
-      <p>
-        $$
-        v^H A v = \lambda\, v^Hv, \qquad v^H A v = (Av)^Hv = (\lambda v)^Hv = \bar\lambda\, v^Hv.
-        $$
-      </p>
-      <p>Since $v^Hv > 0$, this forces $\lambda = \bar\lambda$, i.e. $\lambda \in \mathbb{R}$.</p>
-      <p class="intuition"><em>Intuition: symmetry leaves no room for the complex (rotational) eigenvalues a generic matrix can have.</em></p>
+      <p class="idea">Complex eigenvalues signal rotation. Symmetry leaves no room for it.</p>
+      <p>Allow complex $\lambda,v$ and use $A^H=A$:</p>
+      <p>$$v^HAv=\lambda\,v^Hv, \qquad v^HAv=(Av)^Hv=\bar\lambda\,v^Hv \ \Rightarrow\ \lambda=\bar\lambda \quad(v^Hv\gt0).$$</p>
+      <p class="example-label">Example</p>
+      <table>
+        <tr><td>$\begin{pmatrix}0&-1\\1&0\end{pmatrix}$ (rotation, not symmetric)</td><td>$\lambda=\pm i$</td></tr>
+        <tr><td>$\begin{pmatrix}2&1\\1&2\end{pmatrix}$ (symmetric)</td><td>$\lambda=3,1$</td></tr>
+      </table>
 
       <h2>Eigenvectors are orthogonal</h2>
-      <p>For distinct eigenvalues $\lambda_1 \neq \lambda_2$ with eigenvectors $v_1, v_2$:</p>
-      <p>
-        $$
-        \lambda_1 v_1^Tv_2 = (Av_1)^Tv_2 = v_1^TA^Tv_2 = v_1^TAv_2 = v_1^T(\lambda_2 v_2) = \lambda_2 v_1^Tv_2.
-        $$
-      </p>
-      <p>$(\lambda_1 - \lambda_2)v_1^Tv_2 = 0$ and $\lambda_1 \neq \lambda_2$, so $v_1^Tv_2 = 0$.</p>
-      <p class="intuition"><em>Intuition: symmetry ($A^T=A$) is exactly what lets the eigenvalue "slide across" the dot product like this.</em></p>
+      <p class="idea">Symmetry lets $\lambda$ slide across the dot product. That forces eigenvectors of different eigenvalues to be perpendicular.</p>
+      <p>$$\lambda_1v_1^Tv_2=(Av_1)^Tv_2=v_1^TA^Tv_2=v_1^TAv_2=\lambda_2v_1^Tv_2 \ \Rightarrow\ (\lambda_1-\lambda_2)\,v_1^Tv_2=0.$$</p>
+      <p>$\lambda_1\neq\lambda_2$, so $v_1^Tv_2=0$.</p>
       <p class="example-label">Example</p>
-      <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$, eigenvalues $3,1$, eigenvectors $(1,1),(1,-1)$ (from Diagonalization):</p>
-      <p>
-        $$
-        q_1 = \tfrac{1}{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix}, \quad q_2 = \tfrac{1}{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix},
-        \quad q_1 \cdot q_2 = \tfrac12(1-1) = 0.
-        $$
-      </p>
-      <p>
-        $$
-        Q = \tfrac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix}, \ \Lambda = \begin{pmatrix}3&0\\0&1\end{pmatrix}, \quad Q\Lambda Q^T = \begin{pmatrix}2&1\\1&2\end{pmatrix} = A. \ \checkmark
-        $$
-      </p>
+      <p>$q_1\cdot q_2=\tfrac12(1-1)=0$. &#10003;</p>
 
       <h2>What if an eigenvalue repeats?</h2>
-      <p>
-        The argument above only orthogonalizes eigenvectors from <em>different</em> eigenvalues:
-        two eigenvectors sharing one eigenvalue aren't automatically orthogonal. But a repeated eigenvalue's
-        eigenspace is just a subspace, so pick any orthonormal basis for it directly. Combined with the
-        other eigenvalues' (automatically orthogonal) eigenvectors, that's a full orthonormal eigenbasis,
-        repeats or not.
-      </p>
-      <p>
-        So symmetric $\Rightarrow$ always diagonalizable, $A = Q\Lambda Q^T$, never defective.
-        That's not the same as full rank: eigenvalues can still be $0$.
-      </p>
-      <p class="intuition"><em>Intuition: a repeated eigenvalue means more freedom in choosing eigenvectors, never less.</em></p>
-      <p class="example-label">Example</p>
-      <p>$A = \begin{pmatrix}1&1&1\\1&1&1\\1&1&1\end{pmatrix}$ (symmetric): eigenvalues $3,0,0$; $0$ repeats with $\operatorname{AM}=2$.</p>
-      <p>
-        $$
-        N(A) = \{x : x_1+x_2+x_3=0\}, \ \dim = 2 = \operatorname{AM}(0) \;\Rightarrow\; \text{not defective.}
-        $$
-      </p>
-      <p>Still, $\operatorname{rank}(A) = 1$: diagonalizable and low-rank are unrelated.</p>
-      <p>Pick any orthonormal basis of that plane, e.g. $q_2 = \tfrac{1}{\sqrt2}(1,-1,0)$, $q_3 = \tfrac{1}{\sqrt6}(1,1,-2)$, and $q_1 = \tfrac{1}{\sqrt3}(1,1,1)$ for $\lambda=3$: all three pairwise orthogonal.</p>
+      <p class="idea">A repeated $\lambda$ gives a whole eigenspace of full dimension; pick any orthonormal basis inside it. More freedom, never fewer eigenvectors.</p>
+      <p>$$A=A^T \ \Rightarrow\ \operatorname{GM}(\lambda)=\operatorname{AM}(\lambda)\ \ \forall\lambda \ \Rightarrow\ A=Q\Lambda Q^T \text{ always (never defective)}.$$</p>
+      <p>Never defective is not full rank: eigenvalues can still be $0$.</p>
+      <p class="example-label">Example: all-ones $3\times3$</p>
+      <p>Eigenvalues $3,0,0$. $N(A)=\{x_1+x_2+x_3=0\}$ has $\dim 2=\operatorname{AM}(0)$, yet $\operatorname{rank}A=1$. One orthonormal choice:</p>
+      <p>$$q_1=\tfrac1{\sqrt3}(1,1,1),\quad q_2=\tfrac1{\sqrt2}(1,-1,0),\quad q_3=\tfrac1{\sqrt6}(1,1,-2).$$</p>
 
       <figure class="figure">
         <svg viewBox="0 0 400 260" role="img" aria-label="Any orthonormal basis of a repeated eigenvalue's eigenspace is a valid choice of eigenvectors">
@@ -177,37 +147,23 @@
           <text class="lbl muted" x="283" y="189">q&#8322;&#8242;</text>
           <text class="lbl muted" x="249" y="224">q&#8323;&#8242;</text>
         </svg>
-        <figcaption>Within a repeated eigenvalue's eigenspace, any orthonormal pair is a valid choice of eigenvectors: the solid $(q_2,q_3)$ and dashed $(q_2',q_3')$ axes work equally well.</figcaption>
+        <figcaption>Inside the eigenspace of $\lambda=0$, the solid pair $(q_2,q_3)$ and the dashed pair $(q_2',q_3')$ work equally well.</figcaption>
       </figure>
 
-      <h2>$A$ as a sum of simple pieces</h2>
-      <p>Multiplying out $Q\Lambda Q^T$ column by column gives a rank-1 sum:</p>
-      <p>
-        $$
-        A = \sum_i \lambda_i\, q_iq_i^T.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $A$ is a weighted sum of simple directions $q_iq_i^T$, one per eigenvector, weighted by how much $A$ stretches that direction.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>Each piece is a column times a row, an outer product, so it is a full $n\times n$ matrix of rank 1:</p>
-      <p>
-        $$
-        \underbrace{q_i}_{n\times1}\underbrace{q_i^T}_{1\times n}=\underbrace{\begin{pmatrix}q_{i1}q_{i1}&\cdots&q_{i1}q_{in}\\\vdots&\ddots&\vdots\\q_{in}q_{i1}&\cdots&q_{in}q_{in}\end{pmatrix}}_{n\times n,\ \text{rank }1}, \qquad
-        A=\lambda_1\underbrace{q_1q_1^T}_{n\times n}+\cdots+\lambda_n\underbrace{q_nq_n^T}_{n\times n}.
-        $$
-      </p>
-      <p>Each $q_iq_i^T$ is also the projection onto the line through $q_i$ (the line formula from Rank, subspaces, and projections, with $q_i^Tq_i=1$): $A$ projects onto each axis, scales by $\lambda_i$, and adds the results.</p>
+      <h2>$A$ as a sum of rank-1 pieces</h2>
+      <p class="idea">Project onto each axis, scale by $\lambda_i$, add up. This is view 4 of matrix multiplication applied to $Q\Lambda Q^T$.</p>
+      <p>$$A=\sum_i\lambda_i\underbrace{q_i}_{n\times1}\underbrace{q_i^T}_{1\times n}, \qquad q_iq_i^T=\text{projection onto the line through } q_i\ \ (n\times n,\ \text{rank } 1).$$</p>
       <p class="example-label">Example</p>
-      <p>
-        $$
-        q_1q_1^T = \tfrac12\begin{pmatrix}1&1\\1&1\end{pmatrix}, \quad q_2q_2^T = \tfrac12\begin{pmatrix}1&-1\\-1&1\end{pmatrix}.
-        $$
-      </p>
-      <p>
-        $$
-        3\,q_1q_1^T + 1\,q_2q_2^T = \begin{pmatrix}1.5&1.5\\1.5&1.5\end{pmatrix} + \begin{pmatrix}0.5&-0.5\\-0.5&0.5\end{pmatrix} = \begin{pmatrix}2&1\\1&2\end{pmatrix} = A. \ \checkmark
-        $$
-      </p>
+      <p>$$3\cdot\tfrac12\begin{pmatrix}1&1\\1&1\end{pmatrix}+1\cdot\tfrac12\begin{pmatrix}1&-1\\-1&1\end{pmatrix}=\begin{pmatrix}2&1\\1&2\end{pmatrix}=A.$$</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>If every $\lambda_i\neq0$, show $A^{-1}=\sum_i\frac1{\lambda_i}q_iq_i^T$. Check it on the running example.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$\big(\sum_i\lambda_iq_iq_i^T\big)\big(\sum_j\tfrac1{\lambda_j}q_jq_j^T\big)=\sum_{i,j}\tfrac{\lambda_i}{\lambda_j}q_i\underbrace{(q_i^Tq_j)}_{1 \text{ if } i=j,\ \text{else } 0}q_j^T=\sum_iq_iq_i^T=QQ^T=I$. Example: $\tfrac13\cdot\tfrac12\begin{pmatrix}1&1\\1&1\end{pmatrix}+\tfrac12\begin{pmatrix}1&-1\\-1&1\end{pmatrix}=\tfrac13\begin{pmatrix}2&-1\\-1&2\end{pmatrix}$, and $A\cdot\tfrac13\begin{pmatrix}2&-1\\-1&2\end{pmatrix}=I$. &#10003;</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -218,7 +174,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

@@ -13,7 +13,7 @@
   </script>
   <title>Generative modeling: approximating p&#952; - Deep Learning Notes</title>
   <meta name="description" content="Generative modeling is the same forward-KL/MLE objective as supervised learning, applied to p(x) itself; nearly every method (autoregressive, flows, VAEs, GANs, diffusion) is a different trick for making that objective computable.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,30 +43,54 @@
 
   <main>
     <article>
-      <h1>Generative modeling: approximating p&#952;</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">generative-modeling</span><span class="tag">kl-divergence</span><span class="tag">maximum-likelihood</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Generative modeling: approximating p&#952;</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">information-theory</span><span class="tag">deep-learning</span><span class="tag">generative-modeling</span><span class="tag">kl-divergence</span><span class="tag">maximum-likelihood</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="supervised-learning-as-kl-minimization.html">Supervised learning as KL minimization</a>, <a href="lebesgue-measure-and-kl-divergence.html">KL divergence</a>, <a href="convexity-and-jensen.html">Convexity and Jensen</a> &middot; <strong>Leads to:</strong> <a href="reparameterization-trick.html">The reparameterization trick</a></p>
+
+      <p class="idea">Generative modeling is supervised learning with the label removed: fit a distribution over $x$ itself. The objective is easy. Computing $p_\theta(x)$ is the hard part.</p>
 
       <h2>Same objective, one level up</h2>
-      <p>Now $x$ itself (image, sentence, molecule) is drawn from $p_{\text{data}}(x)$, and the model is a distribution $p_\theta(x)$. Swap $y\mid x\to x$ in Supervised learning as KL minimization; forward KL is still MLE:</p>
+      <p class="idea">Swap $p(y\mid x)$ for $p(x)$. Forward KL to the data is still maximum likelihood.</p>
       <p>
         $$
-        \min_\theta\ KL\big(p_{\text{data}}(x)\,\|\,p_\theta(x)\big) \ \Longleftrightarrow\ \max_\theta\ \mathbb{E}_{x\sim p_{\text{data}}}\big[\log p_\theta(x)\big].
+        \mathrm{KL}(p_{\text{data}}\|p_\theta)=\underbrace{-H(p_{\text{data}})}_{\text{const}}-\mathbb{E}_{x\sim p_{\text{data}}}[\log p_\theta(x)] \quad\Rightarrow\quad \min_\theta\mathrm{KL}\iff\max_\theta\,\mathbb{E}_{p_{\text{data}}}[\log p_\theta(x)].
         $$
       </p>
+      <p class="example-label">Example</p>
+      <p>Data: 7 heads in 10 flips, $p_\theta=\text{Bernoulli}(\theta)$. Maximize $7\log\theta+3\log(1-\theta)$: $\ \frac7\theta=\frac3{1-\theta}\Rightarrow\theta=0.7$.</p>
 
-      <p class="intuition"><em>Intuition: the objective was never the hard part; $p_\theta(x)$ being intractable to evaluate or sample is. Every method below is a different trick for making $\max_\theta\mathbb{E}[\log p_\theta(x)]$, or a stand-in for it, computable.</em></p>
+      <h2>Why it's hard</h2>
+      <p class="idea">A density over images must integrate to $1$ over a huge space. That normalizer is an intractable integral.</p>
+      <p>$$p_\theta(x)=\frac{\tilde p_\theta(x)}{Z_\theta}, \qquad Z_\theta=\int\tilde p_\theta(x)\,dx \quad (\text{no closed form for a neural } \tilde p_\theta).$$</p>
+      <p>Every method below is a different way around $Z_\theta$.</p>
 
       <h2>A map of the methods</h2>
-      <ul>
-        <li><strong>Autoregressive models</strong> (e.g. language models): factor $p_\theta(x)=\prod_i p_\theta(x_i\mid x_{&lt;i})$ by the chain rule (Probability notation and random variables). Exact likelihood, directly optimized by forward KL/MLE; no approximation needed, at the cost of sequential generation.</li>
-        <li><strong>Normalizing flows</strong>: an invertible $x=f_\theta(z)$ from a simple base density; change of variables gives $p_\theta(x)$ exactly via a Jacobian determinant (Gradients, Jacobians, and Hessians). Also exact likelihood, but the architecture must stay invertible.</li>
-        <li><strong>Variational autoencoders (VAEs)</strong>: $p_\theta(x)=\int p_\theta(x\mid z)p(z)\,dz$ is intractable, so introduce $q_\phi(z\mid x)$ and optimize the ELBO, a tractable lower bound on $\log p_\theta(x)$ built around $KL(q_\phi(z\mid x)\,\|\,p(z))$. Approximates the marginal likelihood via a bound; that inner KL is a reverse-KL, variational-inference term (Lebesgue measure and KL divergence), and training needs a gradient through the sampling step $z\sim q_\phi(z\mid x)$ (The reparameterization trick).</li>
-        <li><strong>GANs</strong>: no explicit $p_\theta(x)$ at all, just a sampler, trained adversarially against a discriminator. At the optimal discriminator the implicit objective relates to the Jensen&ndash;Shannon divergence; still "match $p_\theta$ to $p_{\text{data}}$", but with likelihood evaluation traded for sample quality and a different (symmetrized) divergence than KL.</li>
-        <li><strong>Diffusion / score-based models</strong>: sidestep $p_\theta(x)$ by learning the score $\nabla_x\log p_\theta(x)$ instead (equivalently, denoising at many noise levels). Training reduces to a tractable regression loss that is provably bounded in relation to the log-likelihood; approximate MLE without ever forming $p_\theta(x)$ itself.</li>
-      </ul>
+      <table>
+        <tr><td><strong>Method</strong></td><td><strong>Trick</strong></td><td><strong>$\log p_\theta(x)$</strong></td><td><strong>Price</strong></td></tr>
+        <tr><td>Autoregressive (LLMs)</td><td>$p_\theta(x)=\prod_ip_\theta(x_i\mid x_{\lt i})$, each factor a softmax</td><td>exact</td><td>sequential sampling</td></tr>
+        <tr><td>Normalizing flow</td><td>invertible $x=f_\theta(z)$: $\log p_\theta(x)=\log p(z)-\log\big|\det\tfrac{\partial f_\theta}{\partial z}\big|$</td><td>exact</td><td>architecture must be invertible</td></tr>
+        <tr><td>VAE</td><td>latent $z$, maximize a lower bound (the ELBO)</td><td>lower bound</td><td>gradient through $z\sim q_\phi$</td></tr>
+        <tr><td>GAN</td><td>sampler only, trained against a discriminator</td><td>none</td><td>Jensen-Shannon, not KL; unstable</td></tr>
+        <tr><td>Diffusion</td><td>learn the score $\nabla_x\log p$ by denoising at many noise levels</td><td>bound (weighted ELBO)</td><td>many sampling steps</td></tr>
+      </table>
+      <p>One project in five disguises: fit $p_\theta$ to $p_{\text{data}}$.</p>
 
-      <p>Exact factorization, an invertible change of variables, a variational bound, a different divergence, a score instead of a density: five disguises for the same project, fitting $p_\theta$ to $p_{\text{data}}$.</p>
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>VAE: $p_\theta(x)=\int p_\theta(x\mid z)\,p(z)\,dz$. For any $q(z\mid x)$, prove the ELBO:</p>
+        <p>$$\log p_\theta(x)\ \ge\ \mathbb{E}_{z\sim q}[\log p_\theta(x\mid z)]-\mathrm{KL}\big(q(z\mid x)\,\|\,p(z)\big).$$</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Multiply and divide by $q$, then Jensen ($\log$ is concave):</p>
+          <p>$$\log p_\theta(x)=\log\mathbb{E}_{q}\Big[\frac{p_\theta(x\mid z)\,p(z)}{q(z\mid x)}\Big]\ \ge\ \mathbb{E}_q[\log p_\theta(x\mid z)]+\mathbb{E}_q\Big[\log\frac{p(z)}{q(z\mid x)}\Big].$$</p>
+          <p>The last term is $-\mathrm{KL}(q\|p(z))$. The gap is $\mathrm{KL}\big(q(z\mid x)\|p_\theta(z\mid x)\big)$: zero when $q$ is the true posterior.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -77,7 +101,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

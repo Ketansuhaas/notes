@@ -13,7 +13,7 @@
   </script>
   <title>Singular value decomposition - Deep Learning Notes</title>
   <meta name="description" content="A = USigmaV^T for any matrix, built from the spectral theorem applied to A^TA and AA^T, and how it hands you the four fundamental subspaces, low-rank approximation, and the pseudoinverse.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,38 +43,22 @@
 
   <main>
     <article>
-      <h1>Singular value decomposition</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">svd</span><span class="tag">matrix-factorization</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Singular value decomposition</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">svd</span><span class="tag">matrix-factorization</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="linear-algebra-fundamentals.html">Rank, subspaces, and projections</a>, <a href="spectral-theorem.html">The spectral theorem</a>, <a href="quadratic-forms-and-positive-definiteness.html">Quadratic forms and positive definiteness</a> &middot; <strong>Leads to:</strong> <a href="principal-component-analysis.html">Principal component analysis</a></p>
 
-      <h2>Statement</h2>
-      <p>Every $A\in\mathbb{R}^{m\times n}$, square or not, defective or not, factors as:</p>
-      <p>
-        $$
-        A = U\Sigma V^T, \quad U \in \mathbb{R}^{m\times m}, V \in \mathbb{R}^{n\times n} \text{ orthogonal}, \ \Sigma \in \mathbb{R}^{m\times n} \text{ diagonal}, \ \sigma_1\geq\sigma_2\geq\cdots\geq0.
-        $$
-      </p>
-      <p class="example-label">Shapes</p>
-      <p>For a tall $A$ ($m>n$), the $m\times n$ matrix $\Sigma$ is a square diagonal block with zero rows underneath; for a wide $A$ ($m&lt;n$) it has zero columns to the right:</p>
-      <p>
-        $$
-        \underbrace{A}_{m\times n}=\underbrace{U}_{m\times m}\ \underbrace{\begin{pmatrix}\sigma_1&&\\&\ddots&\\&&\sigma_n\\\hline0&\cdots&0\\\vdots&&\vdots\\0&\cdots&0\end{pmatrix}}_{\Sigma,\ m\times n}\ \underbrace{V^T}_{n\times n}
-        \qquad\text{(tall)},
-        $$
-      </p>
-      <p>
-        $$
-        \underbrace{A}_{m\times n}=\underbrace{U}_{m\times m}\ \underbrace{\begin{pmatrix}\sigma_1&&&0&\cdots&0\\&\ddots&&\vdots&&\vdots\\&&\sigma_m&0&\cdots&0\end{pmatrix}}_{\Sigma,\ m\times n}\ \underbrace{V^T}_{n\times n}
-        \qquad\text{(wide)}.
-        $$
-      </p>
-      <p>The zero rows or columns of $\Sigma$ multiply the extra columns of $U$ or $V$ by $0$, so only the first $r=\operatorname{rank}(A)$ columns of each ever matter. Dropping them gives the compact ("thin") form:</p>
-      <p>
-        $$
-        \underbrace{A}_{m\times n}=\underbrace{U_r}_{m\times r}\ \underbrace{\Sigma_r}_{r\times r}\ \underbrace{V_r^T}_{r\times n}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: SVD finds one orthonormal basis for the input space and another for the output space, in which $A$ is just a (rectangular) diagonal scaling.</em></p>
+      <p class="idea">Every matrix, any shape, is a rotation, then a stretch along the axes, then another rotation.</p>
+
+      <h2>The statement</h2>
+      <p class="idea">Pick the right orthonormal axes in the input and in the output, and $A$ just scales axis $i$ by $\sigma_i$.</p>
+      <p>$$\underbrace{A}_{m\times n}=\underbrace{U}_{m\times m}\,\underbrace{\Sigma}_{m\times n}\,\underbrace{V^T}_{n\times n}, \qquad Av_i=\sigma_iu_i, \qquad \sigma_1\ge\sigma_2\ge\cdots\ge0.$$</p>
+      <p>$U,V$ orthogonal. $\Sigma$ is diagonal, padded with zero rows (tall $A$) or zero columns (wide $A$). Only $r=\operatorname{rank}A$ terms survive (thin SVD):</p>
+      <p>$$\underbrace{A}_{m\times n}=\underbrace{U_r}_{m\times r}\,\underbrace{\Sigma_r}_{r\times r}\,\underbrace{V_r^T}_{r\times n}.$$</p>
 
       <figure class="figure">
         <svg viewBox="0 0 640 260" role="img" aria-label="A unit circle in the input space, spanned by orthogonal directions v1 and v2, mapped by A onto an ellipse in the output space with semi-axes sigma1 u1 and sigma2 u2">
@@ -102,108 +86,50 @@
           <text class="lbl" x="598" y="110">&#963;&#8321;u&#8321;</text>
           <text class="lbl" x="468" y="94">&#963;&#8322;u&#8322;</text>
         </svg>
-        <figcaption>$A$ sends the orthonormal basis $v_1,v_2$ to the (generally differently oriented) orthogonal directions $\sigma_1u_1,\sigma_2u_2$: a unit circle always lands as an ellipse.</figcaption>
+        <figcaption>Orthonormal $v_1,v_2$ land on orthogonal $\sigma_1u_1,\sigma_2u_2$: a circle always becomes an ellipse.</figcaption>
       </figure>
 
-      <h2>Construction</h2>
-      <p>
-        $A^TA$ ($n\times n$) and $AA^T$ ($m\times m$) are always symmetric and positive semidefinite,
-        even when $A$ itself is rectangular or far from symmetric, so the spectral theorem always applies to them:
-      </p>
-      <p>
-        $$
-        A^TA = V\Lambda V^T, \quad AA^T = U\Lambda' U^T, \quad \lambda_i = \sigma_i^2 \ \text{(shared nonzero eigenvalues)}.
-        $$
-      </p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{A^TA}_{n\times n}=\underbrace{V}_{n\times n}\ \underbrace{\Lambda}_{n\times n}\ \underbrace{V^T}_{n\times n}, \qquad
-        \underbrace{AA^T}_{m\times m}=\underbrace{U}_{m\times m}\ \underbrace{\Lambda'}_{m\times m}\ \underbrace{U^T}_{m\times m}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: $A^TA$ and $AA^T$ are always square, even when $A$ itself is rectangular, which is exactly why the spectral theorem can always be applied to them.</em></p>
-      <p>The columns of $V$ and $U$ are linked by $Av_i = \sigma_iu_i$ for every $\sigma_i>0$.</p>
-      <p class="intuition"><em>Intuition: $A^TA$ and $AA^T$ are always symmetric, so they're never defective, giving SVD for literally any matrix.</em></p>
+      <h2>Constructing it</h2>
+      <p class="idea">$A$ may be rectangular, but $A^TA$ and $AA^T$ are square, symmetric, and positive semidefinite. The spectral theorem always applies to them, so every matrix has an SVD.</p>
+      <p>$$\underbrace{A^TA}_{n\times n}=V(\Sigma^T\Sigma)V^T, \qquad \underbrace{AA^T}_{m\times m}=U(\Sigma\Sigma^T)U^T,$$ $$\sigma_i=\sqrt{\lambda_i}, \quad u_i=\frac{Av_i}{\sigma_i},\ \ v_i=\frac{A^Tu_i}{\sigma_i}\ \ (\sigma_i\gt0).$$</p>
       <p class="example-label">Example</p>
-      <p>Reusing the wide $A=\begin{pmatrix}1&0&1\\0&1&1\end{pmatrix}$ (from Fundamental subspaces):</p>
-      <p>
-        $$
-        AA^T = \begin{pmatrix}2&1\\1&2\end{pmatrix}, \ \text{eigenvalues } 3,1, \ \text{eigenvectors } u_1=\tfrac{1}{\sqrt2}(1,1), \ u_2=\tfrac{1}{\sqrt2}(1,-1).
-        $$
-      </p>
-      <p>So $\sigma_1=\sqrt3, \sigma_2=1$. Then $v_1 = A^Tu_1/\sigma_1 = \tfrac{1}{\sqrt6}(1,1,2)$, and checking the link:</p>
-      <p>
-        $$
-        Av_1 = \tfrac{1}{\sqrt6}\begin{pmatrix}3\\3\end{pmatrix} = \sqrt3\cdot\tfrac{1}{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix} = \sigma_1u_1. \ \checkmark
-        $$
-      </p>
+      <p>$$A=\begin{pmatrix}1&0&1\\0&1&1\end{pmatrix}, \qquad AA^T=\begin{pmatrix}2&1\\1&2\end{pmatrix} \ \Rightarrow\ \sigma_1=\sqrt3,\ \sigma_2=1.$$</p>
+      <p>$$u_1=\tfrac1{\sqrt2}(1,1),\ \ v_1=\tfrac{A^Tu_1}{\sqrt3}=\tfrac1{\sqrt6}(1,1,2); \qquad u_2=\tfrac1{\sqrt2}(1,-1),\ \ v_2=A^Tu_2=\tfrac1{\sqrt2}(1,-1,0).$$</p>
+      <p>Check: $Av_1=\tfrac1{\sqrt6}(3,3)=\sqrt3\,u_1$. &#10003;</p>
 
-      <h2>Rank and the fundamental subspaces</h2>
-      <p>
-        $\operatorname{rank}(A)$ is the count of nonzero singular values. The columns of $U$ and $V$ split exactly
-        along the four fundamental subspaces from before:
-      </p>
-      <ul>
-        <li>$u_1,\dots,u_r$ span $C(A)$; the rest of $U$ spans $N(A^T)$</li>
-        <li>$v_1,\dots,v_r$ span $C(A^T)$; the rest of $V$ spans $N(A)$</li>
-      </ul>
-      <p class="intuition"><em>Intuition: SVD hands you a ready-made orthonormal basis for every one of the four fundamental subspaces.</em></p>
+      <h2>Four subspaces for free</h2>
+      <p class="idea">The columns of $U$ and $V$ split into orthonormal bases for all four fundamental subspaces at once.</p>
+      <table>
+        <tr><td></td><td>first $r$ columns</td><td>remaining columns</td></tr>
+        <tr><td>$U$ (output, $\mathbb{R}^m$)</td><td>$C(A)$</td><td>$N(A^T)$</td></tr>
+        <tr><td>$V$ (input, $\mathbb{R}^n$)</td><td>$C(A^T)$</td><td>$N(A)$</td></tr>
+      </table>
+      <p>$$\operatorname{rank}A=\text{number of nonzero } \sigma_i.$$</p>
       <p class="example-label">Example</p>
-      <p>Here $r=2=m$, so $u_1,u_2$ span all of $C(A)=\mathbb{R}^2$ and $N(A^T)=\{0\}$. The leftover $v_3=\tfrac{1}{\sqrt3}(-1,-1,1)$ spans $N(A)$, matching the earlier post exactly.</p>
+      <p>$r=2=m$: $C(A)=\mathbb{R}^2$, $N(A^T)=\{0\}$. The leftover $v_3=\tfrac1{\sqrt3}(-1,-1,1)$ spans $N(A)$: $Av_3=0$. &#10003;</p>
 
       <h2>Low-rank approximation</h2>
-      <p>Expanding $U\Sigma V^T$ column by column gives a rank-1 sum, largest singular value first:</p>
-      <p>
-        $$
-        A = \sum_i \sigma_iu_iv_i^T.
-        $$
-      </p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{A}_{m\times n}=\sum_i\underbrace{\sigma_iu_i}_{m\times1}\ \underbrace{v_i^T}_{1\times n}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: each term pairs one output direction ($u_i$) with one input direction ($v_i$), scaled by how much $A$ cares about that pairing ($\sigma_i$); summing them, biggest first, rebuilds $A$ exactly.</em></p>
-      <p>Keeping only the top $k$ terms gives the best possible rank-$k$ approximation to $A$ (Eckart-Young).</p>
-      <p class="intuition"><em>Intuition: dropping the smallest singular values keeps the directions $A$ cares about most and discards the least important ones.</em></p>
-
-      <figure class="figure">
-        <svg viewBox="0 0 640 170" role="img" aria-label="A built up as a sum of rank-one terms sigma_i u_i v_i transpose, each term shrinking as the singular values decrease">
-          <rect x="20" y="35" width="90" height="75" style="fill:none;stroke:currentColor;stroke-width:1.5"/>
-          <text class="lbl" x="22" y="130">&#963;&#8321;u&#8321;v&#8321;&#7488;</text>
-          <text class="lbl muted" x="122" y="80">+</text>
-          <rect x="148" y="52" width="62" height="48" style="fill:none;stroke:currentColor;stroke-width:1.5;opacity:0.6"/>
-          <text class="lbl muted" x="150" y="130">&#963;&#8322;u&#8322;v&#8322;&#7488;</text>
-          <text class="lbl muted" x="222" y="80">+</text>
-          <rect x="248" y="63" width="36" height="28" style="fill:none;stroke:currentColor;stroke-width:1.5;opacity:0.35"/>
-          <text class="lbl muted" x="244" y="130">&#963;&#8323;u&#8323;v&#8323;&#7488;</text>
-          <text class="lbl muted" x="296" y="80">+ &#8943;</text>
-          <text class="lbl" x="350" y="80">=</text>
-          <rect x="390" y="25" width="220" height="95" style="fill:none;stroke:currentColor;stroke-width:1.5"/>
-          <text class="lbl" x="488" y="138">A</text>
-        </svg>
-        <figcaption>Summing the rank-one terms from biggest singular value to smallest rebuilds $A$ exactly; stopping early gives the best rank-$k$ approximation.</figcaption>
-      </figure>
+      <p class="idea">The SVD writes $A$ as a sum of rank-one pieces, biggest first. Keep the top $k$ and you have the best rank-$k$ copy of $A$: the idea behind compression and PCA.</p>
+      <p>$$\underbrace{A}_{m\times n}=\sum_{i=1}^r\sigma_i\,\underbrace{u_i}_{m\times1}\underbrace{v_i^T}_{1\times n}, \qquad A_k=\sum_{i\le k}\sigma_iu_iv_i^T, \qquad \|A-A_k\|_F^2=\sum_{i\gt k}\sigma_i^2.$$</p>
+      <p>No rank-$k$ matrix gets closer (Eckart-Young).</p>
+      <p class="example-label">Example</p>
+      <p>$$A_1=\sqrt3\,u_1v_1^T=\tfrac12\begin{pmatrix}1&1&2\\1&1&2\end{pmatrix},$$ $$A-A_1=\tfrac12\begin{pmatrix}1&-1&0\\-1&1&0\end{pmatrix}=\sigma_2u_2v_2^T, \qquad \|A-A_1\|_F^2=1=\sigma_2^2. \ \checkmark$$</p>
 
       <h2>The pseudoinverse</h2>
-      <p>Inverting only the nonzero singular values gives the Moore-Penrose pseudoinverse:</p>
-      <p>
-        $$
-        A^+ = V\Sigma^+U^T, \quad \Sigma^+_{ii} = 1/\sigma_i \ (\sigma_i\neq0), \ 0 \ \text{otherwise}.
-        $$
-      </p>
-      <p>$x^+=A^+b$ is exactly the minimum-norm solution to $Ax=b$, the $x_{\text{row}}$ from The big picture.</p>
-      <p class="intuition"><em>Intuition: where $A$ can't be inverted, the pseudoinverse does the best it can, landing exactly in the row space.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>$A$ maps $\mathbb{R}^n\to\mathbb{R}^m$, so $A^+$ goes back, $\mathbb{R}^m\to\mathbb{R}^n$, and $\Sigma^+$ is the transpose-shaped $\Sigma$ with each nonzero $\sigma_i$ inverted:</p>
-      <p>
-        $$
-        \underbrace{A^+}_{n\times m}=\underbrace{V}_{n\times n}\ \underbrace{\Sigma^+}_{n\times m}\ \underbrace{U^T}_{m\times m}, \qquad
-        \underbrace{x^+}_{n\times1}=\underbrace{A^+}_{n\times m}\underbrace{b}_{m\times1}.
-        $$
-      </p>
+      <p class="idea">Invert the stretches you can, zero out the ones you can't. The result solves $Ax=b$ as well as possible, with the shortest $x$.</p>
+      <p>$$\underbrace{A^+}_{n\times m}=\underbrace{V}_{n\times n}\,\underbrace{\Sigma^+}_{n\times m}\,\underbrace{U^T}_{m\times m}, \qquad \Sigma^+_{ii}=\begin{cases}1/\sigma_i & \sigma_i\gt0\\0 & \text{otherwise}\end{cases}, \qquad x^+=A^+b.$$</p>
+      <p>$x^+$ is the minimum-norm least-squares solution; it lies in the row space $C(A^T)$.</p>
+      <p class="example-label">Example</p>
+      <p>$b=(1,1)=\sqrt2\,u_1$, so $x^+=\tfrac{\sqrt2}{\sqrt3}v_1=\tfrac13(1,1,2)$. $Ax^+=(1,1)$ &#10003;, and $x^+\perp v_3$: adding any null-space piece only makes $x$ longer.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Show $\max_{\|x\|=1}\|Ax\|=\sigma_1$, reached at $x=v_1$. (The largest stretch of $A$ is its top singular value.)</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Write $x=\sum_ic_iv_i$ with $\sum_ic_i^2=1$ ($V$ is an orthonormal basis; set $\sigma_i=0$ for $i\gt r$). Then $\|Ax\|^2=x^TA^TAx=\sum_i\sigma_i^2c_i^2\le\sigma_1^2\sum_ic_i^2=\sigma_1^2$, with equality at $c=(1,0,\dots)$, i.e. $x=v_1$. Example: $\|Av_1\|=\sqrt3$.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -214,7 +140,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

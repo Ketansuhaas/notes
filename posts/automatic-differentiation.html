@@ -13,7 +13,7 @@
   </script>
   <title>Automatic differentiation - Deep Learning Notes</title>
   <meta name="description" content="The computation graph, forward-mode and reverse-mode automatic differentiation as the general algorithms behind JVPs and VJPs, why reverse mode needs the forward pass stored first, the sum-over-children rule for shared nodes, and backpropagation as its special case.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,68 +43,87 @@
 
   <main>
     <article>
-      <h1>Automatic differentiation</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">deep-learning</span><span class="tag">gradients</span><span class="tag">automatic-differentiation</span><span class="tag">jacobian</span><span class="tag">backpropagation</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Automatic differentiation</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">deep-learning</span><span class="tag">gradients</span><span class="tag">automatic-differentiation</span><span class="tag">jacobian</span><span class="tag">backpropagation</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="backpropagation-via-jvps.html">Backpropagation via JVPs</a>, <a href="gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a> &middot; <strong>Leads to:</strong> <a href="reparameterization-trick.html">The reparameterization trick</a></p>
+
+      <p class="idea">Backprop is one case of a general machine. Write any program as a graph of simple operations, then push derivatives through it: forward along with the values, or backward from the output.</p>
 
       <h2>The computation graph</h2>
-      <p>Any numerical computation, however complicated, is a sequence of elementary operations: $v_1,\dots,v_k$ are the inputs, and every later $v_i$ ($i>k$) is computed from some of the earlier $v_j$'s, called its parents, through one elementary function with a known local Jacobian:</p>
-      <p>
-        $$
-        v_i = f_i\big(\{v_j : j \in \operatorname{parents}(i)\}\big).
-        $$
-      </p>
-      <p>$v_n$, the last node, is the final output (a scalar $\mathcal{L}$, for a loss). This is exactly the layered network from Backpropagation via Jacobian-vector products, written in full generality: there, $z_\ell$ and $h_\ell$ were nodes, $W_\ell h_{\ell-1}+b_\ell$ and $\sigma(\cdot)$ were the $f_i$'s, and the graph happened to be a plain chain, one parent per node.</p>
-      <p class="intuition"><em>Intuition: a computation graph is just a dependency diagram of every intermediate value a program computes, in the exact order each one becomes available.</em></p>
+      <p class="idea">Every program is a list of elementary operations. Each value is computed from earlier ones (its parents) by a function whose local derivative is known.</p>
+      <p>$$v_i=f_i\big(v_j:\ j\in\operatorname{pa}(i)\big), \qquad \text{local derivatives } \frac{\partial v_i}{\partial v_j}.$$</p>
+      <p class="example-label">Running example: $y=x^2+x$</p>
+      <p>$v_1=x,\quad v_2=v_1\cdot v_1,\quad v_3=v_2+v_1=y$. The input is used twice.</p>
 
-      <h2>Forward-mode: push derivatives forward</h2>
-      <p>Pick a direction for the inputs and track, alongside each node's ordinary value $v_i$, its directional derivative (tangent) $\dot v_i$ along that direction. Inputs are seeded directly; every later node's tangent is a sum of JVPs over its parents, computed in the same order the values themselves are computed:</p>
-      <p>
-        $$
-        \dot v_i = \sum_{j\,\in\,\operatorname{parents}(i)} J_{f_i}(v_j)\,\dot v_j.
-        $$
-      </p>
-      <p>Value and tangent can be computed together, node by node, in one forward sweep, because $\dot v_i$ only ever needs tangents of nodes already finished earlier in that same sweep.</p>
-      <p class="intuition"><em>Intuition: forward mode asks "if the inputs move this way, how does every downstream value move," and answers it in the same order the computation already runs.</em></p>
-      <p>One sweep produces one column of the full Jacobian (the directional derivative along one input direction); a full Jacobian with $n_{\text{in}}$ input dimensions needs $n_{\text{in}}$ sweeps, one seed direction at a time.</p>
+      <figure class="figure">
+        <svg viewBox="0 0 640 150" role="img" aria-label="Computation graph for y equals x squared plus x: x feeds a squaring node v2 and, directly, the output node y.">
+          <line class="axis" x1="141.5" y1="95.2" x2="298.5" y2="59.8"/>
+          <line class="axis" x1="341.5" y1="59.8" x2="498.5" y2="95.2"/>
+          <line class="axis" x1="142" y1="100" x2="498" y2="100"/>
+          <polygon class="pt" points="298.5,59.8 291.6,65.5 289.8,57.7"/>
+          <polygon class="pt" points="498.5,95.2 489.8,97.3 491.6,89.5"/>
+          <polygon class="pt" points="498,100 490,96 490,104"/>
+          <circle class="origin" cx="120" cy="100" r="22"/>
+          <circle class="origin" cx="320" cy="55" r="22"/>
+          <circle class="origin" cx="520" cy="100" r="22"/>
+          <text class="lbl" x="120" y="105" text-anchor="middle">x</text>
+          <text class="lbl" x="320" y="60" text-anchor="middle">v&#8322;</text>
+          <text class="lbl" x="520" y="105" text-anchor="middle">y</text>
+          <text class="lbl muted" x="320" y="22" text-anchor="middle">v&#8322; = x &#183; x</text>
+          <text class="lbl muted" x="205" y="70" text-anchor="middle">2x</text>
+          <text class="lbl muted" x="435" y="70" text-anchor="middle">1</text>
+          <text class="lbl muted" x="320" y="122" text-anchor="middle">1 (direct use)</text>
+        </svg>
+        <figcaption>Edges carry local derivatives. Two paths lead from $x$ to $y$; their contributions add: $2x+1$.</figcaption>
+      </figure>
 
-      <h2>Reverse-mode: push derivatives backward</h2>
-      <p>Run the ordinary forward pass first, storing every intermediate value $v_i$ (not just the final output). Then define the adjoint $\bar v_i := \partial\mathcal{L}/\partial v_i$, seeded at the output, $\bar v_n=1$, and sweep backward, in the reverse of the order the values were computed. A node's adjoint sums one VJP contribution from every child that used it:</p>
-      <p>
-        $$
-        \bar v_j = \sum_{i\,:\,j\,\in\,\operatorname{parents}(i)} \bar v_i\ J_{f_i}(v_j).
-        $$
-      </p>
-      <p>This is the exact recursion from Backpropagation via Jacobian-vector products ($g_{\ell-1}=g_{z_\ell}W_\ell$, etc.), with one difference made explicit: the sum. A plain chain has one child per node, so the sum there was always one term; a general graph does not.</p>
-      <p class="intuition"><em>Intuition: reverse mode asks "how much should this node change to move the one final output," one question per node, answered in exactly the reverse of the order the forward pass discovered them.</em></p>
+      <h2>Forward mode: tangents ride along</h2>
+      <p class="idea">Pick an input direction and carry each value's rate of change next to the value, in the order the program runs.</p>
+      <p>$$\dot v_i=\sum_{j\in\operatorname{pa}(i)}\frac{\partial v_i}{\partial v_j}\,\dot v_j, \qquad \text{seed } \dot x=v\ \Rightarrow\ \text{one sweep gives } Jv \text{ (one column of } J).$$</p>
+      <p class="example-label">Example at $x=3$, $\dot x=1$</p>
+      <table>
+        <tr><td>$v_1=3$</td><td>$\dot v_1=1$</td></tr>
+        <tr><td>$v_2=9$</td><td>$\dot v_2=2v_1\dot v_1=6$</td></tr>
+        <tr><td>$v_3=12$</td><td>$\dot v_3=\dot v_2+\dot v_1=7$</td></tr>
+      </table>
+      <p>$dy/dx=2x+1=7$. &#10003;</p>
 
-      <h2>Why a node's adjoint sums over every child</h2>
-      <p>Take $y = x^2 + x$, with $x$ feeding two places at once: $v_1=x$, $v_2=v_1\cdot v_1$, $v_3=v_2+v_1$, output $y=v_3$. Reverse sweep:</p>
-      <p>
-        $$
-        \bar v_3 = 1, \qquad \bar v_2 \mathrel{+}= \bar v_3\cdot\frac{\partial v_3}{\partial v_2}=1, \qquad \bar v_1 \mathrel{+}= \bar v_3\cdot\frac{\partial v_3}{\partial v_1}=1.
-        $$
-      </p>
-      <p>$v_1$ has a second child, $v_2$, not yet processed. Continuing to it adds a second contribution to the same $\bar v_1$:</p>
-      <p>
-        $$
-        \bar v_1 \mathrel{+}= \bar v_2\cdot\frac{\partial v_2}{\partial v_1} = 1\cdot 2v_1 = 2x, \qquad\text{total: } \bar v_1 = 1+2x.
-        $$
-      </p>
-      <p>$dy/dx=2x+1$ directly confirms it. &#10003;</p>
-      <p class="intuition"><em>Intuition: if a value is reused, every path it was reused along contributes its own share of blame (or credit) to the final output, and those shares add; skipping any one of them would silently undercount the gradient.</em></p>
+      <h2>Reverse mode: adjoints flow back</h2>
+      <p class="idea">Run the program and store every value. Then ask each node how much the output cares about it, in reverse order. A value used twice collects from both uses.</p>
+      <p>$$\bar v_j=\frac{\partial y}{\partial v_j}=\sum_{i:\ j\in\operatorname{pa}(i)}\bar v_i\,\frac{\partial v_i}{\partial v_j},$$ $$\text{seed } \bar y=1\ \Rightarrow\ \text{one sweep gives the whole gradient (one row of } J).$$</p>
+      <p class="example-label">Example at $x=3$</p>
+      <table>
+        <tr><td>$\bar v_3=1$</td><td></td></tr>
+        <tr><td>$\bar v_2=\bar v_3\cdot1=1$</td><td></td></tr>
+        <tr><td>$\bar v_1=\bar v_3\cdot1+\bar v_2\cdot2v_1=1+6=7$</td><td>two children, two terms</td></tr>
+      </table>
+      <p>The local derivative $2v_1$ needs the stored forward value: reverse mode is two passes and must keep activations (training's memory cost).</p>
+      <p>Backprop is this on a chain: one child per node, so the sum has one term, and $\bar v$ is the row $g$ in $g_{\ell-1}=g_{z_\ell}W_\ell$.</p>
 
-      <h2>Why reverse mode needs the forward pass stored first</h2>
-      <p>Forward mode's recursion only ever needs tangents of already-finished parents, so it can compute values and tangents together in one pass. Reverse mode's recursion needs $J_{f_i}(v_j)$, the local Jacobian evaluated at the actual value $v_j$ took during the computation, before any adjoint can be propagated through it. Those values are only known once the whole forward pass has finished, so reverse mode is unavoidably two passes: forward (compute and store every value), then backward (compute every adjoint using those stored values).</p>
-      <p class="intuition"><em>Intuition: forward mode builds its answer as it goes; reverse mode has to see where the computation ended up before it can work out how it got there.</em></p>
+      <h2>Cost: pick the smaller side</h2>
+      <p class="idea">A full Jacobian takes one sweep per input (forward) or one per output (reverse). Run the mode whose side is smaller.</p>
+      <table>
+        <tr><td>$J\in\mathbb{R}^{n_{\text{out}}\times n_{\text{in}}}$</td><td><strong>One sweep gives</strong></td><td><strong>Sweeps for all of $J$</strong></td><td><strong>Memory</strong></td></tr>
+        <tr><td>Forward</td><td>$Jv$, a column</td><td>$n_{\text{in}}$</td><td>small</td></tr>
+        <tr><td>Reverse</td><td>$u^TJ$, a row</td><td>$n_{\text{out}}$</td><td>stores all values</td></tr>
+      </table>
+      <p class="example-label">Example</p>
+      <p>Loss of a $10^9$-parameter model: $n_{\text{out}}=1$. Reverse: $1$ sweep. Forward: $10^9$.</p>
 
-      <h2>Cost: $n_{\text{in}}$ sweeps vs. $n_{\text{out}}$ sweeps</h2>
-      <p>A full Jacobian of a function with $n_{\text{in}}$ inputs and $n_{\text{out}}$ outputs costs $n_{\text{in}}$ forward-mode sweeps or $n_{\text{out}}$ reverse-mode sweeps. A scalar loss has $n_{\text{out}}=1$, so reverse mode needs exactly one sweep regardless of how many millions of parameters feed into it, which is why it is the only sane choice for training. The reverse holds too: a function with one input and a million outputs is a single forward-mode sweep away from its full Jacobian, and would cost a million reverse-mode sweeps instead.</p>
-      <p class="intuition"><em>Intuition: pick the mode that only has to run once, which means counting whichever side of the function, inputs or outputs, is smaller.</em></p>
-
-      <h2>Backpropagation is reverse-mode autodiff, specialized</h2>
-      <p>Backpropagation via Jacobian-vector products is this exact algorithm, run on one particular, simple graph: a chain, each node a matmul or an elementwise nonlinearity, one child per node, so the sum in the adjoint recursion never has more than one term to add. General autodiff handles arbitrary graphs, branches, shared weights, skip connections, anything where a value is reused, and the one new rule it needs beyond that post is exactly the sum over children derived above.</p>
-      <p class="intuition"><em>Intuition: every automatic differentiation library is running the same two recursions on whatever graph your code happens to build; a feedforward network is simply the case where that graph is a straight line.</em></p>
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>$y=x_1x_2+\sin x_1$. Write the graph, run one reverse sweep, and read off both $\partial y/\partial x_1$ and $\partial y/\partial x_2$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$v_3=x_1x_2$, $v_4=\sin x_1$, $y=v_3+v_4$. Seed: $\bar v_3=\bar v_4=1$.</p>
+          <p>$\bar x_2=\bar v_3\,x_1=x_1$. $\ \bar x_1=\bar v_3\,x_2+\bar v_4\cos x_1=x_2+\cos x_1$ ($x_1$ has two children, so two terms). One sweep, both partials.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -115,7 +134,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

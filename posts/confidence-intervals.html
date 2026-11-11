@@ -13,7 +13,7 @@
   </script>
   <title>Confidence intervals: the z and t statistics - Deep Learning Notes</title>
   <meta name="description" content="What a confidence interval actually claims, the z-statistic when sigma is known, and why replacing sigma with its sample estimate forces the heavier-tailed t-distribution with n-1 degrees of freedom instead of the normal.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,74 +43,68 @@
 
   <main>
     <article>
-      <h1>Confidence intervals: the z and t statistics</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">probability</span><span class="tag">statistics</span><span class="tag">confidence-intervals</span><span class="tag">t-distribution</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Confidence intervals: the z and t statistics</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">statistics</span><span class="tag">confidence-intervals</span><span class="tag">t-distribution</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="lln-and-clt.html">LLN and CLT</a>, <a href="sample-variance-and-degrees-of-freedom.html">Sample variance and degrees of freedom</a> &middot; <strong>Leads to:</strong> <a href="entropy-and-cross-entropy.html">Entropy and cross-entropy</a></p>
 
-      <h2>What a confidence interval claims</h2>
-      <p>$\mu$ is a fixed, unknown number; it is not random. A $(1-\alpha)$ confidence interval is a random interval, built from the sample $x_1,\dots,x_n$, with the property:</p>
-      <p>
-        $$
-        P\big(L(x_1,\dots,x_n) \leq \mu \leq U(x_1,\dots,x_n)\big) = 1-\alpha,
-        $$
-      </p>
-      <p>a statement about the random endpoints $L,U$, evaluated before any data is drawn. Once a specific sample is observed and $L,U$ become specific numbers, $\mu$ either is or is not between them: there is no probability left in that statement at all.</p>
-      <p class="intuition"><em>Intuition: "$95\%$ confidence" describes the procedure, not any one interval it produces; if you repeated the whole sampling process many times and built an interval each time, about $95\%$ of those intervals would contain $\mu$, but any single interval you are looking at either hit or missed.</em></p>
+      <h2>What "95%" claims</h2>
+      <p class="idea">$\mu$ is fixed; the interval is random. "95%" describes the procedure: repeat it many times and 95% of the intervals catch $\mu$. Any one interval either hit or missed.</p>
+      <p>$$P\big(L(x_{1:n})\le\mu\le U(x_{1:n})\big)=1-\alpha.$$</p>
+      <p>The probability is over samples (random $L,U$), not over $\mu$.</p>
 
-      <h2>The z-statistic, when $\sigma$ is known</h2>
-      <p>From the central limit theorem (Law of large numbers and the central limit theorem):</p>
-      <p>
-        $$
-        Z_n := \frac{\bar x_n-\mu}{\sigma/\sqrt n} \ \xrightarrow{\ d\ }\ \mathcal{N}(0,1).
-        $$
-      </p>
-      <p>Let $z_{\alpha/2}$ be the value with $P(Z>z_{\alpha/2})=\alpha/2$ for $Z\sim\mathcal{N}(0,1)$ (e.g. $z_{0.025}=1.96$). For large $n$, $P(-z_{\alpha/2}\leq Z_n\leq z_{\alpha/2})\approx1-\alpha$. Rearranging the inequality to isolate $\mu$ in the middle:</p>
-      <p>
-        $$
-        P\Big(\bar x_n - z_{\alpha/2}\,\frac{\sigma}{\sqrt n} \ \leq\ \mu \ \leq\ \bar x_n + z_{\alpha/2}\,\frac{\sigma}{\sqrt n}\Big) \approx 1-\alpha,
-        \qquad \text{i.e.} \qquad \mu \in \bar x_n \pm z_{\alpha/2}\frac{\sigma}{\sqrt n}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: the interval is just "sample mean, plus or minus a safety margin"; the margin is the standard error of $\bar x_n$, $\sigma/\sqrt n$, scaled by however many standard deviations the normal distribution needs to cover $1-\alpha$ of its mass.</em></p>
+      <figure class="figure">
+        <svg viewBox="0 0 640 190" role="img" aria-label="Eight intervals from eight samples, drawn as horizontal bars around a vertical line at mu; seven cross the line, one misses.">
+          <line class="faint" x1="320" y1="22" x2="320" y2="182"/>
+          <text class="lbl" x="326" y="16">&#956; (fixed)</text>
+          <line class="axis" x1="245" y1="30" x2="355" y2="30"/><circle class="pt" cx="300" cy="30" r="3.5"/>
+          <line class="axis" x1="280" y1="50" x2="410" y2="50"/><circle class="pt" cx="345" cy="50" r="3.5"/>
+          <line class="axis" x1="260" y1="70" x2="360" y2="70"/><circle class="pt" cx="310" cy="70" r="3.5"/>
+          <line class="axis" x1="230" y1="90" x2="350" y2="90"/><circle class="pt" cx="290" cy="90" r="3.5"/>
+          <line class="axis" x1="342" y1="110" x2="458" y2="110"/><circle class="pt" cx="400" cy="110" r="3.5"/>
+          <line class="axis" x1="268" y1="130" x2="392" y2="130"/><circle class="pt" cx="330" cy="130" r="3.5"/>
+          <line class="axis" x1="263" y1="150" x2="367" y2="150"/><circle class="pt" cx="315" cy="150" r="3.5"/>
+          <line class="axis" x1="269" y1="170" x2="401" y2="170"/><circle class="pt" cx="335" cy="170" r="3.5"/>
+          <text class="lbl muted" x="470" y="114">miss</text>
+        </svg>
+        <figcaption>Eight samples, eight intervals $\bar x_n\pm$ margin. Seven cover $\mu$.</figcaption>
+      </figure>
 
-      <h2>The problem: $\sigma$ is usually unknown too</h2>
-      <p>$\sigma$ is rarely known in practice. The natural fix is to plug in the unbiased sample estimate $\hat\sigma$ (Sample variance and degrees of freedom), dividing by $n-1$:</p>
-      <p>
-        $$
-        T_n := \frac{\bar x_n-\mu}{\hat\sigma/\sqrt n}.
-        $$
-      </p>
-      <p>$T_n$ has the same form as $Z_n$, but $\hat\sigma$ is itself random, estimated from the same $n$ points as $\bar x_n$. For large $n$, $\hat\sigma\to\sigma$ (law of large numbers again), so $T_n$ behaves like $Z_n$. For small $n$, the extra randomness in $\hat\sigma$ makes $T_n$ swing further from $0$ than $Z_n$ would, more often than a true $\mathcal{N}(0,1)$ allows.</p>
-      <p class="intuition"><em>Intuition: $\hat\sigma$ occasionally comes out too small just by chance, since it too is only an estimate; when that happens $T_n$'s denominator is too small and $T_n$ overshoots, so $T_n$'s distribution needs heavier tails than the normal to stay honest.</em></p>
+      <h2>$\sigma$ known: the z-interval</h2>
+      <p class="idea">Estimate $\pm$ margin. The margin is the standard error $\sigma/\sqrt n$ times how many standard deviations the normal needs to hold $1-\alpha$ of its mass.</p>
+      <p>$$Z_n=\frac{\bar x_n-\mu}{\sigma/\sqrt n}\approx\mathcal N(0,1) \ \ \Rightarrow\ \ \mu\in\bar x_n\pm z_{\alpha/2}\frac{\sigma}{\sqrt n}, \qquad z_{0.025}=1.96.$$</p>
+      <p class="example-label">Example</p>
+      <p>$n=100$, $\bar x=5.2$, $\sigma=2$: standard error $0.2$, so $\mu\in5.2\pm0.39=[4.81,\ 5.59]$.</p>
 
-      <h2>The t-distribution</h2>
-      <p>If the $x_i$ are themselves $\mathcal{N}(\mu,\sigma^2)$, then exactly, for every $n$ (not just approximately):</p>
-      <p>
-        $$
-        T_n \ \sim\ t_{n-1},
-        $$
-      </p>
-      <p>Student's $t$-distribution with $n-1$ degrees of freedom, the same $n-1$ as the degrees of freedom spent estimating $\hat\sigma$ (Sample variance and degrees of freedom). If the $x_i$ are not Gaussian but $n$ is reasonably large, $T_n$ is only approximately $t_{n-1}$ (via the CLT and $\hat\sigma\to\sigma$), which is the more common situation in practice. As $n\to\infty$, $t_{n-1}\to\mathcal{N}(0,1)$: more data makes $\hat\sigma$ more reliable, and the correction for estimating it shrinks away.</p>
-      <p class="intuition"><em>Intuition: $t_{n-1}$ is exactly $\mathcal{N}(0,1)$ with its tails fattened by one extra, controllable source of uncertainty, not knowing $\sigma$; fewer degrees of freedom (smaller $n$) means that uncertainty is larger and the tails are fatter, and more degrees of freedom shrinks it back toward the normal.</em></p>
+      <h2>$\sigma$ unknown: the t-interval</h2>
+      <p class="idea">Plug in $\hat\sigma$ (divide by $n-1$). But $\hat\sigma$ is random too: when it comes out small, $T_n$ overshoots. So $T_n$ needs heavier tails than $\mathcal N(0,1)$.</p>
+      <p>$$T_n=\frac{\bar x_n-\mu}{\hat\sigma/\sqrt n}\sim t_{n-1} \ \ \Rightarrow\ \ \mu\in\bar x_n\pm t_{n-1,\alpha/2}\frac{\hat\sigma}{\sqrt n}.$$</p>
+      <p>Exact if the $x_i$ are Gaussian; approximate otherwise (CLT). The $n-1$ is the same degrees of freedom left in $\hat\sigma$. As $n\to\infty$, $t_{n-1}\to\mathcal N(0,1)$.</p>
+      <table>
+        <tr><td>$n$</td><td>$5$</td><td>$10$</td><td>$30$</td><td>$\infty$</td></tr>
+        <tr><td>$t_{n-1,\,0.025}$</td><td>$2.78$</td><td>$2.26$</td><td>$2.05$</td><td>$1.96$</td></tr>
+      </table>
+      <p class="example-label">Example</p>
+      <p>$n=10$, $\bar x=5.2$, $\hat\sigma=2$: standard error $0.632$. t-margin $2.26\cdot0.632=1.43$ vs. z-margin $1.24$. Not knowing $\sigma$ costs a wider interval.</p>
 
-      <h2>The resulting interval</h2>
-      <p>Let $t_{n-1,\alpha/2}$ be the value with $P(T>t_{n-1,\alpha/2})=\alpha/2$ for $T\sim t_{n-1}$. The same rearrangement as before, with $\hat\sigma$ and $t_{n-1,\alpha/2}$ in place of $\sigma$ and $z_{\alpha/2}$:</p>
-      <p>
-        $$
-        \mu \in \bar x_n \pm t_{n-1,\alpha/2}\,\frac{\hat\sigma}{\sqrt n}.
-        $$
-      </p>
-      <p>$t_{n-1,\alpha/2}$ is always at least as large as $z_{\alpha/2}$, so this interval is never narrower than the $z$-interval would be with the true $\sigma$: the price of not knowing $\sigma$ is paid honestly, as a wider interval, not ignored.</p>
+      <h2>Side by side</h2>
+      <table>
+        <tr><td>$\sigma$ known</td><td>$\bar x_n\pm z_{\alpha/2}\,\sigma/\sqrt n$</td></tr>
+        <tr><td>$\sigma$ estimated</td><td>$\bar x_n\pm t_{n-1,\alpha/2}\,\hat\sigma/\sqrt n$</td></tr>
+      </table>
 
-      <h2>z vs. t, side by side</h2>
-      <p>
-        $$
-        \text{$\sigma$ known: } \ \mu \in \bar x_n \pm z_{\alpha/2}\frac{\sigma}{\sqrt n},
-        \qquad
-        \text{$\sigma$ estimated: } \ \mu \in \bar x_n \pm t_{n-1,\alpha/2}\frac{\hat\sigma}{\sqrt n}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: same formula, "estimate plus or minus a margin"; every unknown quantity that has to be estimated from the data, rather than handed to you, adds its own share of uncertainty to the margin, and here that share is exactly the gap between $t_{n-1}$ and $\mathcal{N}(0,1)$.</em></p>
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Solve $-z\le Z_n\le z$ for $\mu$ to get the z-interval. Then find how large $n$ must be for a 95% half-width of at most $E$. Try $\sigma=2$, $E=0.1$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Multiply by $\sigma/\sqrt n$: $-z\sigma/\sqrt n\le\bar x_n-\mu\le z\sigma/\sqrt n$. Rearrange: $\bar x_n-z\sigma/\sqrt n\le\mu\le\bar x_n+z\sigma/\sqrt n$. Half-width $z\sigma/\sqrt n\le E\iff n\ge(z\sigma/E)^2=(1.96\cdot20)^2\approx1537$.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -121,7 +115,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

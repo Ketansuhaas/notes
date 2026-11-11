@@ -13,7 +13,7 @@
   </script>
   <title>Rank, subspaces, and projections - Deep Learning Notes</title>
   <meta name="description" content="Rank seen via the reduced row echelon block form, tall/wide/square solvability of Ax=b, vector spaces and subspaces, the four fundamental subspaces, and the projection matrix derived from the residual condition.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,172 +43,84 @@
 
   <main>
     <article>
-      <h1>Rank, subspaces, and projections</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">rank</span><span class="tag">subspaces</span><span class="tag">projections</span><span class="tag">span</span><span class="tag">basis</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Rank, subspaces, and projections</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">rank</span><span class="tag">subspaces</span><span class="tag">projections</span><span class="tag">span</span><span class="tag">basis</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="four-views-of-matrix-multiplication.html">Four views of matrix multiplication</a>, <a href="geometry-in-rn.html">Lines, planes, and spheres in $\mathbb{R}^n$</a> &middot; <strong>Leads to:</strong> <a href="eigenvalues-and-defectiveness.html">Eigenvalues, eigenvectors, and defectiveness</a>, <a href="singular-value-decomposition.html">Singular value decomposition</a></p>
 
-      <h2>Span and basis</h2>
-      <p>The span of vectors $v_1,\dots,v_k$ is every linear combination of them:</p>
-      <p>
-        $$
-        \operatorname{span}(v_1,\dots,v_k) = \{c_1v_1+\cdots+c_kv_k \ :\ c_i\in\mathbb{R}\},
-        $$
-      </p>
-      <p>itself a subspace: closed under addition and scaling, and it contains $0$ (take every $c_i=0$).</p>
-      <p class="intuition"><em>Intuition: the span is everywhere you can reach by stretching and adding the given vectors.</em></p>
-      <p>A <strong>basis</strong> of a subspace $S$ is a spanning set for $S$ that is also linearly independent (no vector in it is a combination of the others). Every basis of $S$ has the same number of vectors, its <strong>dimension</strong> $\dim S$.</p>
-      <p class="intuition"><em>Intuition: a basis is a minimal spanning set, just enough vectors to reach all of $S$ with no redundancy; dropping any one of them would shrink what's reachable.</em></p>
-      <p>$A$'s columns span $C(A)$, and a basis for that span is exactly its pivot columns, so:</p>
-      <p>
-        $$
-        \operatorname{rank}(A) = \dim\operatorname{span}(a_1,\dots,a_n) = \dim C(A).
-        $$
-      </p>
+      <p class="idea">$A$ maps $\mathbb{R}^n\to\mathbb{R}^m$. Four subspaces say what it reaches, what it kills, and how close it gets otherwise.</p>
+
+      <h2>Subspaces, span, basis</h2>
+      <p class="idea">A subspace is a flat slice through the origin. A span is everywhere some vectors can reach; a basis reaches it with no redundancy.</p>
+      <table>
+        <tr><td>Subspace</td><td>closed under $+$ and scaling, contains $0$</td></tr>
+        <tr><td>Span</td><td>$\operatorname{span}(v_1,\dots,v_k)=\{c_1v_1+\cdots+c_kv_k\}$</td></tr>
+        <tr><td>Basis</td><td>independent spanning set (drop one and the span shrinks)</td></tr>
+        <tr><td>Dimension</td><td>size of any basis</td></tr>
+      </table>
+      <p class="example-label">Example</p>
+      <p>$(1,0,0),(0,1,0),(1,1,0)$ span the $xy$-plane. Any two form a basis, so $\dim=2$.</p>
 
       <h2>Rank</h2>
-      <p>
-        $\operatorname{rank}(A) = \dim C(A) = \dim C(A^T)$ = # independent columns = # independent rows = # pivots.
-      </p>
-      <p class="intuition"><em>Intuition: the number of genuinely independent directions $A$ can produce.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>A rank-1 matrix is a column times a row (an outer product), which is why all its columns are multiples of one vector:</p>
-      <p>
-        $$
-        \underbrace{\begin{pmatrix} 1 & 2 \\ 2 & 4 \\ 3 & 6 \end{pmatrix}}_{3\times2}
-        =\underbrace{\begin{pmatrix} 1 \\ 2 \\ 3 \end{pmatrix}}_{3\times1}\underbrace{\begin{pmatrix} 1 & 2 \end{pmatrix}}_{1\times2}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: rank $r$ means $A$ can be squeezed through an $r$-dimensional bottleneck: $(m\times r)(r\times n)$.</em></p>
-      <p>Row-reduce any $A$ (permuting columns if needed) and that bottleneck becomes visible directly, as the size of an identity block:</p>
-      <p>
-        $$
-        R = \begin{pmatrix} I_r & F \\ 0 & 0 \end{pmatrix}.
-        $$
-      </p>
-      <p>$I_r$ marks the $r$ pivot columns; $F$ expresses every free column as a combination of the pivot columns; the zero rows are exactly the rows that were dependent on the others and reduced away.</p>
-      <p class="intuition"><em>Intuition: rank isn't an abstract count, it's the size of the identity block left standing after canceling every row and column you possibly could.</em></p>
+      <p class="idea">How many independent directions $A$ can output. $Ax$ mixes columns (view 2), so rank counts the genuinely different columns.</p>
+      <p>$$\operatorname{rank}A=\dim C(A)=\dim C(A^T)=\#\text{pivots}, \qquad \underbrace{A}_{m\times n}=\underbrace{B}_{m\times r}\underbrace{C}_{r\times n}\ (\text{an } r\text{-dim bottleneck}).$$</p>
+      <p>Row-reduced (columns permuted if needed), the bottleneck is an identity block:</p>
+      <p>$$R=\begin{pmatrix}I_r&F\\0&0\end{pmatrix}:$$ $$I_r=\text{pivot columns},\ \ F=\text{free columns as mixes of pivots},\ \ 0=\text{dependent rows}.$$</p>
+      <p class="example-label">Example: rank 1 = one column times one row</p>
+      <p>$$\underbrace{\begin{pmatrix}1&2\\2&4\\3&6\end{pmatrix}}_{3\times2}=\underbrace{\begin{pmatrix}1\\2\\3\end{pmatrix}}_{3\times1}\underbrace{\begin{pmatrix}1&2\end{pmatrix}}_{1\times2}.$$</p>
 
-      <h2>Solving $Ax = b$</h2>
-      <p>Behaviour depends on shape and rank $r$ of $A \in \mathbb{R}^{m \times n}$. Here are the three shapes side by side ($m$ equations, $n$ unknowns):</p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{\begin{pmatrix}\ast&\ast\\\ast&\ast\\\ast&\ast\\\ast&\ast\end{pmatrix}}_{\text{tall, } m>n}
-        \begin{pmatrix}x_1\\x_2\end{pmatrix}=\begin{pmatrix}b_1\\b_2\\b_3\\b_4\end{pmatrix},
-        $$
-      </p>
-      <p>
-        $$
-        \underbrace{\begin{pmatrix}\ast&\ast&\ast&\ast\\\ast&\ast&\ast&\ast\end{pmatrix}}_{\text{wide, } m&lt;n}
-        \begin{pmatrix}x_1\\x_2\\x_3\\x_4\end{pmatrix}=\begin{pmatrix}b_1\\b_2\end{pmatrix},
-        $$
-      </p>
-      <p>
-        $$
-        \underbrace{\begin{pmatrix}\ast&\ast&\ast\\\ast&\ast&\ast\\\ast&\ast&\ast\end{pmatrix}}_{\text{square, } m=n}
-        \begin{pmatrix}x_1\\x_2\\x_3\end{pmatrix}=\begin{pmatrix}b_1\\b_2\\b_3\end{pmatrix}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: tall means more equations than unknowns (over-constrained); wide means fewer equations than unknowns (under-constrained); square is balanced.</em></p>
+      <h2>The four fundamental subspaces</h2>
+      <p class="idea">$C(A)$: everywhere $Ax$ can reach. $N(A)$: everything $A$ crushes to $0$. Each has a perpendicular partner from $A^T$.</p>
+      <table>
+        <tr><td>Column space $C(A)$</td><td>in $\mathbb{R}^m$</td><td>$\dim r$</td></tr>
+        <tr><td>Null space $N(A)=\{x:Ax=0\}$</td><td>in $\mathbb{R}^n$</td><td>$\dim n-r$</td></tr>
+        <tr><td>Row space $C(A^T)$</td><td>in $\mathbb{R}^n$</td><td>$\dim r$</td></tr>
+        <tr><td>Left null space $N(A^T)$</td><td>in $\mathbb{R}^m$</td><td>$\dim m-r$</td></tr>
+      </table>
+      <p>$$N(A)\perp C(A^T), \qquad N(A^T)\perp C(A). \qquad (Ax=0 \text{ says every row of } A \text{ is } \perp x.)$$</p>
+      <p class="example-label">Example: the rank-1 matrix above</p>
+      <p>$C(A)=\operatorname{span}(1,2,3)$, $C(A^T)=\operatorname{span}(1,2)$, $N(A)=\operatorname{span}(2,-1)$, $N(A^T)$ = the plane $x+2y+3z=0$. Check $(1,2)\cdot(2,-1)=0$. &#10003;</p>
 
-      <p>Each case specializes the block form $R=\begin{pmatrix}I_r&F\\0&0\end{pmatrix}$ from above:</p>
-      <p><strong>Tall</strong> ($m > n$), full column rank $r = n$: $N(A) = \{0\}$, so at most one solution. No column is free, so $F$ vanishes and only the zero rows remain:</p>
-      <p>
-        $$
-        R = \begin{pmatrix} I_n \\ 0 \end{pmatrix}.
-        $$
-      </p>
-      <p><strong>Wide</strong> ($m < n$), full row rank $r = m$: $C(A) = \mathbb{R}^m$, so always consistent; $n - r$ free variables $\Rightarrow$ infinitely many solutions. No row is redundant, so no zero rows survive, and every non-pivot column lands in $F$:</p>
-      <p>
-        $$
-        R = \begin{pmatrix} I_m & F \end{pmatrix}.
-        $$
-      </p>
-      <p><strong>Square</strong> ($m = n$): full rank $\Rightarrow$ invertible, unique $x = A^{-1}b$ for every $b$; neither $F$ nor zero rows survive:</p>
-      <p>
-        $$
-        R = I_n.
-        $$
-      </p>
-      <p>Rank-deficient $\Rightarrow$ no solution or infinitely many, depending on $b$.</p>
+      <h2>Solving $Ax=b$</h2>
+      <p class="idea">Solvable iff $b\in C(A)$. Unique iff $N(A)=\{0\}$. Shape and rank decide which.</p>
+      <table>
+        <tr><td>Tall, $m\gt n$, $r=n$</td><td>$R=\begin{pmatrix}I_n\\0\end{pmatrix}$</td><td>$N(A)=\{0\}$: at most one solution</td></tr>
+        <tr><td>Wide, $m\lt n$, $r=m$</td><td>$R=\begin{pmatrix}I_m&F\end{pmatrix}$</td><td>$C(A)=\mathbb{R}^m$: always solvable, $n-m$ free variables</td></tr>
+        <tr><td>Square, $r=n$</td><td>$R=I_n$</td><td>unique $x=A^{-1}b$</td></tr>
+        <tr><td>Rank-deficient</td><td>zero rows and $F$</td><td>none or infinitely many</td></tr>
+      </table>
+      <p class="example-label">Example: rank-1 $A$ above</p>
+      <p>$b=(1,2,3)\in C(A)$: $x=(1,0)+t(2,-1)$, infinitely many. $b=(1,0,0)\notin C(A)$: no solution.</p>
 
-      <h2>Vector space, subspace</h2>
-      <p>
-        Vector space $V$: closed under addition and scalar multiplication, $0 \in V$.
-        Subspace $S \subseteq V$: a subset that is itself a vector space.
-      </p>
-      <p class="intuition"><em>Intuition: a subspace is a flat slice of the space that passes through the origin.</em></p>
-
-      <h2>Fundamental subspaces</h2>
-      <p>For $A\in\mathbb{R}^{m\times n}$ with $\operatorname{rank}(A) = r$, four subspaces:</p>
-      <ul>
-        <li>Column space $C(A) \subseteq \mathbb{R}^m$, $\dim = r$</li>
-        <li>Null space $N(A) = \{x : Ax = 0\} \subseteq \mathbb{R}^n$, $\dim = n - r$</li>
-        <li>Row space $C(A^T) \subseteq \mathbb{R}^n$, $\dim = r$</li>
-        <li>Left null space $N(A^T) \subseteq \mathbb{R}^m$, $\dim = m - r$</li>
-      </ul>
-      <p class="intuition"><em>Intuition: $C(A)$ is everywhere $Ax$ can reach; $N(A)$ is everything that collapses to $0$.</em></p>
-      <p>
-        $$
-        N(A) \perp C(A^T) \ \text{in } \mathbb{R}^n, \qquad N(A^T) \perp C(A) \ \text{in } \mathbb{R}^m.
-        $$
-      </p>
-
-      <h2>Projection, via the residual</h2>
-      <p class="intuition"><em>Intuition: the closest point in a subspace is the one whose leftover error is perpendicular to it.</em></p>
-      <p><strong>Onto $C(A)$</strong>: write $p = A\hat x$, residual $e = b - A\hat x$. Require $e \perp C(A)$, i.e. $A^Te = 0$:</p>
-      <p>
-        $$
-        A^T(b - A\hat x) = 0 \;\Rightarrow\; A^TA\,\hat x = A^Tb \;\Rightarrow\; \hat x = (A^TA)^{-1}A^Tb
-        \;\Rightarrow\; p = \underbrace{A(A^TA)^{-1}A^T}_{P}\,b.
-        $$
-      </p>
-      <p>Tracking shapes ($A$ tall, $m\times n$): the middle factor is small, the outer factors are tall and wide, and $P$ ends up $m\times m$ while only having rank $n$:</p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        P=\underbrace{A}_{m\times n}\ \underbrace{(A^TA)^{-1}}_{n\times n}\ \underbrace{A^T}_{n\times m}\in\mathbb{R}^{m\times m},
-        \qquad \hat x=\underbrace{(A^TA)^{-1}A^T}_{n\times m}\,\underbrace{b}_{m\times1}\in\mathbb{R}^{n}.
-        $$
-      </p>
+      <h2>Projection</h2>
+      <p class="idea">If $b$ is out of reach, take the closest reachable point: the one whose error is perpendicular to everything reachable.</p>
+      <p>$$e=b-A\hat x\perp C(A) \iff A^T(b-A\hat x)=0 \iff A^TA\,\hat x=A^Tb.$$</p>
+      <p>With independent columns ($A$ tall, rank $n$):</p>
+      <p>$$\hat x=\underbrace{(A^TA)^{-1}A^T}_{n\times m}\,\underbrace{b}_{m\times1}, \qquad P=\underbrace{A}_{m\times n}\underbrace{(A^TA)^{-1}}_{n\times n}\underbrace{A^T}_{n\times m}\ \ (m\times m,\ \text{rank } n).$$</p>
+      <p>Onto a single line $a$: $P=\dfrac{aa^T}{a^Ta}$.</p>
+      <p class="example-label">Example</p>
+      <p>$a=(1,1)$, $b=(2,0)$: $\hat x=\tfrac{a^Tb}{a^Ta}=1$, $p=(1,1)$, $e=(1,-1)\perp a$. &#10003;</p>
 
       <h2>The big picture</h2>
-      <p>
-        $A$ is a map taking a vector from one space ($\mathbb{R}^n$) to another ($\mathbb{R}^m$).
-        It's constrained both ways: it can't reach every point of the output space, and it
-        can't keep every input alive: some vectors just die to $0$.
-      </p>
-      <p>
-        $$
-        \mathbb{R}^m = C(A) \oplus N(A^T), \qquad \mathbb{R}^n = C(A^T) \oplus N(A).
-        $$
-      </p>
+      <p class="idea">$A$ sees only the row-space part of its input and reaches only the column space. The null spaces are its blind spots.</p>
+      <p>$$\mathbb{R}^n=C(A^T)\oplus N(A), \qquad \mathbb{R}^m=C(A)\oplus N(A^T).$$</p>
+      <p>$$Ax=A(x_{\text{row}}+x_{\text{null}})=Ax_{\text{row}}, \qquad b=\underbrace{b_{\text{col}}}_{\text{reachable}}+\underbrace{b_\perp}_{\text{never reached}}.$$</p>
+      <p>$A$ maps row space one-to-one onto column space; least squares solves $Ax=b_{\text{col}}$.</p>
+      <p class="example-label">Example: rank-1 $A$, $x=(1,0)$</p>
+      <p>$x_{\text{row}}=\tfrac15(1,2)$, $x_{\text{null}}=\tfrac25(2,-1)$. Then $Ax_{\text{row}}=\tfrac15(5,10,15)=(1,2,3)=Ax$. &#10003;</p>
 
-      <p><strong>Output side.</strong> Every $b$ splits uniquely into a reachable part and a part $A$ is blind to:</p>
-      <p>
-        $$
-        b = b_{\text{col}} + b_\perp, \quad b_{\text{col}} \in C(A), \ b_\perp \in N(A^T).
-        $$
-      </p>
-      <p>$Ax$ can only ever land in $C(A)$, so $b_\perp$ can never be reached; the best we can do is $Ax = b_{\text{col}}$, exactly the projection above.</p>
-      <p class="intuition"><em>Intuition: $b_\perp$ is the part of $b$ that $A$ is structurally blind to.</em></p>
-
-      <p><strong>Input side.</strong> Every $x$ splits uniquely too:</p>
-      <p>
-        $$
-        x = x_{\text{row}} + x_{\text{null}}, \quad x_{\text{row}} \in C(A^T), \ x_{\text{null}} \in N(A).
-        $$
-      </p>
-      <p>
-        $$
-        Ax = A(x_{\text{row}} + x_{\text{null}}) = Ax_{\text{row}} + \underbrace{Ax_{\text{null}}}_{=\,0} = Ax_{\text{row}}.
-        $$
-      </p>
-      <p>The null-space part of $x$ is invisible to $A$: only $x_{\text{row}}$ ever matters.</p>
-      <p class="intuition"><em>Intuition: $A$ only ever "sees" the row-space part of its input.</em></p>
-      <p>
-        Together: $A$ is a bijection from the row space onto the column space, with $N(A)$ and $N(A^T)$ as the blind spots on either side.
-      </p>
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Prove $N(A^TA)=N(A)$. Conclude that $A^TA$ is invertible exactly when $A$ has independent columns.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$Ax=0\Rightarrow A^TAx=0$. Conversely, $A^TAx=0\Rightarrow x^TA^TAx=\|Ax\|^2=0\Rightarrow Ax=0$. Same null space, so the $n\times n$ matrix $A^TA$ is invertible $\iff N(A)=\{0\}\iff\operatorname{rank}A=n$.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -219,7 +131,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

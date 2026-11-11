@@ -13,7 +13,7 @@
   </script>
   <title>Eigenvalues, eigenvectors, and defectiveness - Deep Learning Notes</title>
   <meta name="description" content="Eigenvalues and eigenvectors, their connection to rank, algebraic vs. geometric multiplicity, and defectiveness.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,38 +43,20 @@
 
   <main>
     <article>
-      <h1>Eigenvalues, eigenvectors, and defectiveness</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">diagonalization</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Eigenvalues, eigenvectors, and defectiveness</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">eigenvalues</span><span class="tag">diagonalization</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="linear-algebra-fundamentals.html">Rank, subspaces, and projections</a>, <a href="four-views-of-matrix-multiplication.html">Four views of matrix multiplication</a> &middot; <strong>Leads to:</strong> <a href="spectral-theorem.html">The spectral theorem</a>, <a href="dynamics-in-the-eigenbasis.html">Dynamics in the eigenbasis</a></p>
 
       <h2>Eigenvalues and eigenvectors</h2>
-      <p>
-        $$
-        Av = \lambda v, \quad v \neq 0.
-        $$
-      </p>
-      <p>$\lambda$: eigenvalue. $v$: eigenvector. Found from $\det(A - \lambda I) = 0$ (characteristic equation).</p>
-      <p class="intuition"><em>Intuition: eigenvectors are the directions $A$ doesn't transform at all, it only scales them.</em></p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{A}_{n\times n}\ \underbrace{v}_{n\times1} = \lambda\ \underbrace{v}_{n\times1}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: an $n\times n$ matrix always sends an $n\times1$ vector to another $n\times1$ vector; an eigenvector is the special case where that output vector is just a rescaled copy of the input, same shape, same line.</em></p>
+      <p class="idea">Most vectors get turned by $A$. Eigenvectors are the special directions it only stretches; $\lambda$ is the stretch factor.</p>
+      <p>$$\underbrace{A}_{n\times n}\underbrace{v}_{n\times1}=\lambda\underbrace{v}_{n\times1},\ v\neq0 \iff N(A-\lambda I)\neq\{0\} \iff \det(A-\lambda I)=0.$$</p>
       <p class="example-label">Example</p>
-      <p>
-        $$
-        A = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}: \quad
-        \det(A-\lambda I) = \lambda^2 - 4\lambda + 3 = 0 \;\Rightarrow\; \lambda = 1, 3.
-        $$
-      </p>
-      <p>
-        $$
-        \lambda=3: (A-3I)v=0 \Rightarrow v = \begin{pmatrix}1\\1\end{pmatrix}, \qquad
-        \lambda=1: (A-I)v=0 \Rightarrow v = \begin{pmatrix}1\\-1\end{pmatrix}.
-        $$
-      </p>
+      <p>$$A=\begin{pmatrix}2&1\\1&2\end{pmatrix}: \ \lambda^2-4\lambda+3=0 \Rightarrow \lambda=3,1. \qquad \lambda=3: v=\begin{pmatrix}1\\1\end{pmatrix}, \quad \lambda=1: v=\begin{pmatrix}1\\-1\end{pmatrix}.$$</p>
 
       <figure class="figure">
         <svg viewBox="0 0 240 200" role="img" aria-label="For A with eigenvector v=(1,1), Av=3v stays on the same line through the origin; for a non-eigenvector u=(1,0), Au=(2,1) rotates off its line">
@@ -96,103 +78,29 @@
           <text class="lbl" x="82" y="178">u</text>
           <text class="lbl muted" x="117" y="130">Au</text>
         </svg>
-        <figcaption>With $A=\begin{pmatrix}2&1\\1&2\end{pmatrix}$: the eigenvector $v=(1,1)$ maps to $Av=3v$, staying on the same line through the origin. The non-eigenvector $u=(1,0)$ maps to $Au=(2,1)$, which does not.</figcaption>
+        <figcaption>$v=(1,1)$ stays on its line ($Av=3v$). $u=(1,0)$ gets turned ($Au=(2,1)$).</figcaption>
       </figure>
 
-      <h2>Eigenvalues and rank</h2>
-      <p>
-        $$
-        \dim N(A) = n - \operatorname{rank}(A) \quad \text{(rank–nullity)}.
-        $$
-      </p>
-      <p>
-        $N(A) = N(A - 0I)$ is the eigenspace of $\lambda = 0$, so $\dim N(A)$ is $0$'s <em>geometric</em> multiplicity.
-        Hence $\operatorname{rank}(A) = n - (\text{geometric multiplicity of } 0)$, always true.
-        If $A$ is diagonalizable, this equals the count of nonzero eigenvalues.
-      </p>
-      <p class="intuition"><em>Intuition: $\lambda=0$ marks directions $A$ collapses; everything else contributes to rank.</em></p>
+      <h2>Diagonalization</h2>
+      <p class="idea">With $n$ independent eigenvectors, use them as coordinates. In those coordinates $A$ is a pure scaling.</p>
+      <p>$$A\underbrace{\begin{pmatrix}v_1&\cdots&v_n\end{pmatrix}}_{V,\ n\times n}=\begin{pmatrix}\lambda_1v_1&\cdots&\lambda_nv_n\end{pmatrix}=V\underbrace{\Lambda}_{\operatorname{diag}(\lambda_i)}\quad(\text{always}).$$</p>
+      <p>$$A=V\Lambda V^{-1} \iff V \text{ invertible} \iff \text{the eigenvectors are independent}.$$</p>
       <p class="example-label">Example</p>
-      <p>
-        $$
-        A = \begin{pmatrix} 1 & 2 \\ 2 & 4 \end{pmatrix}\ (\operatorname{rank} 1): \quad
-        \det(A-\lambda I) = \lambda^2 - 5\lambda = 0 \;\Rightarrow\; \lambda = 0, 5.
-        $$
-      </p>
-      <p>
-        $$
-        N(A) = \operatorname{span}\begin{pmatrix}2\\-1\end{pmatrix}, \ \dim = 1 = n - \operatorname{rank}(A).
-        $$
-      </p>
-      <p>
-        $$
-        \text{1 nonzero eigenvalue} = \operatorname{rank}(A). \ \checkmark
-        $$
-      </p>
+      <p>$V=\begin{pmatrix}1&1\\1&-1\end{pmatrix}$, $\det V=-2\neq0$, so $A=V\Lambda V^{-1}$ with $\Lambda=\operatorname{diag}(3,1)$.</p>
 
       <h2>Algebraic vs. geometric multiplicity</h2>
-      <p>
-        Algebraic multiplicity $\operatorname{AM}(\lambda)$: multiplicity of $\lambda$ as a root of $\det(A-\lambda I)=0$.
-        Geometric multiplicity $\operatorname{GM}(\lambda) = \dim N(A - \lambda I)$: dimension of its eigenspace.
-        Always $1 \le \operatorname{GM}(\lambda) \le \operatorname{AM}(\lambda)$.
-      </p>
-      <p class="intuition"><em>Intuition: AM counts roots on paper; GM counts how many independent directions actually get that eigenvalue.</em></p>
+      <p class="idea">AM counts how often $\lambda$ appears as a root on paper. GM counts how many independent directions actually get it. GM can fall short.</p>
+      <p>$$\operatorname{AM}(\lambda)=\text{root multiplicity in }\det(A-\lambda I), \qquad \operatorname{GM}(\lambda)=\dim N(A-\lambda I),$$ $$1\le\operatorname{GM}\le\operatorname{AM}.$$</p>
       <p class="example-label">Example</p>
-      <p>
-        $$
-        A = \begin{pmatrix} 2 & 1 \\ 0 & 2 \end{pmatrix}: \quad
-        \det(A-\lambda I) = (2-\lambda)^2 = 0 \;\Rightarrow\; \lambda = 2,\ \operatorname{AM}(2) = 2.
-        $$
-      </p>
-      <p>
-        $$
-        A - 2I = \begin{pmatrix} 0&1\\0&0\end{pmatrix} \Rightarrow N(A-2I) = \operatorname{span}\begin{pmatrix}1\\0\end{pmatrix},
-        \ \operatorname{GM}(2) = 1 < \operatorname{AM}(2) = 2.
-        $$
-      </p>
-
-      <h2>Diagonalization</h2>
-      <p>Stack eigenvectors as columns of $V$, eigenvalues on the diagonal of $\Lambda$:</p>
-      <p>
-        $$
-        AV = A\begin{pmatrix} v_1 & \cdots & v_n \end{pmatrix} = \begin{pmatrix} \lambda_1 v_1 & \cdots & \lambda_n v_n \end{pmatrix} = V\Lambda.
-        $$
-      </p>
-      <p>
-        This always holds. But $A = V\Lambda V^{-1}$ needs $V$ invertible $\iff$ its columns (the eigenvectors)
-        are linearly independent $\iff$ $\operatorname{rank}(V) = n \iff C(V) = \mathbb{R}^n$.
-      </p>
-      <p class="example-label">Shapes</p>
-      <p>Every factor is $n\times n$. Multiplying by a diagonal matrix on the right scales the <em>columns</em> of $V$, which is exactly $\lambda_iv_i$:</p>
-      <p>
-        $$
-        \underbrace{A}_{n\times n}\underbrace{\begin{pmatrix}\vert&&\vert\\v_1&\cdots&v_n\\\vert&&\vert\end{pmatrix}}_{V,\ n\times n}
-        =\underbrace{\begin{pmatrix}\vert&&\vert\\v_1&\cdots&v_n\\\vert&&\vert\end{pmatrix}}_{V,\ n\times n}
-        \underbrace{\begin{pmatrix}\lambda_1&&\\&\ddots&\\&&\lambda_n\end{pmatrix}}_{\Lambda,\ n\times n}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: independent eigenvectors give a new coordinate system in which $A$ is just a scaling; that's what diagonalizable means.</em></p>
-      <p class="example-label">Example</p>
-      <p>Reusing $A = \begin{pmatrix}2&1\\1&2\end{pmatrix}$ with eigenvectors $(1,1), (1,-1)$ from above:</p>
-      <p>
-        $$
-        V = \begin{pmatrix}1&1\\1&-1\end{pmatrix}, \quad \det(V) = -2 \neq 0 \;\Rightarrow\; \text{invertible}, \ \operatorname{rank}(V) = 2 = n.
-        $$
-      </p>
-      <p>So $A = V\Lambda V^{-1}$ with $\Lambda = \operatorname{diag}(3,1)$.</p>
+      <p>$$\begin{pmatrix}2&1\\0&2\end{pmatrix}: (2-\lambda)^2 \Rightarrow \operatorname{AM}(2)=2. \quad A-2I=\begin{pmatrix}0&1\\0&0\end{pmatrix} \Rightarrow N=\operatorname{span}\begin{pmatrix}1\\0\end{pmatrix},\ \operatorname{GM}(2)=1.$$</p>
 
       <h2>Defectiveness</h2>
-      <p>
-        $A$ is <strong>defective</strong> if $\operatorname{GM}(\lambda) < \operatorname{AM}(\lambda)$ for some $\lambda$:
-        too few eigenvectors to form a basis, so $A$ is not diagonalizable.
-        Diagonalizable $\iff$ $\operatorname{GM}(\lambda) = \operatorname{AM}(\lambda)$ for every $\lambda$.
-      </p>
-      <p class="intuition"><em>Intuition: a repeated eigenvalue doesn't hand you a second independent eigenvector for free.</em></p>
-      <p class="example-label">Example</p>
-      <p>
-        $\begin{pmatrix} 2 & 1 \\ 0 & 2 \end{pmatrix}$ above is defective (GM $<$ AM).
-        Contrast with $\begin{pmatrix} 2 & 0 \\ 0 & 2 \end{pmatrix}$: same $\operatorname{AM}(2)=2$,
-        but $A - 2I = 0 \Rightarrow \operatorname{GM}(2) = 2 = \operatorname{AM}(2)$: not defective (already diagonal).
-      </p>
+      <p class="idea">A repeated eigenvalue does not hand you extra eigenvectors for free. If one comes up short, there are too few eigenvectors for a basis.</p>
+      <p>$$\text{defective}\iff\operatorname{GM}(\lambda)\lt\operatorname{AM}(\lambda) \text{ for some } \lambda; \qquad \text{diagonalizable}\iff\operatorname{GM}=\operatorname{AM}\ \ \forall\lambda.$$</p>
+      <table>
+        <tr><td>$\begin{pmatrix}2&1\\0&2\end{pmatrix}$</td><td>$\operatorname{AM}(2)=2$, $\operatorname{GM}(2)=1$</td><td>defective</td></tr>
+        <tr><td>$\begin{pmatrix}2&0\\0&2\end{pmatrix}$</td><td>$\operatorname{AM}(2)=2$, $\operatorname{GM}(2)=2$</td><td>fine (already diagonal)</td></tr>
+      </table>
 
       <figure class="figure">
         <svg viewBox="0 0 420 200" role="img" aria-label="Left, a defective matrix has a one-dimensional eigenspace for a repeated eigenvalue. Right, a non-defective matrix with the same repeated eigenvalue has a two-dimensional eigenspace, the whole plane">
@@ -209,8 +117,24 @@
           <line class="axis" x1="267" y1="57" x2="353" y2="143"/>
           <text class="lbl muted" x="236" y="178">GM(2) = 2 (whole plane)</text>
         </svg>
-        <figcaption>Left: $\begin{pmatrix}2&1\\0&2\end{pmatrix}$ is defective, only one eigenvector direction for $\lambda=2$. Right: $\begin{pmatrix}2&0\\0&2\end{pmatrix}$ has the same algebraic multiplicity, but every direction is an eigenvector.</figcaption>
+        <figcaption>Same AM. Left: one eigen-direction (defective). Right: every direction is an eigenvector.</figcaption>
       </figure>
+
+      <h2>Eigenvalues and rank</h2>
+      <p class="idea">$\lambda=0$ marks the directions $A$ collapses. Everything else survives and counts toward rank.</p>
+      <p>$$N(A)=N(A-0I) \ \Rightarrow\ \operatorname{rank}A=n-\operatorname{GM}(0) \quad(\text{rank-nullity}).$$</p>
+      <p>If $A$ is diagonalizable, rank $=$ number of nonzero eigenvalues (with multiplicity). Not otherwise: $\begin{pmatrix}0&1\\0&0\end{pmatrix}$ has rank 1, eigenvalues $0,0$.</p>
+      <p class="example-label">Example</p>
+      <p>$$\begin{pmatrix}1&2\\2&4\end{pmatrix}: \ \lambda^2-5\lambda=0 \Rightarrow \lambda=0,5. \quad N(A)=\operatorname{span}\begin{pmatrix}2\\-1\end{pmatrix}, \ \operatorname{rank}=2-1=1 = \#\{\lambda\neq0\}.$$</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Show that eigenvectors $v_1,v_2$ with $\lambda_1\neq\lambda_2$ are independent. Why does this mean only a <em>repeated</em> eigenvalue can make $A$ defective?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>Suppose $c_1v_1+c_2v_2=0$. Apply $A$: $c_1\lambda_1v_1+c_2\lambda_2v_2=0$. Subtract $\lambda_2$ times the first: $c_1(\lambda_1-\lambda_2)v_1=0\Rightarrow c_1=0$, then $c_2=0$. The same trick (by induction) gives $n$ independent eigenvectors when all $n$ eigenvalues differ, so $V$ is invertible.</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -221,7 +145,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

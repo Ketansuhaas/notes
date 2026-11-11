@@ -13,7 +13,7 @@
   </script>
   <title>Backpropagation via Jacobian-vector products - Deep Learning Notes</title>
   <meta name="description" content="Backpropagation derived from scratch as a chain of vector-Jacobian products, every link named and dimensioned down to a weight matrix two layers back, with the standard delta notation for the weight and bias gradients; plus why reverse mode beats forward mode for a scalar loss.">
-  <link rel="stylesheet" href="../assets/style.css?v=10">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
@@ -43,121 +43,80 @@
 
   <main>
     <article>
-      <h1>Backpropagation via Jacobian-vector products</h1>
-      <div class="post-meta">Ketan Suhaas Saichandran</div>
-      <div class="tags"><span class="tag">deep-learning</span><span class="tag">gradients</span><span class="tag">backpropagation</span><span class="tag">jacobian</span><span class="tag">rank</span></div>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Backpropagation via Jacobian-vector products</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">deep-learning</span><span class="tag">gradients</span><span class="tag">backpropagation</span><span class="tag">jacobian</span><span class="tag">rank</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="gradients-jacobians-and-hessians.html">Gradients, Jacobians, and Hessians</a>, <a href="matrix-calculus.html">Matrix calculus with differentials</a> &middot; <strong>Leads to:</strong> <a href="automatic-differentiation.html">Automatic differentiation</a>, <a href="weight-initialization-and-variance.html">Weight initialization</a></p>
 
-      <h2>Setup: a layered network</h2>
-      <p>$h_0=x$, and for $\ell=1,\dots,L$:</p>
-      <p>
-        $$
-        z_\ell = W_\ell h_{\ell-1} + b_\ell, \qquad h_\ell = \sigma(z_\ell) \quad \text{(elementwise)},
-        $$
-      </p>
-      <p>with scalar loss $\mathcal{L}(h_L)$ at the end. Two derivatives per layer (Gradients, Jacobians, and Hessians):</p>
-      <p>
-        $$
-        \underbrace{\frac{dz_\ell}{dh_{\ell-1}}}_{n_\ell\times n_{\ell-1}} = W_\ell, \qquad
-        \underbrace{\frac{dh_\ell}{dz_\ell}}_{n_\ell\times n_\ell} = \operatorname{diag}\big(\sigma'(z_\ell)\big).
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: an elementwise nonlinearity's derivative is diagonal, since output $i$ only ever depends on input $i$; the linear map's derivative is just $W_\ell$ itself.</em></p>
+      <p class="idea">Backprop is the chain rule evaluated right to left. Start from the loss's gradient (a row) and multiply by one small Jacobian per layer, never forming the full product.</p>
 
-      <h2>The chain, written once, then substituted</h2>
-      <p>$h_{\ell-1}$ affects $\mathcal{L}$ only through $h_{\ell-1}\to z_\ell\to h_\ell\to\cdots\to\mathcal{L}$. Write that whole dependency as one chain-rule equation first, before substituting anything for any term in it:</p>
+      <h2>Setup</h2>
+      <p class="idea">Each layer is a linear map, then an elementwise squash. Two local Jacobians: $W_\ell$, and a diagonal (unit $i$ depends only on input $i$).</p>
       <p>
         $$
-        \underbrace{\frac{d\mathcal{L}}{dh_{\ell-1}}}_{1\times n_{\ell-1}} = \underbrace{\frac{d\mathcal{L}}{dh_\ell}}_{1\times n_\ell}\cdot\underbrace{\frac{dh_\ell}{dz_\ell}}_{n_\ell\times n_\ell}\cdot\underbrace{\frac{dz_\ell}{dh_{\ell-1}}}_{n_\ell\times n_{\ell-1}}.
+        h_0=x,\quad \underbrace{z_\ell}_{n_\ell\times1}=\underbrace{W_\ell}_{n_\ell\times n_{\ell-1}}\underbrace{h_{\ell-1}}_{n_{\ell-1}\times1}+b_\ell,\quad h_\ell=\sigma(z_\ell),\quad \text{loss } \mathcal L(h_L).
         $$
       </p>
-      <p>Abbreviate $g_\ell:=\dfrac{d\mathcal{L}}{dh_\ell}$, so this reads $g_{\ell-1}=g_\ell\cdot\dfrac{dh_\ell}{dz_\ell}\cdot\dfrac{dz_\ell}{dh_{\ell-1}}$. Base case: $g_L=\dfrac{d\mathcal{L}}{dh_L}$, the loss's own gradient (e.g. $g_L=(h_L-y)^T$ for $\mathcal{L}=\tfrac12\|h_L-y\|^2$). Now substitute the two derivatives from Setup, one at a time, into the chain above:</p>
-      <p>
-        $$
-        \frac{dh_\ell}{dz_\ell} = \operatorname{diag}\big(\sigma'(z_\ell)\big), \qquad \frac{dz_\ell}{dh_{\ell-1}} = W_\ell.
-        $$
-      </p>
-      <p>
-        $$
-        g_{\ell-1} = g_\ell\,\operatorname{diag}\big(\sigma'(z_\ell)\big)\,W_\ell.
-        $$
-      </p>
-      <p>A row times a diagonal matrix is an elementwise product. Splitting the product there, left factor first, names a reusable intermediate:</p>
-      <p>
-        $$
-        \underbrace{g_{z_\ell}}_{1\times n_\ell} := g_\ell\odot\sigma'(z_\ell)^T, \qquad
-        \underbrace{g_{\ell-1}}_{1\times n_{\ell-1}} = \underbrace{g_{z_\ell}}_{1\times n_\ell}\ \underbrace{W_\ell}_{n_\ell\times n_{\ell-1}}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: one chain-rule equation, two substitutions; $g_{z_\ell}$ is that same equation evaluated halfway through, and it is reused below for the parameter gradients too.</em></p>
+      <p>$$\frac{\partial z_\ell}{\partial h_{\ell-1}}=W_\ell, \qquad \frac{\partial h_\ell}{\partial z_\ell}=\operatorname{diag}\big(\sigma'(z_\ell)\big).$$</p>
 
-      <p class="example-label">Two steps at once</p>
-      <p>The recursion above is this one equation applied repeatedly. Writing it out two layers back, straight from $h_{\ell-2}$ to $\mathcal{L}$, makes that explicit, before any substitution:</p>
+      <h2>The backward recursion</h2>
+      <p class="idea">$g_\ell=\partial\mathcal L/\partial h_\ell$ is a row: how much the loss cares about each unit. One step back means multiplying by that layer's two Jacobians, on the right.</p>
       <p>
         $$
-        \underbrace{\frac{d\mathcal{L}}{dh_{\ell-2}}}_{1\times n_{\ell-2}} =
-        \underbrace{\frac{d\mathcal{L}}{dh_\ell}}_{1\times n_\ell}\cdot
-        \underbrace{\frac{dh_\ell}{dz_\ell}}_{n_\ell\times n_\ell}\cdot
-        \underbrace{\frac{dz_\ell}{dh_{\ell-1}}}_{n_\ell\times n_{\ell-1}}\cdot
-        \underbrace{\frac{dh_{\ell-1}}{dz_{\ell-1}}}_{n_{\ell-1}\times n_{\ell-1}}\cdot
-        \underbrace{\frac{dz_{\ell-1}}{dh_{\ell-2}}}_{n_{\ell-1}\times n_{\ell-2}}.
+        \underbrace{g_{\ell-1}}_{1\times n_{\ell-1}}=g_\ell\,\operatorname{diag}\big(\sigma'(z_\ell)\big)\,W_\ell=\underbrace{g_{z_\ell}}_{1\times n_\ell}\underbrace{W_\ell}_{n_\ell\times n_{\ell-1}}, \qquad g_{z_\ell}:=g_\ell\odot\sigma'(z_\ell)^T.
         $$
       </p>
-      <p>The first three factors are exactly $g_{\ell-1}$ from above; the equation is just $g_{\ell-1}$ taking one more step back, with its own two substitutions:</p>
-      <p>
-        $$
-        g_{\ell-2} = \underbrace{\Big(g_\ell\cdot\frac{dh_\ell}{dz_\ell}\cdot\frac{dz_\ell}{dh_{\ell-1}}\Big)}_{=\;g_{\ell-1}}\cdot\frac{dh_{\ell-1}}{dz_{\ell-1}}\cdot\frac{dz_{\ell-1}}{dh_{\ell-2}}
-        = g_{\ell-1}\,\operatorname{diag}\big(\sigma'(z_{\ell-1})\big)\,W_{\ell-1}.
-        $$
-      </p>
-      <p class="intuition"><em>Intuition: going back $k$ layers multiplies $k$ more of these small factors into the same row vector; backprop never forms this long product in one shot, it computes $g_\ell$, then $g_{\ell-1}$, then $g_{\ell-2}$, each one reusing the row vector the previous step already built.</em></p>
+      <p>Start: $g_L=(h_L-y)^T$ for $\mathcal L=\tfrac12\|h_L-y\|^2$. Each step is a row times a matrix: a vector-Jacobian product.</p>
 
-      <h2>Parameter gradients, from scratch</h2>
-      <p>Take $\nabla_{W_{\ell-2}}\mathcal{L}$ directly, a weight matrix two layers back. Everything needed is already built: $g_{\ell-2}$ came from the two-step chain above, and substituting it through the same nonlinearity step used for $g_{z_\ell}$ gives:</p>
+      <h2>Weight gradient: error times input</h2>
+      <p class="idea">Exactly the linear layer from Matrix calculus: an outer product of the error arriving at $z_\ell$ and the input that fed it. An input that was $0$ gets no gradient on its weights.</p>
       <p>
         $$
-        \underbrace{g_{z_{\ell-2}}}_{1\times n_{\ell-2}} = g_{\ell-2}\odot\sigma'(z_{\ell-2})^T.
+        d\mathcal L=g_{z_\ell}\,dW_\ell\,h_{\ell-1}=\operatorname{tr}\big(h_{\ell-1}\,g_{z_\ell}\,dW_\ell\big) \ \Rightarrow\ \underbrace{\nabla_{W_\ell}\mathcal L}_{n_\ell\times n_{\ell-1}}=\underbrace{\delta_\ell}_{n_\ell\times1}\underbrace{h_{\ell-1}^T}_{1\times n_{\ell-1}}, \quad \nabla_{b_\ell}\mathcal L=\delta_\ell,
         $$
       </p>
-      <p>$g_{z_{\ell-2}}$ is a row. Package it as a column instead, the standard convention for this last step, and give it a name:</p>
-      <p>
-        $$
-        \underbrace{\delta_{\ell-2}}_{n_{\ell-2}\times1} \ :=\ g_{z_{\ell-2}}^T.
-        $$
-      </p>
-      <p>$z_{\ell-2}=W_{\ell-2}h_{\ell-3}+b_{\ell-2}$ is linear in $W_{\ell-2}$ and $b_{\ell-2}$ too, exactly as it is in $h_{\ell-3}$. The two vectors already in reach at this point in the chain are $\delta_{\ell-2}$ ($n_{\ell-2}\times1$, how much $z_{\ell-2}$ should change) and $h_{\ell-3}$ ($n_{\ell-3}\times1$, what fed into $z_{\ell-2}$ alongside $W_{\ell-2}$). Whatever $\nabla_{W_{\ell-2}}\mathcal{L}$ is, it must have the same shape as $W_{\ell-2}$ itself, $n_{\ell-2}\times n_{\ell-3}$ (the shape rule, Gradients, Jacobians, and Hessians). An outer product of these two vectors is the only way to build a matrix of that exact shape, and only one order works: $\delta_{\ell-2}h_{\ell-3}^T$ is $n_{\ell-2}\times n_{\ell-3}$, while the other order, $h_{\ell-3}\delta_{\ell-2}^T$, is $n_{\ell-3}\times n_{\ell-2}$, the wrong shape entirely. That pins the formula down:</p>
-      <p>
-        $$
-        \nabla_{W_{\ell-2}}\mathcal{L} = \delta_{\ell-2}\,h_{\ell-3}^T.
-        $$
-      </p>
-      <p class="example-label">Shapes</p>
-      <p>
-        $$
-        \underbrace{\delta_{\ell-2}}_{n_{\ell-2}\times1}\ \underbrace{h_{\ell-3}^T}_{1\times n_{\ell-3}} = \underbrace{\nabla_{W_{\ell-2}}\mathcal{L}}_{n_{\ell-2}\times n_{\ell-3}}.
-        $$
-      </p>
-      <p>$\nabla_{b_{\ell-2}}\mathcal{L}=\delta_{\ell-2}$ needs no such argument: $b_{\ell-2}$ enters $z_{\ell-2}$ directly, with no other vector multiplying it, so the gradient is $\delta_{\ell-2}$ itself, unchanged.</p>
-      <p>By the same shape rule used everywhere above (output shape times input shape, Gradients, Jacobians, and Hessians), the raw derivative $d\mathcal{L}/dW_{\ell-2}$ is really $1\times n_{\ell-2}\times n_{\ell-3}$: the loss's own scalar shape, $1$, prepended to $W_{\ell-2}$'s own shape. That leading $1$ carries no information, exactly like the $1$ in $g_\ell$'s $1\times n_\ell$, so it is dropped by convention, identifying the gradient with a matrix of exactly $W_{\ell-2}$'s own shape: precisely $\nabla_{W_{\ell-2}}\mathcal{L}$ as just derived.</p>
-      <p class="intuition"><em>Intuition: the gradient for the weight connecting input $k$ to output $j$ is (how much output $j$ should change) times (how large input $k$ actually was); an input that was $0$ contributes no gradient to any weight reading from it, no matter how wrong the output was.</em></p>
+      <p>with $\delta_\ell:=g_{z_\ell}^T$, the same error written as a column.</p>
 
-      <p class="example-label">The same pattern, at every layer</p>
-      <p>Nothing above depended on being exactly two layers back. The identical argument applies verbatim at every $\ell$, with $\delta_\ell := g_{z_\ell}^T$ supplied by the recursion however far $\ell$ is from $L$:</p>
+      <p class="example-label">Example: one ReLU layer</p>
+      <p>$x=\begin{pmatrix}1\\2\end{pmatrix}$, $W=\begin{pmatrix}1&-1\\1&1\end{pmatrix}$, $b=0$, $y=\begin{pmatrix}0\\1\end{pmatrix}$.</p>
+      <table>
+        <tr><td>Forward</td><td>$z=(-1,\,3)$, $h=(0,\,3)$, $\mathcal L=\tfrac12(0^2+2^2)=2$</td></tr>
+        <tr><td>Error</td><td>$g_1=(0,\,2)$, $\sigma'(z)=(0,\,1)$, $g_z=(0,\,2)$</td></tr>
+        <tr><td>Weights</td><td>$\nabla_W\mathcal L=\begin{pmatrix}0\\2\end{pmatrix}\begin{pmatrix}1&2\end{pmatrix}=\begin{pmatrix}0&0\\2&4\end{pmatrix}$ (dead unit: zero row)</td></tr>
+        <tr><td>Input</td><td>$g_0=g_zW=(2,\,2)$</td></tr>
+      </table>
+      <p>Check: only unit 2 is active, so locally $\mathcal L=\tfrac12(x_1+x_2-1)^2$ and $\partial\mathcal L/\partial x_i=2$. &#10003;</p>
+
+      <h2>Rank 1 per example</h2>
+      <p class="idea">A column times a row has rank 1. A batch sums $B$ outer products (Four views of matrix multiplication), so the update has rank at most $B$.</p>
       <p>
         $$
-        \nabla_{W_\ell}\mathcal{L} = \delta_\ell\,h_{\ell-1}^T, \qquad \nabla_{b_\ell}\mathcal{L} = \delta_\ell.
+        \nabla_{W_\ell}\mathcal L_{\text{batch}}=\frac1B\sum_{b=1}^B\delta_\ell^{(b)}h_{\ell-1}^{(b)T}=\frac1B\underbrace{\Delta_\ell}_{n_\ell\times B}\underbrace{H_{\ell-1}^T}_{B\times n_{\ell-1}}, \qquad \operatorname{rank}\le\min(B,\,n_\ell,\,n_{\ell-1}).
         $$
       </p>
-      <p class="intuition"><em>Intuition: the formula never referenced $\ell$'s distance from $L$, only $\delta_\ell$; the activation recursion is what supplies that vector at whatever depth it's needed, one step or several.</em></p>
+      <p>Columns of $\Delta_\ell$ are the $\delta_\ell^{(b)}$; columns of $H_{\ell-1}$ are the $h_{\ell-1}^{(b)}$.</p>
 
-      <p class="example-label">A consequence: rank 1, per example</p>
-      <p>$\delta_\ell h_{\ell-1}^T$ is exactly the outer-product construction from Rank, subspaces, and projections: a column times a row. For a single training example, $\nabla_{W_\ell}\mathcal{L}$ is therefore always rank $1$ (rank $0$ only if $\delta_\ell$ or $h_{\ell-1}$ is exactly $0$), no matter how large $W_\ell$ is. A minibatch of $B$ examples sums $B$ such rank-$1$ terms, $\frac1B\sum_{b=1}^B\delta_\ell^{(b)}\big(h_{\ell-1}^{(b)}\big)^T$, and a sum of $B$ rank-$1$ matrices has rank at most $B$, generically exactly $\min(B,n_\ell,n_{\ell-1})$.</p>
-      <p class="intuition"><em>Intuition: one example's gradient only ever says "nudge $W_\ell$ along this one row direction, scaled along this one column direction"; batching is what turns that single rank-$1$ nudge into an update with real structure across the weight matrix.</em></p>
+      <h2>Why backward, not forward</h2>
+      <p class="idea">One loss, millions of weights. Starting from the single scalar at the end gives every gradient in one pass; starting from the inputs needs one pass per parameter.</p>
+      <table>
+        <tr><td>Forward mode (JVP)</td><td>$J\,v$</td><td>one input direction per pass</td></tr>
+        <tr><td>Reverse mode (VJP): backprop</td><td>$g\,J$</td><td>one output per pass, so all of $\nabla\mathcal L$ at once</td></tr>
+      </table>
+      <p>Cost: about $2\times$ the forward pass (per layer, one matmul for $g_{\ell-1}$, one for $\nabla_{W_\ell}$).</p>
 
-      <h2>One backward pass, every parameter at once</h2>
-      <p>Starting from a single row $g_L$ and running the recursion down to $\ell=1$ computes $\nabla_{W_\ell}\mathcal{L}$ and $\nabla_{b_\ell}\mathcal{L}$ for every layer, in one pass, at roughly the cost of one forward pass.</p>
-      <p>A JVP-based (forward-mode) approach would instead need to seed a separate pass per parameter, since forward mode propagates one input direction $v$ at a time (Gradients, Jacobians, and Hessians): with millions of parameters, that is millions of passes. Reverse mode wins precisely because there is one scalar output to seed from and, typically, far more parameters than that.</p>
-      <p class="intuition"><em>Intuition: forward mode answers "how does the output move if this one input moves"; a network has one loss but millions of weights, so asking the reverse question once, "how should every weight move to move this one loss", is the only question worth asking that many times cheaper.</em></p>
-      <p>Everything above is this general algorithm (Automatic differentiation) specialized to one particular computation graph: a plain chain of matmuls and elementwise nonlinearities, where every node has exactly one child.</p>
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Two linear layers, no nonlinearity: $\mathcal L=\tfrac12\|W_2W_1x-y\|^2$. Use the recursion to show $\nabla_{W_1}\mathcal L=W_2^T\,r\,x^T$ with $r=W_2W_1x-y$. Check the shape.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$\sigma'=1$, so $g_{z_2}=g_2=r^T$. Then $g_1=r^TW_2$, $g_{z_1}=r^TW_2$, $\delta_1=W_2^Tr$, and $\nabla_{W_1}\mathcal L=\delta_1h_0^T=W_2^Trx^T$.</p>
+          <p>Shapes: $(n_1\times n_2)(n_2\times1)(1\times n_0)=n_1\times n_0$, the shape of $W_1$. &#10003;</p>
+        </details>
+      </section>
     </article>
   </main>
 
@@ -168,7 +127,7 @@
     &copy; <span id="year"></span> Ketan Suhaas Saichandran
   </footer>
   <script src="../assets/theme.js?v=2"></script>
-  <script src="../assets/sidebar.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>

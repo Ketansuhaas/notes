@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Expectation and variance algebra - Deep Learning Notes</title>
+  <meta name="description" content="The few rules that do most of the work: linearity of expectation, how variance scales and adds, sigma^2/n for averages, and Cov(AX) = A Sigma A^T.">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Expectation and variance algebra</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Expectation and variance algebra</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">expectation</span><span class="tag">variance</span><span class="tag">covariance</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> <a href="random-variables-and-notation.html">Probability notation</a> &middot; <strong>Leads to:</strong> <a href="covariance-matrix-intuition.html">The covariance matrix, intuitively</a>, <a href="weight-initialization-and-variance.html">Weight initialization</a>, <a href="lln-and-clt.html">LLN and CLT</a></p>
+
+      <h2>Linearity of expectation</h2>
+      <p class="idea">Average of a sum = sum of averages. Always, even if the pieces depend on each other.</p>
+      <p>$$\mathbb{E}[aX+bY+c]=a\,\mathbb{E}X+b\,\mathbb{E}Y+c. \qquad \text{Two dice: } 3.5+3.5=7.$$</p>
+
+      <h2>Shift and scale</h2>
+      <p class="idea">Shifting moves the cloud, it doesn't spread it. Scaling by $a$ stretches distances by $a$, squared distances by $a^2$.</p>
+      <p>$$\operatorname{Var}X=\mathbb{E}[(X-\mu)^2]=\mathbb{E}[X^2]-\mu^2, \qquad \operatorname{Var}(aX+b)=a^2\operatorname{Var}X.$$</p>
+
+      <h2>Sums</h2>
+      <p class="idea">Spreads add, plus a term for moving together. Independent: that term is $0$.</p>
+      <p>$$\operatorname{Var}(X+Y)=\operatorname{Var}X+\operatorname{Var}Y+2\operatorname{Cov}(X,Y).$$</p>
+
+      <h2>Averages: $\sigma^2/n$</h2>
+      <p class="idea">Independent errors partly cancel. Noise of an average shrinks like $1/\sqrt n$.</p>
+      <p>$$X_i\overset{\text{iid}}{\sim}(\mu,\sigma^2): \quad \operatorname{Var}\Big(\textstyle\sum_iX_i\Big)=n\sigma^2, \qquad \operatorname{Var}\Big(\tfrac1n\textstyle\sum_iX_i\Big)=\dfrac{\sigma^2}{n}.$$</p>
+      <p class="example-label">Example</p>
+      <p>Mini-batch of size $B$: gradient noise $\sigma/\sqrt B$. $4\times$ the batch, half the noise.</p>
+
+      <h2>Vectors: $\operatorname{Cov}(AX)=A\Sigma A^T$</h2>
+      <p class="idea">A linear map reshapes the spread, acting from both sides.</p>
+      <p>
+        $$
+        \mathbb{E}[AX+b]=A\mu+b, \qquad \underbrace{\operatorname{Cov}(AX+b)}_{m\times m}=\underbrace{A}_{m\times n}\underbrace{\Sigma}_{n\times n}\underbrace{A^T}_{n\times m}.
+        $$
+      </p>
+      <p>Proof: $AX+b-\mathbb{E}[AX+b]=A(X-\mu)$, so $\mathbb{E}[A(X-\mu)(X-\mu)^TA^T]=A\Sigma A^T$.</p>
+      <p class="example-label">Special case</p>
+      <p>$A=v^T$, a unit row: $\operatorname{Var}(v^TX)=v^T\Sigma v$, the spread along $v$. Next note.</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>$q,k\in\mathbb{R}^d$ independent, entries iid with mean $0$, variance $1$. Show $\operatorname{Var}(q^Tk)=d$. Why does attention divide by $\sqrt d$?</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$q^Tk=\sum_iq_ik_i$. Each term: mean $0$, variance $\mathbb{E}[q_i^2]\,\mathbb{E}[k_i^2]=1$, uncorrelated with the others. Sum: variance $d$. Dividing by $\sqrt d$ brings it back to $1$, so the softmax doesn't saturate as $d$ grows.</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

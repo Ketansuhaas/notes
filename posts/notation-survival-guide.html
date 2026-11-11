@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("notes-theme") || "light";
+        document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <title>Reading the notation in papers - Deep Learning Notes</title>
+  <meta name="description" content="The symbols ML papers use without explaining them: shapes, definitions, proportionality, distributions, expectations, argmin, norms and decorations, with one real line decoded.">
+  <link rel="stylesheet" href="../assets/style.css?v=14">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-top">
+      <div class="site-header-left">
+        <button id="toc-toggle" class="toc-toggle" aria-label="Toggle table of contents" aria-expanded="false">&#9776;</button>
+        <a class="site-title" href="../index.html">Deep Learning Notes</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode"></button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc-sidebar" id="toc-sidebar" aria-label="Table of contents"></nav>
+    <div class="page-content">
+
+  <nav class="crumbs"><a href="../index.html">Deep Learning Notes</a> / Reading the notation in papers</nav>
+
+  <main>
+    <article>
+      <div class="post-head">
+        <div class="post-head-text">
+          <h1>Reading the notation in papers</h1>
+          <div class="post-meta">Ketan Suhaas Saichandran</div>
+        </div>
+        <div class="tags"><span class="tag">notation</span><span class="tag">foundations</span></div>
+      </div>
+      <p class="chain"><strong>Builds on:</strong> nothing, start here &middot; <strong>Leads to:</strong> <a href="four-views-of-matrix-multiplication.html">Four views of matrix multiplication</a>, <a href="expectation-and-variance-algebra.html">Expectation and variance algebra</a></p>
+
+      <p class="idea">An equation is a compressed sentence. Ask three things: <strong>what shape</strong> is each symbol, <strong>what is random</strong>, <strong>what is optimized</strong>.</p>
+
+      <h2>Shapes</h2>
+      <p class="idea">Every symbol is a box of numbers. Write its shape underneath it.</p>
+      <p>
+        $$
+        \underbrace{X}_{n\times d}=\begin{pmatrix}-\,x_1^T-\\\vdots\\-\,x_n^T-\end{pmatrix}, \quad \underbrace{x_i}_{d\times1}\ (\text{a column}), \quad X_{ij}=\text{point } i,\ \text{feature } j.
+        $$
+      </p>
+
+      <h2>Symbols</h2>
+      <table>
+        <tr><td>$a:=b$</td><td>defines $a$</td></tr>
+        <tr><td>$a\propto b$</td><td>equal up to a constant you can ignore</td></tr>
+        <tr><td>$X\sim p$, $\ \overset{\text{iid}}{\sim}$</td><td>drawn from $p$; independent draws from the same $p$</td></tr>
+        <tr><td>$\mathbb{E}_{x\sim p}[f(x)]$</td><td>average of $f$; the subscript is what's random</td></tr>
+        <tr><td>$\min_\theta L$ vs $\operatorname*{arg\,min}_\theta L$</td><td>best value vs. the $\theta$ that achieves it</td></tr>
+        <tr><td>$\nabla_\theta L$</td><td>gradient in $\theta$ only</td></tr>
+        <tr><td>$\|x\|_2$, $\langle x,y\rangle$</td><td>length, dot product $x^Ty$</td></tr>
+        <tr><td>$x\odot y$, $\ xy^T$</td><td>elementwise product, outer product</td></tr>
+        <tr><td>$\operatorname{tr}A$, $\operatorname{diag}(v)$, $\mathbb{1}[\cdot]$</td><td>sum of diagonal, diagonal matrix, 1 if true else 0</td></tr>
+        <tr><td>$\hat\theta$, $\theta^\star$, $\bar x$, $\tilde x$</td><td>estimate, optimum, mean, noisy version</td></tr>
+      </table>
+
+      <h2>One real line, decoded</h2>
+      <p class="idea">Read from the inside out.</p>
+      <p>
+        $$
+        \theta^\star=\operatorname*{arg\,min}_\theta\ \underbrace{\mathbb{E}_{(x,y)\sim p_{\text{data}}}\big[\underbrace{-\log p_\theta(y\mid x)}_{\text{surprise at the true label}}\big]}_{\text{averaged over real data}}+\underbrace{\lambda\|\theta\|_2^2}_{\text{weight decay}}.
+        $$
+      </p>
+      <p>"Find the weights that give the correct labels high probability, keeping weights small."</p>
+
+      <section class="exercise">
+        <h2>Derive it yourself</h2>
+        <p>Give every shape, then say it in words ($x_i\in\mathbb{R}^d$, $y_i\in\mathbb{R}^k$): $\ \mathcal{L}(W)=\frac1n\sum_i\|Wx_i-y_i\|_2^2$.</p>
+        <details>
+          <summary>Solution</summary>
+          <p>$W$ is $k\times d$, $Wx_i-y_i$ is $k\times1$, $\mathcal{L}$ is a scalar. "Mean squared error of a linear map $\mathbb{R}^d\to\mathbb{R}^k$."</p>
+        </details>
+      </section>
+    </article>
+  </main>
+
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    &copy; <span id="year"></span> Ketan Suhaas Saichandran
+  </footer>
+  <script src="../assets/theme.js?v=2"></script>
+  <script src="../assets/sidebar.js?v=4"></script>
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

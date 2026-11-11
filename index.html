@@ -13,7 +13,7 @@
   </script>
   <title>Deep Learning Notes: Mathematics &amp; Theory</title>
   <meta name="description" content="Deep Learning Notes: Mathematics &amp; Theory - notes on mathematics and deep learning, filterable by tag.">
-  <link rel="stylesheet" href="assets/style.css?v=10">
+  <link rel="stylesheet" href="assets/style.css?v=14">
 </head>
 <body>
   <header class="site-header">
@@ -90,6 +90,16 @@
       <button type="button" data-tag="jacobian">jacobian</button>
       <button type="button" data-tag="weight-initialization">weight-initialization</button>
       <button type="button" data-tag="reparameterization-trick">reparameterization-trick</button>
+      <button type="button" data-tag="notation">notation</button>
+      <button type="button" data-tag="foundations">foundations</button>
+      <button type="button" data-tag="matrix-multiplication">matrix-multiplication</button>
+      <button type="button" data-tag="taylor">taylor</button>
+      <button type="button" data-tag="convexity">convexity</button>
+      <button type="button" data-tag="jensen">jensen</button>
+      <button type="button" data-tag="entropy">entropy</button>
+      <button type="button" data-tag="gradient-descent">gradient-descent</button>
+      <button type="button" data-tag="condition-number">condition-number</button>
+      <button type="button" data-tag="matrix-calculus">matrix-calculus</button>
     </div>
 
     <ul class="post-list" id="notes-list">
@@ -193,10 +203,47 @@
         <div class="title-row"><a href="posts/reparameterization-trick.html">The reparameterization trick</a></div>
         <div class="tags"><span class="tag">deep-learning</span><span class="tag">generative-modeling</span><span class="tag">reparameterization-trick</span><span class="tag">gradients</span></div>
       </li>
+      <li data-tags="notation foundations">
+        <div class="title-row"><a href="posts/notation-survival-guide.html">Reading the notation in papers</a></div>
+        <div class="tags"><span class="tag">notation</span><span class="tag">foundations</span></div>
+      </li>
+      <li data-tags="linear-algebra matrix-multiplication">
+        <div class="title-row"><a href="posts/four-views-of-matrix-multiplication.html">Four views of matrix multiplication</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">matrix-multiplication</span></div>
+      </li>
+      <li data-tags="probability expectation variance covariance">
+        <div class="title-row"><a href="posts/expectation-and-variance-algebra.html">Expectation and variance algebra</a></div>
+        <div class="tags"><span class="tag">probability</span><span class="tag">expectation</span><span class="tag">variance</span><span class="tag">covariance</span></div>
+      </li>
+      <li data-tags="linear-algebra probability covariance variance eigenvalues quadratic-forms">
+        <div class="title-row"><a href="posts/covariance-matrix-intuition.html">The covariance matrix, intuitively</a></div>
+        <div class="tags"><span class="tag">linear-algebra</span><span class="tag">probability</span><span class="tag">covariance</span><span class="tag">variance</span><span class="tag">eigenvalues</span><span class="tag">quadratic-forms</span></div>
+      </li>
+      <li data-tags="calculus taylor gradients hessian optimization">
+        <div class="title-row"><a href="posts/taylor-expansion.html">Taylor expansion in many variables</a></div>
+        <div class="tags"><span class="tag">calculus</span><span class="tag">taylor</span><span class="tag">gradients</span><span class="tag">hessian</span><span class="tag">optimization</span></div>
+      </li>
+      <li data-tags="convexity optimization jensen probability">
+        <div class="title-row"><a href="posts/convexity-and-jensen.html">Convexity and Jensen's inequality</a></div>
+        <div class="tags"><span class="tag">convexity</span><span class="tag">optimization</span><span class="tag">jensen</span><span class="tag">probability</span></div>
+      </li>
+      <li data-tags="information-theory entropy cross-entropy kl-divergence probability">
+        <div class="title-row"><a href="posts/entropy-and-cross-entropy.html">Entropy and cross-entropy</a></div>
+        <div class="tags"><span class="tag">information-theory</span><span class="tag">entropy</span><span class="tag">cross-entropy</span><span class="tag">kl-divergence</span><span class="tag">probability</span></div>
+      </li>
+      <li data-tags="optimization gradient-descent eigenvalues hessian condition-number">
+        <div class="title-row"><a href="posts/gradient-descent-on-a-quadratic.html">Gradient descent on a quadratic</a></div>
+        <div class="tags"><span class="tag">optimization</span><span class="tag">gradient-descent</span><span class="tag">eigenvalues</span><span class="tag">hessian</span><span class="tag">condition-number</span></div>
+      </li>
+      <li data-tags="calculus matrix-calculus gradients linear-algebra">
+        <div class="title-row"><a href="posts/matrix-calculus.html">Matrix calculus with differentials</a></div>
+        <div class="tags"><span class="tag">calculus</span><span class="tag">matrix-calculus</span><span class="tag">gradients</span><span class="tag">linear-algebra</span></div>
+      </li>
     </ul>
     <script>
       (function () {
-        var btns = document.querySelectorAll('.tag-filter button');
+        var filter = document.querySelector('.tag-filter');
+        var btns = document.querySelectorAll('.tag-filter button[data-tag]');
         var items = document.querySelectorAll('#notes-list li');
         var selected = new Set();
         function apply() {
@@ -223,6 +270,20 @@
           });
         });
         apply();
+
+        var toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'tag-filter-toggle';
+        function setCollapsed(collapsed) {
+          filter.classList.toggle('collapsed', collapsed);
+          toggle.setAttribute('aria-expanded', String(!collapsed));
+          toggle.textContent = collapsed ? 'Show all tags (' + (btns.length - 1) + ')' : 'Hide tags';
+        }
+        toggle.addEventListener('click', function () {
+          setCollapsed(!filter.classList.contains('collapsed'));
+        });
+        filter.appendChild(toggle);
+        setCollapsed(true);
       })();
     </script>
 
@@ -252,7 +313,7 @@
   </footer>
   <script src="assets/cite.js?v=2"></script>
   <script src="assets/theme.js?v=2"></script>
-  <script src="assets/sidebar.js?v=2"></script>
+  <script src="assets/sidebar.js?v=4"></script>
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
 </body>
 </html>
